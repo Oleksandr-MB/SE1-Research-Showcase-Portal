@@ -6,3 +6,6 @@ sqlalchemy
 psycopg2-binary
 pydantic
 passlib[argon2]
+python-multipart
+pydantic[email]
+argon2_cffi

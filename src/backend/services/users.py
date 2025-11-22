@@ -7,9 +7,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from backend.db.db import get_db
-from backend.db import models
-from backend.services.schemas import UserCreate, UserRead, Token, TokenData
+from src.backend.db.db import get_db
+from src.backend.db import models
+from src.backend.services.schemas import UserCreate, UserRead, Token, TokenData
 
 #okay, just make a config class and loader later, k?
 SECRET_KEY = "guys-this-is-secure-i-swear"  
