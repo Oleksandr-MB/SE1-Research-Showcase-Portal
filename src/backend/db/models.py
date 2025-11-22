@@ -64,6 +64,7 @@ class User(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(nullable=False)
+    password_salt: Mapped[str] = mapped_column(String(64), nullable=False)
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role"),
         default=UserRole.USER,

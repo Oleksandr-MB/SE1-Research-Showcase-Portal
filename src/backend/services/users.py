@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta
 from typing import Annotated
 
@@ -21,11 +22,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 router = APIRouter()
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+def _salt_password(plain_password: str, salt: str) -> str:
+    return f"{plain_password}:{salt}"
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+def verify_password(plain_password: str, hashed_password: str, salt: str) -> bool:
+    return pwd_context.verify(_salt_password(plain_password, salt), hashed_password)
+
+def get_password_hash(password: str, salt: str) -> str:
+    return pwd_context.hash(_salt_password(password, salt))
+
+def generate_password_salt() -> str:
+    return secrets.token_hex(16)
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
@@ -84,9 +91,12 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered",
         )
 
+    salt = generate_password_salt()
+
     db_user = models.User(
         username=user_in.username,
-        password_hash=get_password_hash(user_in.password),
+        password_hash=get_password_hash(user_in.password, salt),
+        password_salt=salt,
         role=models.UserRole.USER,
         email = user_in.email,
         is_email_verified = False,
@@ -108,7 +118,14 @@ def login(
     db: Session = Depends(get_db)):
 
     user = get_user_by_username(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.password_hash):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not verify_password(form_data.password, user.password_hash, user.password_salt):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
