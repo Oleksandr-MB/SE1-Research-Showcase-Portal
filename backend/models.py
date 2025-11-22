@@ -11,6 +11,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    Column
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -45,12 +46,12 @@ class VotableMixin:
 post_tags = Table(
     "post_tags",
     Base.metadata,
-    mapped_column(
+    Column(
         "post_id",
         ForeignKey("posts.id", ondelete="CASCADE"),
         primary_key=True,
     ),
-    mapped_column(
+    Column(
         "tag_id",
         ForeignKey("tags.id", ondelete="CASCADE"),
         primary_key=True,
@@ -69,11 +70,9 @@ class User(TimestampMixin, Base):
         nullable=False,
     )
 
-    profile: Mapped["Profile"] = relationship(
-        back_populates="user",
-        uselist=False,
-        cascade="all, delete-orphan",
-    )
+    email: Mapped[str] = mapped_column(unique=True, index=True)
+    is_email_verified: Mapped[bool] = mapped_column(default=False,nullable=False)
+    social_links: Mapped[str | None] = mapped_column()
 
     authored_posts: Mapped[list["Post"]] = relationship(
         back_populates="poster",
@@ -104,27 +103,6 @@ class User(TimestampMixin, Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
-
-
-class Profile(TimestampMixin, Base):
-    __tablename__ = "profiles"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
-        unique=True,
-    )
-
-    email: Mapped[str] = mapped_column(unique=True, index=True)
-    is_email_verified: Mapped[bool] = mapped_column(default=False,nullable=False)
-
-    bio: Mapped[str | None] = mapped_column()
-    orcid: Mapped[str | None] = mapped_column()
-    arxiv_id: Mapped[str | None] = mapped_column()
-    social_links: Mapped[str | None] = mapped_column()
-
-    user: Mapped[User] = relationship(back_populates="profile")
-
 
 class Tag(TimestampMixin, Base):
     __tablename__ = "tags"
@@ -265,7 +243,7 @@ class PostVote(TimestampMixin, Base):
     __tablename__ = "post_votes"
     __table_args__ = (
         CheckConstraint("value in (-1, 1)", name="post_vote_value_check"),
-        UniqueConstraint("user_id", "post_id", name="uq_post_vote_user_post")
+        UniqueConstraint("user_id", "post_id", name="uq_post_vote")
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -287,7 +265,7 @@ class CommentVote(TimestampMixin, Base):
     __tablename__ = "comment_votes"
     __table_args__ = (
         CheckConstraint("value in (-1, 1)", name="comment_vote_value_check"),
-        UniqueConstraint("user_id", "comment_id", name="uq_post_vote_user_post")
+        UniqueConstraint("user_id", "comment_id", name="uq_comment_vote")
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
