@@ -1,0 +1,7 @@
+pyJWT
+jose
+fastAPI
+uvicorn
+sqlalchemy
+psycopg2
+pydantic
