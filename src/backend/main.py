@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from backend.routers import users  
+from backend.services import users  
 
 app = FastAPI(title="Research Portal API")
 app.include_router(users.router, prefix="/users")

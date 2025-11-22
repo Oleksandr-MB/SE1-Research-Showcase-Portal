@@ -7,16 +7,16 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from backend.db import get_db
-from backend import models
-from backend.schemas import UserCreate, UserRead, Token, TokenData
+from backend.db.db import get_db
+from backend.db import models
+from backend.services.schemas import UserCreate, UserRead, Token, TokenData
 
 #okay, just make a config class and loader later, k?
 SECRET_KEY = "guys-this-is-secure-i-swear"  
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 router = APIRouter()
@@ -60,6 +60,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     except JWTError:
         raise credentials_exception
 
+    if token_data.username is None:
+        raise credentials_exception
     user = get_user_by_username(db, token_data.username)
     if user is None:
         raise user_lost_exception

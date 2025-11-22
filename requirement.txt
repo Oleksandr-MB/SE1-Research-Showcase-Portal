@@ -1,7 +1,8 @@
 pyJWT
-jose
+python-jose[cryptography]
 fastAPI
 uvicorn
 sqlalchemy
-psycopg2
+psycopg2-binary
 pydantic
+passlib[argon2]
