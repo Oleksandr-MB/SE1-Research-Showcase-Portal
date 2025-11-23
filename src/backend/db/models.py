@@ -21,6 +21,7 @@ from sqlalchemy.sql import func
 class Base(DeclarativeBase):
     pass
 
+
 class UserRole(str, enum.Enum):
     USER = "user"
     RESEARCHER = "researcher"
@@ -32,12 +33,14 @@ class ReportStatus(str, enum.Enum):
     OPEN = "open"
     CLOSED = "closed"
 
+
 class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
+
 
 class VotableMixin:
     upvotes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -59,6 +62,7 @@ post_tags = Table(
     ),
 )
 
+
 class User(TimestampMixin, Base):
     __tablename__ = "users"
 
@@ -73,7 +77,8 @@ class User(TimestampMixin, Base):
     )
 
     email: Mapped[str] = mapped_column(unique=True, index=True)
-    is_email_verified: Mapped[bool] = mapped_column(default=False,nullable=False)
+    is_email_verified: Mapped[bool] = mapped_column(
+        default=False, nullable=False)
     social_links: Mapped[str | None] = mapped_column()
 
     authored_posts: Mapped[list["Post"]] = relationship(
@@ -106,6 +111,7 @@ class User(TimestampMixin, Base):
         cascade="all, delete-orphan",
     )
 
+
 class Tag(TimestampMixin, Base):
     __tablename__ = "tags"
 
@@ -130,7 +136,9 @@ class Post(TimestampMixin, VotableMixin, Base):
     title: Mapped[str] = mapped_column(nullable=False, index=True)
     authors_text: Mapped[str] = mapped_column(nullable=False)
     abstract: Mapped[str] = mapped_column(nullable=False)
-    bibtex: Mapped[str | None] = mapped_column()
+    bibtex: Mapped[str | None] = mapped_column(nullable=True)
+
+    content: Mapped[str] = mapped_column(nullable=False)
 
     poster: Mapped[User] = relationship(back_populates="authored_posts")
     comments: Mapped[list["Comment"]] = relationship(
@@ -240,6 +248,7 @@ class Report(TimestampMixin, Base):
     reported_by: Mapped[User] = relationship(
         back_populates="filed_reports",
     )
+
 
 class PostVote(TimestampMixin, Base):
     __tablename__ = "post_votes"

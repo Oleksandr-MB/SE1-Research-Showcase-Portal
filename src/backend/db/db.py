@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 from src.backend.config.config_utils import read_config
 
+
 public_config = read_config("public")
 prefix = public_config['db_cfg']['base']
 user = public_config['db_cfg']['user']
@@ -57,6 +58,7 @@ SessionLocal = sessionmaker(
     autoflush=False,
     autocommit=False,
 )
+
 
 def get_db():
     db = SessionLocal()

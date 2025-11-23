@@ -18,4 +18,4 @@ token_cfg:
   email_token_expire_minutes: 30
 
 scheduler_cfg:
-  delete_expired_users_interval_minutes: 360
+  delete_expired_users_interval_minutes: 60

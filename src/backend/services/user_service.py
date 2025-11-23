@@ -1,4 +1,3 @@
-import re
 import smtplib
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
@@ -17,6 +16,10 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from src.backend.config.config_utils import read_config
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 private_config = read_config("private")
 public_config = read_config("public")
@@ -38,7 +41,7 @@ EMAIL_SMTP_PORT = private_config["smtp_cfg"]["smtp_port"]
 EMAIL_LINK_BASE = public_config["email_cfg"]["link_base"]
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
 router = APIRouter()
 scheduler = BackgroundScheduler()
@@ -47,6 +50,7 @@ scheduler = BackgroundScheduler()
 def _extract_argon_salt(hashed_password: str) -> str:
     parts = hashed_password.split("$")
     if len(parts) < 6:
+        logging.error("Unexpected password hash format")
         raise RuntimeError("Unexpected password hash format")
     return parts[4]
 
@@ -90,28 +94,31 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str | None = payload.get("sub")
         if username is None:
+            logging.error("Token payload does not contain 'sub'")
             raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
 
     if token_data.username is None:
+        logging.error("Token data does not contain 'username'")
         raise credentials_exception
     user = get_user_by_username(db, token_data.username)
     if user is None:
+        logging.error(f"User not found for username: {token_data.username}")
         raise user_lost_exception
     return user
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
-    print(
+    logging.info(
         f"📝 Registration attempt: username={user_in.username}, email={user_in.email}")
 
     existing_user = db.query(models.User).filter(
         models.User.username == user_in.username).first()
     if existing_user:
-        print(f"❌ Username '{user_in.username}' already exists")
+        logging.error(f"❌ Username '{user_in.username}' already exists")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered",
@@ -120,13 +127,13 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     existing_email = db.query(models.User).filter(
         models.User.email == user_in.email).first()
     if existing_email:
-        print(f"❌ Email '{user_in.email}' already exists")
+        logging.error(f"❌ Email '{user_in.email}' already exists")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
 
-    print("✅ Validation passed, creating user...")
+    logging.info("✅ Validation passed, creating user...")
 
     email_token = create_token(
         data={"sub": user_in.email},
@@ -147,6 +154,7 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     db.commit()
 
     send_verification_email(user_in.email, verification_link)
+    logging.info("✅ User created successfully.")
 
     return UserRead(
         id=db_user.id,
@@ -157,7 +165,6 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
 
 
 def send_verification_email(recipient_email: str, verification_link: str):
-
     msg = EmailMessage()
     msg['Subject'] = 'Verify your email for Research Showcase Portal'
     msg['From'] = EMAIL_SENDER
@@ -178,8 +185,9 @@ def send_verification_email(recipient_email: str, verification_link: str):
             server.starttls()
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
             server.send_message(msg)
-            print(f"✅ Verification email sent to {recipient_email}")
+            logging.info(f"✅ Verification email sent to {recipient_email}")
     except Exception as e:
+        logging.error(f"❌ Failed to send email: {e}")
         raise RuntimeError(f"❌ Failed to send email: {e}")
 
 
@@ -189,11 +197,13 @@ def verify_email(token: Annotated[str, Query(...)], db: Session = Depends(get_db
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str | None = payload.get("sub")
         if email is None:
+            logging.error("Token payload does not contain 'sub'")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid token",
             )
     except JWTError:
+        logging.error("Invalid token error during email verification")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid token",
@@ -201,16 +211,19 @@ def verify_email(token: Annotated[str, Query(...)], db: Session = Depends(get_db
 
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
+        logging.error(f"User not found for email: {email}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
 
     if user.is_email_verified:
+        logging.info(f"Email already verified for user: {email}")
         return {"message": "Email already verified"}
 
     user.is_email_verified = True
     db.commit()
+    logging.info(f"✅ Email successfully verified for user: {email}")
 
     return {"message": "Email successfully verified"}
 
@@ -224,6 +237,7 @@ def delete_expired_users(db: Session):
     ).all()
 
     for user in expired_users:
+        logging.info(f"Deleting expired unverified user: {user.username}")
         db.delete(user)
     db.commit()
 
@@ -231,10 +245,12 @@ def delete_expired_users(db: Session):
 def start_cleanup_scheduler():
 
     def cleanup_job():
+        logging.info("Running cleanup job to delete expired unverified users")
         db = next(get_db())
         try:
             delete_expired_users(db)
         finally:
+            logging.info("Cleanup job finished")
             db.close()
 
     scheduler.add_job(
@@ -254,6 +270,7 @@ def login(
 
     user = get_user_by_username(db, form_data.username)
     if not user:
+        logging.error(f"Login failed: User '{form_data.username}' not found")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -261,6 +278,7 @@ def login(
         )
 
     if not verify_password(form_data.password, user.password_hash):
+        logging.error(f"Login failed: Incorrect password for user '{form_data.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -268,6 +286,7 @@ def login(
         )
 
     if not user.is_email_verified:
+        logging.error(f"Login failed: Email not verified for user '{form_data.username}'")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Email not verified",
@@ -287,3 +306,31 @@ async def read_current_user(current_user: models.User = Depends(get_current_user
         role=current_user.role,
         email=current_user.email,
     )
+
+
+def promote_user(username: str, db: Session):
+    user = get_user_by_username(db, username)
+    if not user:
+        logging.error(f"User '{username}' not found for promotion to RESEARCHER")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    user.role = models.UserRole.RESEARCHER
+    logging.info(f"User '{username}' promoted to RESEARCHER")
+    db.commit()
+
+
+def make_moderator(username: str, db: Session):
+    user = get_user_by_username(db, username)
+    if not user:
+        logging.error(f"User '{username}' not found for promotion to MODERATOR")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    user.role = models.UserRole.MODERATOR
+    logging.info(f"User '{username}' promoted to MODERATOR")
+    db.commit()
