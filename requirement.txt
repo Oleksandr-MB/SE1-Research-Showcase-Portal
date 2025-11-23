@@ -5,7 +5,11 @@ uvicorn
 sqlalchemy
 psycopg2-binary
 pydantic
+python-multipart
+python-dotenv
+apscheduler
 passlib[argon2]
 python-multipart
 pydantic[email]
 argon2_cffi
+PyYAML

@@ -11,7 +11,8 @@ from sqlalchemy import (
     String,
     Table,
     Text,
-    Column
+    Column,
+    MetaData,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -66,7 +67,7 @@ class User(TimestampMixin, Base):
     password_hash: Mapped[str] = mapped_column(nullable=False)
     password_salt: Mapped[str] = mapped_column(String(64), nullable=False)
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole, name="user_role"),
+        Enum(UserRole, name="user_role", native_enum=False),
         default=UserRole.USER,
         nullable=False,
     )
@@ -229,7 +230,7 @@ class Report(TimestampMixin, Base):
     target_id: Mapped[int] = mapped_column(Integer, nullable=False)
 
     status: Mapped[ReportStatus] = mapped_column(
-        Enum(ReportStatus, name="report_status"),
+        Enum(ReportStatus, name="report_status", native_enum=False),
         default=ReportStatus.PENDING,
         nullable=False,
     )

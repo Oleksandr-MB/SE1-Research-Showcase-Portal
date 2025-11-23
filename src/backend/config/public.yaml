@@ -1,0 +1,21 @@
+email_cfg:
+  link_base: http://localhost:8000/users/verify-email?token=
+
+db_cfg:
+  base: postgresql+psycopg2
+  user: postgres
+  host: localhost
+  password: admin
+  port: 5432
+  database: research_showcase
+
+crypto_cfg:
+  key: guys-this-is-secure-i-swear
+  algorithm: HS256
+
+token_cfg:
+  access_token_expire_minutes: 60
+  email_token_expire_minutes: 30
+
+scheduler_cfg:
+  delete_expired_users_interval_minutes: 360
