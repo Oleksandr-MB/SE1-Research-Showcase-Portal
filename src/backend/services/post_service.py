@@ -255,7 +255,7 @@ def delete_research_post(
         logging.error(f"Post with ID {post_id} not found for deletion")
         raise HTTPException(status_code=404, detail="Post not found")
 
-    if db_post.poster_id != current_user.id and current_user.role != models.UserRole.ADMIN:
+    if db_post.poster_id != current_user.id and current_user.role != models.UserRole.MODERATOR:
         logging.error(
             f"User {current_user.id} not authorized to delete post with ID {post_id}")
         raise HTTPException(
