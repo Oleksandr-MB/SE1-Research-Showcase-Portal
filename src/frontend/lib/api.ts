@@ -13,7 +13,26 @@ export type PostSummary = {
   downvotes?: number;
 };
 
-// Populate with some mock data for display
+export type UserRole = "user" | "researcher" | "moderator";
+
+export type UserRead = {
+  id: number;
+  username: string;
+  role: UserRole;
+  email: string;
+  created_at: string;
+};
+
+export type RegisterPayload = {
+  username: string;
+  email: string;
+  password: string;
+};
+
+export type TokenResponse = {
+  access_token: string;
+  token_type: string;
+};
 
 async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
   const sanitizedPath = path.startsWith("http")
@@ -38,6 +57,37 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
 
   return response.json() as Promise<T>;
 }
+
+export async function registerUser(
+  payload: RegisterPayload,
+): Promise<UserRead> {
+  return fetchFromApi<UserRead>("/users/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function loginUser(
+  username: string,
+  password: string,
+): Promise<TokenResponse> {
+  const formData = new URLSearchParams();
+  formData.set("username", username);
+  formData.set("password", password);
+  formData.set("scope", "");
+  formData.set("client_id", "");
+  formData.set("client_secret", "");
+
+  return fetchFromApi<TokenResponse>("/users/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formData,
+  });
+}
+
+// Mock data for design showcase
 
 const mockTopPosts: PostSummary[] = [
   {

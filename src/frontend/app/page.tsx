@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTopPosts, type PostSummary } from "@/lib/api";
+import ProfileButton from "@/components/profile-button";
 
 type LatestUser = {
   id: number;
@@ -132,30 +133,7 @@ export default async function Home() {
               className="h-full w-full border-none bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400"
             />
           </label>
-          <Link
-            href="/me"
-            className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
-            aria-label="Go to your profile"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              className="h-5 w-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 20a8 8 0 0 1 16 0"
-              />
-            </svg>
-          </Link>
+          <ProfileButton />
         </header>
 
         <section className="flex flex-col gap-6 lg:flex-row lg:items-start">

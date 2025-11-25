@@ -1,4 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+// Mock data for design showcase
 
 const profile = {
   name: "Dr. Alex Warren",
@@ -58,6 +64,25 @@ const activity = [
 ];
 
 export default function PersonalLab() {
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    const token =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("rsp_token")
+        : null;
+    if (!token) {
+      router.replace("/login?next=/me");
+      return;
+    }
+    setIsAuthorized(true);
+  }, [router]);
+
+  if (!isAuthorized) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 px-4 pb-24 pt-12 sm:px-8">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10">
@@ -203,5 +228,3 @@ export default function PersonalLab() {
     </div>
   );
 }
-
-// I'll improve this later

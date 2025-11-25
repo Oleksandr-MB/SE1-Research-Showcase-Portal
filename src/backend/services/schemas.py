@@ -6,9 +6,10 @@ from src.database.models import UserRole
 
 class UserBase(BaseModel):
     username: str
-    created_at: datetime.datetime
 
-class UserCreate(UserBase):
+
+class UserCreate(BaseModel):
+    username: str
     password: str
     email: EmailStr
 
@@ -17,6 +18,7 @@ class UserRead(UserBase):
     id: int
     role: UserRole
     email: Optional[EmailStr] = None
+    created_at: datetime.datetime
 
     class Config:
         from_attributes = True
