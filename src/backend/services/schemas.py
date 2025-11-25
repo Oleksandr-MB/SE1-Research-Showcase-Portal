@@ -1,12 +1,12 @@
-
+import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr
-from src.backend.db.models import UserRole
+from src.database.models import UserRole
 
 
 class UserBase(BaseModel):
     username: str
-
+    created_at: datetime.datetime
 
 class UserCreate(UserBase):
     password: str
@@ -34,9 +34,10 @@ class TokenData(BaseModel):
 class PostBase(BaseModel):
     id: int
     title: str
-    content: str
+    body: str
     poster_id: int
     share_link: Optional[str] = None
+    created_at: datetime.datetime
 
 
 class PostCreate(PostBase):
@@ -54,5 +55,25 @@ class PostRead(PostBase):
     tags: Optional[list[str]] = None
     attachments: Optional[list[str]] = None
 
+    class Config:
+        from_attributes = True
+
+
+class CommentBase(BaseModel):
+    id: int
+    post_id: int
+    commenter_id: int
+    parent_comment_id: Optional[int] = None
+    body: str
+    created_at: datetime.datetime
+
+
+class CommentCreate(BaseModel):
+    body: str
+
+
+class CommentRead(CommentBase):
+    body: str
+    
     class Config:
         from_attributes = True

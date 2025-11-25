@@ -7,8 +7,8 @@ from fastapi import Depends, APIRouter, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
-from src.backend.db.db import get_db
-from src.backend.db import models
+from src.database.db import get_db
+from src.database import models
 from src.backend.services.schemas import PostCreate, PostRead
 from src.backend.services.user_service import get_current_user
 
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 def _escape(query: str) -> str:
-    MAX_LEN = 200
+    MAX_LEN = 128
     if query is None:
         return ""
 
@@ -55,7 +55,7 @@ def find_research_posts(
                 .filter(
                     or_(
                         models.Post.title.ilike(pattern, escape="\\"),
-                        models.Post.content.ilike(pattern, escape="\\"),
+                        models.Post.body.ilike(pattern, escape="\\"),
                         models.Post.abstract.ilike(pattern, escape="\\"),
                         models.Post.authors_text.ilike(pattern, escape="\\"),
                     )
@@ -77,7 +77,7 @@ def find_research_posts(
             db_posts = [
                 post for post in db_posts
                 if (query_lower in (post.title or "").lower())
-                or (query_lower in (post.content or "").lower())
+                or (query_lower in (post.body or "").lower())
                 or (query_lower in (post.abstract or "").lower())
                 or (query_lower in (post.authors_text or "").lower())
                 or any(
@@ -96,8 +96,9 @@ def find_research_posts(
             attachments=[
                 attachment.file_path for attachment in post.attachments],
             title=post.title,
-            content=post.content,
+            body=post.body,
             poster_id=post.poster_id,
+            created_at=post.created_at,
         )
         for post in db_posts
     ]
@@ -112,11 +113,12 @@ def create_research_post(
 
     db_post = models.Post(
         title=post.title,
-        content=post.content,
+        content=post.body,
         abstract=post.abstract,
         authors_text=post.authors_text,
         bibtex=post.bibtex,
         poster_id=current_user.id,
+        created_at=datetime.now(timezone.utc)
     )
     db.add(db_post)
     db.commit()
@@ -175,8 +177,9 @@ def create_research_post(
         attachments=[
             attachment.file_path for attachment in db_post.attachments],
         title=db_post.title,
-        content=db_post.content,
+        body=db_post.body,
         poster_id=db_post.poster_id,
+        created_at=db_post.created_at,
     )
 
 
@@ -193,7 +196,7 @@ def list_top_research_posts(
         .outerjoin(models.PostVote)
         .filter(models.Post.created_at >= time_threshold)
         .group_by(models.Post.id)
-        .order_by(func.count(models.PostVote.id).desc())
+        .order_by(func.sum(func.coalesce(models.PostVote.value, 0)).desc())
         .limit(n)
         .all()
     )
@@ -212,8 +215,9 @@ def list_top_research_posts(
             attachments=[
                 attachment.file_path for attachment in post.attachments],
             title=post.title,
-            content=post.content,
+            body=post.body,
             poster_id=post.poster_id,
+            created_at=post.created_at,
         )
         for post in db_posts
     ]
@@ -239,8 +243,9 @@ def get_research_post(
         attachments=[
             attachment.file_path for attachment in db_post.attachments],
         title=db_post.title,
-        content=db_post.content,
+        body=db_post.body,
         poster_id=db_post.poster_id,
+        created_at=db_post.created_at,
     )
 
 

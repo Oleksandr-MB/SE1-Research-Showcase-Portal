@@ -9,8 +9,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from src.backend.db.db import get_db
-from src.backend.db import models
+from src.database.db import get_db
+from src.database import models
 from src.backend.services.schemas import UserCreate, UserRead, Token, TokenData
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -149,6 +149,7 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
         role=models.UserRole.USER,
         email=user_in.email,
         is_email_verified=False,
+        created_at=datetime.now(timezone.utc),
     )
     db.add(db_user)
     db.commit()
@@ -161,6 +162,7 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
         username=db_user.username,
         role=db_user.role,
         email=db_user.email,
+        created_at=db_user.created_at,
     )
 
 
@@ -278,7 +280,8 @@ def login(
         )
 
     if not verify_password(form_data.password, user.password_hash):
-        logging.error(f"Login failed: Incorrect password for user '{form_data.username}'")
+        logging.error(
+            f"Login failed: Incorrect password for user '{form_data.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -286,7 +289,8 @@ def login(
         )
 
     if not user.is_email_verified:
-        logging.error(f"Login failed: Email not verified for user '{form_data.username}'")
+        logging.error(
+            f"Login failed: Email not verified for user '{form_data.username}'")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Email not verified",
@@ -305,13 +309,15 @@ async def read_current_user(current_user: models.User = Depends(get_current_user
         username=current_user.username,
         role=current_user.role,
         email=current_user.email,
+        created_at=current_user.created_at,
     )
 
 
 def promote_user(username: str, db: Session):
     user = get_user_by_username(db, username)
     if not user:
-        logging.error(f"User '{username}' not found for promotion to RESEARCHER")
+        logging.error(
+            f"User '{username}' not found for promotion to RESEARCHER")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
@@ -325,7 +331,8 @@ def promote_user(username: str, db: Session):
 def make_moderator(username: str, db: Session):
     user = get_user_by_username(db, username)
     if not user:
-        logging.error(f"User '{username}' not found for promotion to MODERATOR")
+        logging.error(
+            f"User '{username}' not found for promotion to MODERATOR")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
