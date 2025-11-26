@@ -2,6 +2,7 @@ import smtplib
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from typing import Annotated
+from threading import Lock
 
 from fastapi import Depends, HTTPException, status, APIRouter, Query
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -45,6 +46,18 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
 router = APIRouter()
 scheduler = BackgroundScheduler()
+_revoked_tokens: set[str] = set()
+_revoked_tokens_lock = Lock()
+
+
+def revoke_token(token: str) -> None:
+    with _revoked_tokens_lock:
+        _revoked_tokens.add(token)
+
+
+def is_token_revoked(token: str) -> bool:
+    with _revoked_tokens_lock:
+        return token in _revoked_tokens
 
 
 def _extract_argon_salt(hashed_password: str) -> str:
@@ -84,11 +97,21 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+    token_revoked_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token has been revoked",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
     user_lost_exception = HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Credentials valid but user not found",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    if is_token_revoked(token):
+        logging.warning("Attempt to use revoked token")
+        raise token_revoked_exception
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -299,6 +322,15 @@ def login(
 
     access_token = create_token(data={"sub": user.username})
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout(
+        token: str = Depends(oauth2_scheme),
+        current_user: models.User = Depends(get_current_user)):
+    revoke_token(token)
+    logging.info(f"User '{current_user.username}' logged out")
+    return {"message": "Successfully logged out"}
 
 
 @router.get("/me", response_model=UserRead)

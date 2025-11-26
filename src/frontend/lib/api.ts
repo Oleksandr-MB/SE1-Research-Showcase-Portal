@@ -87,6 +87,23 @@ export async function loginUser(
   });
 }
 
+export async function getCurrentUser(token: string): Promise<UserRead> {
+  return fetchFromApi<UserRead>("/users/me", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function logoutUser(token: string): Promise<void> {
+  await fetchFromApi("/users/logout", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 // Mock data for design showcase
 
 const mockTopPosts: PostSummary[] = [

@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { UserRead } from "@/lib/api";
+import { getCurrentUser } from "@/lib/api";
 
 // Mock data for design showcase
 
-const profile = {
+const fallbackProfile = {
   name: "Dr. Alex Warren",
   role: "Computational Neuroscience",
   institution: "Signal Intelligence Lab, SE1",
@@ -65,23 +67,71 @@ const activity = [
 
 export default function PersonalLab() {
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [user, setUser] = useState<UserRead | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem("rsp_token")
-        : null;
-    if (!token) {
-      router.replace("/login?next=/me");
-      return;
-    }
-    setIsAuthorized(true);
+    let isMounted = true;
+
+    const fetchProfile = async () => {
+      const token =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("rsp_token")
+          : null;
+
+      if (!token) {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        router.replace("/login?next=/me");
+        return;
+      }
+
+      try {
+        const currentUser = await getCurrentUser(token);
+        if (!isMounted) {
+          return;
+        }
+        setUser(currentUser);
+      } catch (error) {
+        console.error("Unable to load current user", error);
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("rsp_token");
+        }
+        router.replace("/login?next=/me");
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [router]);
 
-  if (!isAuthorized) {
-    return null;
+  if (isLoading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
+        Loading your lab...
+      </div>
+    );
   }
+
+  const formattedRole =
+    user.role.charAt(0).toUpperCase() + user.role.slice(1);
+  const joinedDate = new Date(user.created_at).toLocaleDateString();
+
+  const displayProfile = {
+    name: user.username || fallbackProfile.name,
+    role: formattedRole,
+    institution: `Member since ${joinedDate}`,
+    bio: `Reach me at ${user.email}`,
+    stats: fallbackProfile.stats,
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 pb-24 pt-12 sm:px-8">
@@ -92,12 +142,14 @@ export default function PersonalLab() {
               Personal lab
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-900">
-              {profile.name}
+              {displayProfile.name}
             </h1>
-            <p className="text-lg text-slate-600">{profile.role}</p>
-            <p className="mt-4 text-base text-slate-500">{profile.bio}</p>
+            <p className="text-lg text-slate-600">{displayProfile.role}</p>
+            <p className="mt-4 text-base text-slate-500">
+              {displayProfile.bio}
+            </p>
             <p className="mt-3 text-sm font-medium text-slate-500">
-              {profile.institution}
+              {displayProfile.institution}
             </p>
             <div className="mt-6 flex flex-wrap gap-4">
               <Link
@@ -112,6 +164,12 @@ export default function PersonalLab() {
               >
                 Update profile
               </Link>
+              <Link
+                href="/logout"
+                className="rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-900"
+              >
+                Sign out
+              </Link>
             </div>
           </div>
           <div className="rounded-2xl bg-slate-900 p-6 text-white">
@@ -119,7 +177,7 @@ export default function PersonalLab() {
               Snapshot
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              {profile.stats.map((stat) => (
+              {displayProfile.stats.map((stat) => (
                 <div key={stat.label}>
                   <p className="text-3xl font-semibold">{stat.value}</p>
                   <p className="text-sm text-white/70">{stat.label}</p>

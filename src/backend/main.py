@@ -10,7 +10,7 @@ FRONT_PORT = 3000
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"http://{HOST}:{FRONT_PORT}"],
+    allow_origins=[f"http://{HOST}:{FRONT_PORT}", f"http://localhost:{FRONT_PORT}"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
