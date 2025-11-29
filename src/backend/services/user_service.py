@@ -184,7 +184,6 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
         id=db_user.id,
         username=db_user.username,
         role=db_user.role,
-        email=db_user.email,
         created_at=db_user.created_at,
     )
 
@@ -340,8 +339,46 @@ async def read_current_user(current_user: models.User = Depends(get_current_user
         id=current_user.id,
         username=current_user.username,
         role=current_user.role,
-        email=current_user.email,
         created_at=current_user.created_at,
+    )
+
+
+@router.get("/count", response_model=int)
+async def get_user_count(
+    db: Session = Depends(get_db)
+):
+    return int(db.query(models.User).count())
+
+
+@router.get("/latest", response_model=list[UserRead])
+async def get_latest_users(
+    db: Session = Depends(get_db),
+    n: Annotated[int, Query(gt=0, le=50)] = 10,
+):
+    return db.query(models.User) \
+        .order_by(models.User.created_at.desc()) \
+        .limit(n).all()
+
+
+@router.get("/{username}", response_model=UserRead)
+async def get_user_profile(
+    username: str,
+    db: Session = Depends(get_db),
+):
+
+    user = get_user_by_username(db, username)
+    if not user:
+        logging.error(f"User '{username}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return UserRead(
+        id=user.id,
+        username=user.username,
+        role=user.role,
+        created_at=user.created_at,
     )
 
 
@@ -373,3 +410,49 @@ def make_moderator(username: str, db: Session):
     user.role = models.UserRole.MODERATOR
     logging.info(f"User '{username}' promoted to MODERATOR")
     db.commit()
+
+
+@router.get("/{username}/post_count", response_model=int)
+async def get_user_post_count(
+    username: str,
+    db: Session = Depends(get_db),
+):
+    user = get_user_by_username(db, username)
+    if not user:
+        logging.error(f"User '{username}' not found for post count retrieval")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return int(db.query(models.Post)
+               .filter(models.Post.poster_id == user.id)
+               .count())
+
+
+@router.get("/{username}/score", response_model=int)
+async def get_user_score(
+    username: str,
+    db: Session = Depends(get_db),
+):
+    user = get_user_by_username(db, username)
+    if not user:
+        logging.error(f"User '{username}' not found for score retrieval")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    post_score = db.query(models.PostVote) \
+        .join(models.Post, models.PostVote.post_id == models.Post.id) \
+        .filter(models.Post.poster_id == user.id) \
+        .with_entities(models.PostVote.value) \
+        .all()
+
+    comment_score = db.query(models.CommentVote) \
+        .join(models.Comment, models.CommentVote.comment_id == models.Comment.id) \
+        .filter(models.Comment.commenter_id == user.id) \
+        .with_entities(models.CommentVote.value) \
+        .all()
+
+    return sum(vote.value for vote in post_score) + sum(vote.value for vote in comment_score)

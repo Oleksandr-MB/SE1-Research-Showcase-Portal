@@ -17,7 +17,6 @@ class UserCreate(BaseModel):
 class UserRead(UserBase):
     id: int
     role: UserRole
-    email: Optional[EmailStr] = None
     created_at: datetime.datetime
 
     class Config:

@@ -34,6 +34,10 @@ export type TokenResponse = {
   token_type: string;
 };
 
+export type ApiMessage = {
+  message: string;
+};
+
 async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
   const sanitizedPath = path.startsWith("http")
     ? path
@@ -95,94 +99,66 @@ export async function getCurrentUser(token: string): Promise<UserRead> {
   });
 }
 
-export async function logoutUser(token: string): Promise<void> {
-  await fetchFromApi("/users/logout", {
-    method: "POST",
+export async function getUserByUsername(
+  token: string,
+  username: string,
+): Promise<UserRead> {
+  return fetchFromApi<UserRead>(`/users/${username}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 }
 
-// Mock data for design showcase
+export async function logoutUser(token: string): Promise<void> {
+  const sanitizedPath = `${API_BASE_URL}/users/logout`;
+  const response = await fetch(sanitizedPath, {
+    cache: "no-store",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-const mockTopPosts: PostSummary[] = [
-  {
-    id: 1,
-    title: "Collaborative Robotics for Disaster Response",
-    abstract:
-      "A swarm-robotics approach that coordinates heterogeneous drones and rovers for safer search-and-rescue missions.",
-    authors_text: "A. Rivera, L. Chen",
-    tags: ["robotics", "ai", "safety"],
-    poster_id: 9,
-    poster_username: "rivera",
-    created_at: new Date().toISOString(),
-    upvotes: 42,
-    downvotes: 1,
-  },
-  {
-    id: 2,
-    title: "Privacy-Preserving Genomics Pipelines",
-    abstract:
-      "We introduce a zero-knowledge proof system that lets medical teams collaborate on human-genome data without exposing PII.",
-    authors_text: "S. Kapoor, D. Yeung",
-    tags: ["privacy", "genomics"],
-    poster_id: 4,
-    poster_username: "skapoor",
-    created_at: new Date().toISOString(),
-    upvotes: 35,
-    downvotes: 0,
-  },
-  {
-    id: 3,
-    title: "Adaptive Flood Forecasting with Multi-Modal Sensors",
-    abstract:
-      "An interpretable transformer model for municipal teams that blends satellite, radar, and local sensor data for flood alerts.",
-    authors_text: "I. Okafor, H. Singh, Z. Park",
-    tags: ["climate", "ml"],
-    poster_id: 7,
-    poster_username: "okafor",
-    created_at: new Date().toISOString(),
-    upvotes: 27,
-    downvotes: 2,
-  },
-  {
-    id: 4,
-    title: "Quantum-Safe Voting Infrastructure",
-    abstract:
-      "A verifiable, privacy-preserving e-voting scheme that mixes zero-knowledge proofs with post-quantum cryptography to secure municipal elections.",
-    authors_text: "",
-    poster_id: 13,
-    poster_username: "zk-federal",
-    tags: ["security", "cryptography"],
-    created_at: new Date().toISOString(),
-    upvotes: 31,
-    downvotes: 3,
-  },
-  {
-    id: 5,
-    title: "Localized Weather Twins for Farming Co-ops",
-    abstract:
-      "Digital twins of microclimates that fuse drone imagery with soil telemetry for hyper-local irrigation planning in smallholder farms.",
-    authors_text: "M. Diaz, F. Ochieng",
-    poster_id: 16,
-    poster_username: "terraforge",
-    tags: ["agtech", "climate"],
-    created_at: new Date().toISOString(),
-    upvotes: 24,
-    downvotes: 1,
-  },
-];
+  if (!response.ok && response.status !== 401) {
+    const errorBody = await response.text();
+    throw new Error(
+      `API request failed (${response.status}): ${errorBody || response.statusText}`,
+    );
+  }
+}
 
-export async function getTopPosts(limit = 6): Promise<PostSummary[]> {
+export async function verifyEmailToken(token: string): Promise<ApiMessage> {
+  return fetchFromApi<ApiMessage>(`/users/verify-email?token=${encodeURIComponent(token)}`);
+}
+
+export async function getTopPosts(n = 5): Promise<PostSummary[]> {
   try {
-    const posts = await fetchFromApi<PostSummary[]>(`/posts/top?n=${limit}`);
-    if (!posts.length) {
-      return mockTopPosts.slice(0, limit);
-    }
+    const posts = await fetchFromApi<PostSummary[]>(`/posts/top?n=${n}`);
     return posts;
   } catch (error) {
-    console.warn("Falling back to mock data for top posts:", error);
-    return mockTopPosts.slice(0, limit);
+    console.warn("Failed to fetch top posts:", error);
+    return [];
+  }
+}
+
+export async function getLatestUsers(n = 10): Promise<UserRead[]> {
+  try {
+    const users = await fetchFromApi<UserRead[]>(`/users/latest?n=${n}`);
+    return users;
+  } catch (error) {
+    console.warn("Failed to fetch latest users:", error);
+    return [];
+  }
+}
+
+export async function getUserCount(): Promise<number> {
+  try {
+    const count = await fetchFromApi<number>(`/users/count`);
+    return count;
+  } catch (error) {
+    console.warn("Failed to fetch user count:", error);
+    return 0;
   }
 }

@@ -1,28 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base palette */
+  --COLOR_CYAN_CORNFLOWER_BLUE: rgb(29, 150, 205);
+  --COLOR_DARK_TURQUOISE: rgb(0, 211, 226);
+  --COLOR_DARK_TURQUOISE_TRANSPARENT: rgba(0, 211, 226, 0.16);
+  --COLOR_BUBBLES: rgb(227, 246, 245);
+  --COLOR_BRASS: rgb(171, 175, 71);
+  --COLOR_BLACK: rgb(10, 10, 10);
+  --COLOR_WHITE: rgb(245, 245, 245);
+
+  /* Semantic tokens */
+  --primary_accent: var(--COLOR_DARK_TURQUOISE);
+  --accent_hover: var(--COLOR_CYAN_CORNFLOWER_BLUE);
+  --titles: var(--COLOR_CYAN_CORNFLOWER_BLUE);
+  --normal_text: var(--COLOR_BLACK);
+  --inverse_text: var(--COLOR_WHITE);
+  --muted_text: color-mix(in srgb, var(--COLOR_BLACK) 65%, transparent);
+  --muted_text_soft: color-mix(in srgb, var(--COLOR_BLACK) 55%, transparent);
+  --placeholder_text: color-mix(in srgb, var(--COLOR_BLACK) 45%, transparent);
+  --page_background: var(--COLOR_WHITE);
+  --surface_primary: var(--COLOR_WHITE);
+  --surface_muted: var(--COLOR_BUBBLES);
+  --link_hover_on_white: var(--COLOR_BUBBLES);
+  --link_hover_on_color: var(--COLOR_CYAN_CORNFLOWER_BLUE);
+  --rating_text: var(--COLOR_BRASS);
+  --chip_border: color-mix(in srgb, var(--COLOR_CYAN_CORNFLOWER_BLUE) 35%, transparent);
+  --chip_background: color-mix(in srgb, var(--COLOR_BUBBLES) 75%, transparent);
+  --border_on_white: color-mix(in srgb, var(--COLOR_CYAN_CORNFLOWER_BLUE) 40%, transparent);
+  --border_on_surface_soft: color-mix(in srgb, var(--COLOR_CYAN_CORNFLOWER_BLUE) 25%, transparent);
+  --shadow_color: var(--COLOR_DARK_TURQUOISE_TRANSPARENT);
+  --ring_on_surface: var(--COLOR_DARK_TURQUOISE_TRANSPARENT);
+}
+
+.shadow-soft-xs {
+  box-shadow: 0 1px 3px var(--shadow_color);
+}
+
+.shadow-soft-sm {
+  box-shadow: 0 2px 6px var(--shadow_color);
+}
+
+.shadow-soft-md {
+  box-shadow: 0 3px 10px var(--shadow_color);
+}
+
+.hover\:shadow-soft-xs:hover {
+  box-shadow: 0 1px 3px var(--shadow_color);
+}
+
+.hover\:shadow-soft-sm:hover {
+  box-shadow: 0 2px 6px var(--shadow_color);
+}
+
+.hover\:shadow-soft-md:hover {
+  box-shadow: 0 3px 10px var(--shadow_color);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  min-height: 100vh;
+  background: var(--page_background);
+  color: var(--normal_text);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+a:hover.white {
+  color: var(--link_hover_on_white);
+}
+
+a:hover.color {
+  color: var(--link_hover_on_color);
 }
 
 details > summary::-webkit-details-marker {

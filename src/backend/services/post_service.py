@@ -269,3 +269,36 @@ def delete_research_post(
     db.delete(db_post)
     db.commit()
     logging.info(f"Post with ID {post_id} deleted successfully")
+
+
+@router.get("/my", response_model=list[PostRead])
+def get_my_research_posts(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[models.User, Depends(get_current_user)],
+) -> list[PostRead]:
+    db_posts = db.query(models.Post).filter(
+        models.Post.poster_id == current_user.id).all()
+
+    logging.info(
+        f"Retrieved {len(db_posts)} posts for user ID {current_user.id}")
+    
+    if not db_posts:
+        logging.info(f"No posts found for user ID {current_user.id}")
+        return []
+
+    return sorted([
+        PostRead(
+            id=post.id,
+            abstract=post.abstract,
+            authors_text=post.authors_text,
+            bibtex=post.bibtex,
+            tags=[tag.name for tag in post.tags],
+            attachments=[
+                attachment.file_path for attachment in post.attachments],
+            title=post.title,
+            body=post.body,
+            poster_id=post.poster_id,
+            created_at=post.created_at,
+        )
+        for post in db_posts
+    ], key=lambda x: x.created_at, reverse=True)

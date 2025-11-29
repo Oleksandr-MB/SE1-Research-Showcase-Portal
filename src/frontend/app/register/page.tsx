@@ -36,13 +36,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--surface_muted)] px-4 text-[var(--normal_text)]">
+      <div className="shadow-soft-md w-full max-w-md rounded-3xl border border-[var(--border_on_white)] bg-[var(--surface_primary)] p-8">
         <div className="mb-6 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary_accent)]">
             Join the portal
           </p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+          <h1 className="mt-2 text-2xl font-semibold text-[var(--titles)]">
             Create your account
           </h1>
         </div>
@@ -51,7 +51,7 @@ export default function RegisterPage() {
           <div className="space-y-2">
             <label
               htmlFor="username"
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-[var(--muted_text)]"
             >
               Username
             </label>
@@ -60,7 +60,7 @@ export default function RegisterPage() {
               name="username"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-transparent px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[color:rgba(0,211,226,0.1)]"
               placeholder="your-username"
               autoComplete="username"
               required
@@ -70,7 +70,7 @@ export default function RegisterPage() {
           <div className="space-y-2">
             <label
               htmlFor="email"
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-[var(--muted_text)]"
             >
               Email
             </label>
@@ -80,7 +80,7 @@ export default function RegisterPage() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-transparent px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[color:rgba(0,211,226,0.1)]"
               placeholder="user@example.com"
               autoComplete="email"
               required
@@ -90,7 +90,7 @@ export default function RegisterPage() {
           <div className="space-y-2">
             <label
               htmlFor="password"
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-[var(--muted_text)]"
             >
               Password
             </label>
@@ -100,7 +100,7 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-transparent px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[color:rgba(0,211,226,0.1)]"
               placeholder="••••••••"
               autoComplete="new-password"
               required
@@ -114,7 +114,7 @@ export default function RegisterPage() {
           )}
 
           {success && (
-            <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <p className="rounded-2xl bg-[var(--surface_muted)] px-4 py-3 text-sm text-[var(--primary_accent)]">
               {success}
             </p>
           )}
@@ -122,17 +122,17 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex w-full items-center justify-center rounded-2xl bg-[var(--primary_accent)] px-4 py-3 text-sm font-semibold text-[var(--inverse_text)] transition hover:bg-[var(--titles)] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isSubmitting ? "Creating account..." : "Create account"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-[var(--muted_text)]">
           Already registered?{" "}
           <Link
             href="/login"
-            className="font-semibold text-indigo-600 hover:text-indigo-500"
+            className="font-semibold text-[var(--primary_accent)] hover:text-[var(--titles)]"
           >
             Sign in
           </Link>

@@ -115,7 +115,7 @@ export default function PersonalLab() {
 
   if (isLoading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--surface_muted)] text-[var(--muted_text)]">
         Loading your lab...
       </div>
     );
@@ -128,59 +128,60 @@ export default function PersonalLab() {
   const displayProfile = {
     name: user.username || fallbackProfile.name,
     role: formattedRole,
-    institution: `Member since ${joinedDate}`,
-    bio: `Reach me at ${user.email}`,
+    membership: `Member since ${joinedDate}`,
     stats: fallbackProfile.stats,
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 pb-24 pt-12 sm:px-8">
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10">
-        <header className="grid gap-8 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm lg:grid-cols-[2fr_1fr]">
+    <div className="min-h-screen px-4 pb-24 pt-12 text-[var(--normal_text)] sm:px-8">
+      <main className="shadow-soft-md mx-auto flex w-full max-w-6xl flex-col gap-10 rounded-[40px] bg-[var(--surface_primary)] p-6 ring-1 ring-[var(--ring_on_surface)] sm:p-10">
+        <header className="shadow-soft-sm grid gap-8 rounded-3xl border border-[var(--border_on_white)] bg-[var(--surface_primary)] p-8 lg:grid-cols-[2fr_1fr]">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-indigo-600">
+            <p className="text-sm font-medium uppercase tracking-wide text-[var(--primary_accent)]">
               Personal lab
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900">
+            <h1 className="mt-2 text-3xl font-semibold text-[var(--titles)]">
               {displayProfile.name}
             </h1>
-            <p className="text-lg text-slate-600">{displayProfile.role}</p>
-            <p className="mt-4 text-base text-slate-500">
+            <p className="text-lg text-[var(--muted_text)]">
+              {displayProfile.role}
+            </p>
+            <p className="mt-4 text-base text-[var(--muted_text)]">
               {displayProfile.bio}
             </p>
-            <p className="mt-3 text-sm font-medium text-slate-500">
-              {displayProfile.institution}
+            <p className="mt-3 text-sm font-medium text-[var(--muted_text_soft)]">
+              {displayProfile.membership}
             </p>
             <div className="mt-6 flex flex-wrap gap-4">
               <Link
                 href="/posts/new"
-                className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white"
+                className="shadow-soft-xs rounded-full bg-[var(--primary_accent)] px-6 py-3 text-sm font-semibold text-[var(--inverse_text)] transition-colors hover:bg-[var(--titles)]"
               >
                 Draft new post
               </Link>
               <Link
                 href="/settings"
-                className="rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-900"
+                className="rounded-full border border-[var(--primary_accent)] px-6 py-3 text-sm font-semibold text-[var(--primary_accent)] transition-colors hover:border-[var(--titles)] hover:text-[var(--titles)]"
               >
                 Update profile
               </Link>
               <Link
                 href="/logout"
-                className="rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-900"
+                className="rounded-full border border-[var(--primary_accent)] px-6 py-3 text-sm font-semibold text-[var(--primary_accent)] transition-colors hover:border-[var(--titles)] hover:text-[var(--titles)]"
               >
                 Sign out
               </Link>
             </div>
           </div>
-          <div className="rounded-2xl bg-slate-900 p-6 text-white">
-            <p className="text-sm uppercase tracking-wide text-white/70">
+          <div className="shadow-soft-sm rounded-2xl bg-gradient-to-br from-[var(--COLOR_CYAN_CORNFLOWER_BLUE)] to-[var(--COLOR_DARK_TURQUOISE)] p-6 text-[var(--inverse_text)]">
+            <p className="text-sm uppercase tracking-wide text-white/75">
               Snapshot
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               {displayProfile.stats.map((stat) => (
                 <div key={stat.label}>
                   <p className="text-3xl font-semibold">{stat.value}</p>
-                  <p className="text-sm text-white/70">{stat.label}</p>
+                  <p className="text-sm text-white/80">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -188,14 +189,14 @@ export default function PersonalLab() {
         </header>
 
         <section className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="shadow-soft-sm space-y-5 rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-900">
-                Active submissions
+              <h2 className="text-xl font-semibold text-[var(--titles)]">
+                Post history
               </h2>
               <Link
                 href="/posts"
-                className="text-sm font-medium text-indigo-600"
+                className="color text-sm font-medium text-[var(--primary_accent)]"
               >
                 View all
               </Link>
@@ -204,20 +205,20 @@ export default function PersonalLab() {
               {activeProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="rounded-2xl border border-slate-100 p-4"
+                  className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-base font-semibold text-slate-900">
+                      <p className="text-base font-semibold text-[var(--normal_text)]">
                         {project.title}
                       </p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-[var(--muted_text)]">
                         {project.status} · Updated {project.updated}
                       </p>
                     </div>
                     <Link
                       href={`/posts/${project.id}`}
-                      className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+                      className="shadow-soft-xs rounded-full bg-[var(--primary_accent)] px-4 py-2 text-sm font-medium text-[var(--inverse_text)] transition-colors hover:bg-[var(--titles)]"
                     >
                       {project.action}
                     </Link>
@@ -227,12 +228,12 @@ export default function PersonalLab() {
             </div>
           </div>
 
-          <aside className="space-y-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <aside className="shadow-soft-sm space-y-6 rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-6">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">
+              <h3 className="text-lg font-semibold text-[var(--titles)]">
                 Reading queue
               </h3>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-[var(--muted_text)]">
                 Posts you starred for later review.
               </p>
             </div>
@@ -240,10 +241,14 @@ export default function PersonalLab() {
               {bookmarks.map((item) => (
                 <li
                   key={`bookmark-${item.id}`}
-                  className="rounded-2xl border border-slate-100 p-4"
+                  className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_muted)] p-4"
                 >
-                  <p className="font-semibold text-slate-900">{item.title}</p>
-                  <p className="text-sm text-slate-500">{item.authors}</p>
+                  <p className="font-semibold text-[var(--normal_text)]">
+                    {item.title}
+                  </p>
+                  <p className="text-sm text-[var(--muted_text)]">
+                    {item.authors}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -251,31 +256,35 @@ export default function PersonalLab() {
         </section>
 
         <section className="grid gap-8 lg:grid-cols-2">
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-900">
+          <div className="shadow-soft-sm rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-6">
+            <h3 className="text-lg font-semibold text-[var(--titles)]">
               Activity timeline
             </h3>
             <ul className="mt-4 space-y-4">
               {activity.map((item, index) => (
                 <li key={`activity-${index}`} className="space-y-1">
-                  <p className="text-sm text-slate-500">{item.timestamp}</p>
-                  <p className="text-base text-slate-800">{item.summary}</p>
+                  <p className="text-sm text-[var(--muted_text)]">
+                    {item.timestamp}
+                  </p>
+                  <p className="text-base text-[var(--normal_text)]">
+                    {item.summary}
+                  </p>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-900">
+          <div className="shadow-soft-sm rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-6">
+            <h3 className="text-lg font-semibold text-[var(--titles)]">
               Next actions
             </h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-600">
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">
+            <ul className="mt-4 space-y-3 text-sm text-[var(--muted_text)]">
+              <li className="rounded-2xl bg-[var(--surface_muted)] px-4 py-3">
                 Upload supplementary figures for Neuromorphic Agents draft.
               </li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">
+              <li className="rounded-2xl bg-[var(--surface_muted)] px-4 py-3">
                 Send reminder to Moderator Lane about scheduled review.
               </li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">
+              <li className="rounded-2xl bg-[var(--surface_muted)] px-4 py-3">
                 Curate five references tagged &ldquo;privacy&rdquo; for upcoming
                 panel.
               </li>
