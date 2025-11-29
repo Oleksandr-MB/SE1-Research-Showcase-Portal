@@ -1,5 +1,5 @@
 email_cfg:
-  link_base: http://localhost:8000/verify-email?token=
+  link_base: http://localhost:3000/verify-email?token=
 
 db_cfg:
   base: postgresql+psycopg2
