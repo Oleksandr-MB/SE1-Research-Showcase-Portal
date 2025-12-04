@@ -157,7 +157,7 @@ export default function PersonalLab() {
                 href="/posts/new"
                 className="shadow-soft-xs rounded-full bg-[var(--primary_accent)] px-6 py-3 text-sm font-semibold text-[var(--inverse_text)] transition-colors hover:bg-[var(--titles)]"
               >
-                Draft new post
+                Create new post
               </Link>
               <Link
                 href="/settings"

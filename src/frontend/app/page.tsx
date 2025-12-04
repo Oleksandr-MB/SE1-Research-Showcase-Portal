@@ -152,7 +152,7 @@ export default async function Home() {
                 >
                   <div>
                     <Link
-                      href={`/users/${user.username}`}
+                      href={`/${user.username}`}
                       className="white font-semibold text-[var(--inverse_text)] transition-colors"
                     >
                       {user.displayName

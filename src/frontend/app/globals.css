@@ -6,8 +6,8 @@
   --DarkRed: #610C04;
   --DarkRedTransparent: #610C04A9;
   --Iron: #484A4A;
-  --IronLight: #BEC4C4;
-  --IronTransparent: #484A4A25;
+  --IronLight: #E9EEEE;
+  --IronTransparent: #484A4A20;
   --Black: #000000;
   --White: #FFFFFF;
 
@@ -23,7 +23,7 @@
   --page_background: var(--White);
   --surface_primary: var(--White);
   --surface_secondary: var(--IronLight);
-  --surface_muted: var(--Iron);
+  --surface_muted: var(--IronLight);
   --icon_on_hover: var(--DarkRedTransparent);
   --link_hover_on_white: var(--Graphite);
   --link_hover_on_color: var(--White);

@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr
-from src.database.models import UserRole
+from pydantic import BaseModel, EmailStr, field_validator
+from src.database.models import UserRole, PostPhase
 
 
 class UserBase(BaseModel):
@@ -33,31 +33,42 @@ class TokenData(BaseModel):
 
 
 class PostBase(BaseModel):
-    id: int
     title: str
     body: str
-    poster_id: int
-    share_link: Optional[str] = None
-    created_at: datetime.datetime
+    abstract: Optional[str] = None
+    authors_text: str
+    bibtex: Optional[str] = None
+
+
+class AttachmentReference(BaseModel):
+    file_path: str
+    mime_type: Optional[str] = None
 
 
 class PostCreate(PostBase):
-    abstract: Optional[str] = None
-    authors_text: str
-    bibtex: Optional[str] = None
     tags: Optional[list[str]] = None
-    attachments: Optional[list[str]] = None
+    attachments: Optional[list[str | AttachmentReference]] = None
+    phase: PostPhase = PostPhase.DRAFT
 
 
 class PostRead(PostBase):
-    abstract: Optional[str] = None
-    authors_text: str
-    bibtex: Optional[str] = None
+    id: int
+    poster_id: int
+    created_at: datetime.datetime
     tags: Optional[list[str]] = None
     attachments: Optional[list[str]] = None
+    phase: PostPhase
+    upvotes: int = 0
+    downvotes: int = 0
 
     class Config:
         from_attributes = True
+
+
+class AttachmentUploadResponse(BaseModel):
+    file_path: str
+    mime_type: str
+    original_filename: str
 
 
 class CommentBase(BaseModel):
@@ -78,3 +89,36 @@ class CommentRead(CommentBase):
     
     class Config:
         from_attributes = True
+
+
+class CommentWrite(BaseModel):
+    body: str
+    parent_comment_id: Optional[int] = None
+
+
+class CommentThreadRead(BaseModel):
+    id: int
+    post_id: int
+    commenter_id: int
+    commenter_username: str
+    parent_comment_id: Optional[int] = None
+    body: str
+    created_at: datetime.datetime
+    upvotes: int = 0
+    downvotes: int = 0
+
+
+class VoteRequest(BaseModel):
+    value: int
+
+    @field_validator("value")
+    @classmethod
+    def validate_value(cls, v: int) -> int:
+        if v not in (-1, 0, 1):
+            raise ValueError("Vote value must be -1, 0, or 1")
+        return v
+
+
+class VoteResponse(BaseModel):
+    upvotes: int
+    downvotes: int

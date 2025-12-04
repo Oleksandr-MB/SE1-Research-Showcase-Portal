@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = "http://localhost:8000";
+
+export type PostPhase = "draft" | "published";
 
 export type PostSummary = {
   id: number;
@@ -11,6 +13,59 @@ export type PostSummary = {
   created_at: string;
   upvotes?: number;
   downvotes?: number;
+  phase: PostPhase;
+};
+
+export type PostRead = PostSummary & {
+  body: string;
+  attachments: string[];
+  bibtex?: string | null;
+  upvotes: number;
+  downvotes: number;
+};
+
+export type AttachmentDescriptor = {
+  file_path: string;
+  mime_type?: string;
+};
+
+export type AttachmentUploadResponse = {
+  file_path: string;
+  mime_type: string;
+  original_filename: string;
+};
+
+export type CreatePostPayload = {
+  title: string;
+  abstract: string;
+  authors_text: string;
+  body: string;
+  bibtex?: string;
+  tags?: string[];
+  phase?: PostPhase;
+  attachments?: AttachmentDescriptor[];
+};
+
+export type CommentThread = {
+  id: number;
+  post_id: number;
+  commenter_id: number;
+  commenter_username: string;
+  parent_comment_id: number | null;
+  body: string;
+  created_at: string;
+  upvotes: number;
+  downvotes: number;
+};
+
+export type CreateCommentPayload = {
+  body: string;
+  parent_comment_id?: number;
+};
+
+export type VoteResponse = {
+  upvotes: number;
+  downvotes: number;
 };
 
 export type UserRole = "user" | "researcher" | "moderator";
@@ -143,6 +198,19 @@ export async function getTopPosts(n = 5): Promise<PostSummary[]> {
   }
 }
 
+export async function createPost(
+  token: string,
+  payload: CreatePostPayload,
+): Promise<PostRead> {
+  return fetchFromApi<PostRead>("/posts/create", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function getLatestUsers(n = 10): Promise<UserRead[]> {
   try {
     const users = await fetchFromApi<UserRead[]>(`/users/latest?n=${n}`);
@@ -161,4 +229,93 @@ export async function getUserCount(): Promise<number> {
     console.warn("Failed to fetch user count:", error);
     return 0;
   }
+}
+
+export async function getPublicUserProfile(
+  username: string,
+): Promise<UserRead> {
+  return fetchFromApi<UserRead>(`/users/${encodeURIComponent(username)}`);
+}
+
+export async function getPublishedPostsByUsername(
+  username: string,
+): Promise<PostRead[]> {
+  return fetchFromApi<PostRead[]>(`/posts/by/${encodeURIComponent(username)}`);
+}
+
+export async function getPostById(postId: number): Promise<PostRead> {
+  return fetchFromApi<PostRead>(`/posts/${postId}`);
+}
+
+export async function getPostComments(postId: number): Promise<CommentThread[]> {
+  return fetchFromApi<CommentThread[]>(`/posts/${postId}/comments`);
+}
+
+export async function createComment(
+  token: string,
+  postId: number,
+  payload: CreateCommentPayload,
+): Promise<CommentThread> {
+  return fetchFromApi<CommentThread>(`/posts/${postId}/comments`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function voteOnPost(
+  token: string,
+  postId: number,
+  value: -1 | 0 | 1,
+): Promise<VoteResponse> {
+  return fetchFromApi<VoteResponse>(`/posts/${postId}/vote`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ value }),
+  });
+}
+
+export async function voteOnComment(
+  token: string,
+  postId: number,
+  commentId: number,
+  value: -1 | 0 | 1,
+): Promise<VoteResponse> {
+  return fetchFromApi<VoteResponse>(`/posts/${postId}/comments/${commentId}/vote`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ value }),
+  });
+}
+
+export async function uploadPostAttachment(
+  token: string,
+  file: File,
+): Promise<AttachmentUploadResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const endpoint = `${API_BASE_URL}/posts/attachments/upload`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(
+      `Attachment upload failed (${response.status}): ${errorBody || response.statusText}`,
+    );
+  }
+
+  return response.json() as Promise<AttachmentUploadResponse>;
 }

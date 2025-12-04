@@ -4,3 +4,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 src/backend/config/private.yaml
+src/backend/uploads/
