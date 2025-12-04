@@ -173,7 +173,7 @@ export default function PersonalLab() {
               </Link>
             </div>
           </div>
-          <div className="shadow-soft-sm rounded-2xl bg-gradient-to-br from-[var(--COLOR_CYAN_CORNFLOWER_BLUE)] to-[var(--COLOR_DARK_TURQUOISE)] p-6 text-[var(--inverse_text)]">
+          <div className="shadow-soft-sm rounded-2xl bg-gradient-to-br from-[var(--Graphite)] to-[var(--Iron)] p-6 text-[var(--inverse_text)]">
             <p className="text-sm uppercase tracking-wide text-white/75">
               Snapshot
             </p>

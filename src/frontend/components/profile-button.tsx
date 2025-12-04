@@ -18,7 +18,7 @@ export default function ProfileButton() {
     <button
       type="button"
       onClick={handleClick}
-      className="shadow-soft-xs flex h-12 w-12 items-center justify-center rounded-full border border-[var(--primary_accent)] bg-[var(--surface_primary)] text-[var(--primary_accent)] transition-colors hover:border-[var(--titles)] hover:bg-[var(--surface_muted)]"
+      className="shadow-soft-xs flex h-12 w-12 items-center justify-center rounded-full border border-[var(--primary_accent)] bg-[var(--surface_primary)] text-[var(--primary_accent)] transition-colors hover:border-[var(--titles)] hover:bg-[var(--DarkRed)] hover:text-white"
       aria-label="Go to your profile"
     >
       <svg

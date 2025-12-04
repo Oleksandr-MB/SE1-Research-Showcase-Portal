@@ -101,7 +101,7 @@ export default async function Home() {
         <header className="shadow-soft-sm flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-[var(--border_on_white)] bg-[var(--surface_primary)] p-4">
           <label
             htmlFor="global-search"
-            className="shadow-soft-xs flex min-w-[260px] flex-1 items-center gap-3 rounded-full border border-[var(--primary_accent)] bg-[var(--surface_primary)] px-5 py-3 text-sm"
+            className="shadow-soft-xs flex min-w-[260px] flex-1 items-center gap-3 rounded-full border border-[var(--surface_secondary)] bg-[var(--surface_primary)] px-5 py-3 text-sm"
           >
             <svg
               viewBox="0 0 24 24"
@@ -136,7 +136,7 @@ export default async function Home() {
               ))}
             </div>
           </div>
-          <aside className="shadow-soft-sm w-full max-w-xs self-start rounded-[32px] bg-gradient-to-b from-[var(--COLOR_CYAN_CORNFLOWER_BLUE)] to-[var(--COLOR_DARK_TURQUOISE)] p-5 text-[var(--inverse_text)] lg:ml-auto">
+          <aside className="shadow-soft-sm w-full max-w-xs self-start rounded-[32px] bg-gradient-to-b from-[var(--Graphite)] to-[var(--Iron)] p-5 text-[var(--inverse_text)] lg:ml-auto">
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-lg font-bold text-[var(--inverse_text)]">
