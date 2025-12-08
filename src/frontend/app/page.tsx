@@ -6,25 +6,21 @@ import { Badge } from "@/components/Badge";
 type LatestUser = {
   id: number;
   username: string;
-  displayName?: string;
   joined: string;
 };
 
-const latestUsers: LatestUser[] = await getLatestUsers(5).then((users) =>
+const formatLatestUsers = (
+  users: Awaited<ReturnType<typeof getLatestUsers>>,
+): LatestUser[] =>
   users.map((user) => ({
     id: user.id,
     username: user.username,
-    displayName: user.username.includes("_")
-      ? user.username.split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ")
-      : undefined,
     joined: new Date(user.created_at).toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
     }),
-  })));
-
-const totalUsers: number = await getUserCount();
+  }));
 
 const formatAuthor = (post: PostSummary) => {
   if (post.authors_text?.trim()) {
@@ -128,7 +124,12 @@ const PostCard = ({ post }: { post: PostSummary }) => (
 );
 
 export default async function Home() {
-  const posts = await getTopPosts();
+  const [posts, latestUsersRaw, totalUsers] = await Promise.all([
+    getTopPosts(),
+    getLatestUsers(),
+    getUserCount(),
+  ]);
+  const latestUsers = formatLatestUsers(latestUsersRaw);
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-[var(--page_background)] to-[var(--surface_muted)] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">

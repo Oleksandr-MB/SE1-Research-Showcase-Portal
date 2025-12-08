@@ -79,7 +79,6 @@ export type UserRead = {
   email: string;
   created_at: string;
 
-  // Optional profile fields – backend can gradually add these
   display_name?: string | null;
   bio?: string | null;
   affiliation?: string | null;
@@ -90,13 +89,11 @@ export type UserRead = {
   github?: string | null;
   linkedin?: string | null;
 
-  // Optional privacy flags
   is_profile_public?: boolean;
   is_orcid_public?: boolean;
   is_socials_public?: boolean;
   is_arxiv_public?: boolean;
 
-  // Optional verification flag (for later use)
   is_institution_verified?: boolean;
 };
 
@@ -204,8 +201,6 @@ export async function getUserByUsername(
   });
 }
 
-// Update the current user's profile (bio, ORCID, socials, etc.)
-// Backend TODO: implement PATCH /users/me to accept ProfileUpdatePayload
 export async function updateProfile(
   token: string,
   payload: ProfileUpdatePayload,
@@ -266,7 +261,7 @@ export async function createPost(
   });
 }
 
-export async function getLatestUsers(n = 10): Promise<UserRead[]> {
+export async function getLatestUsers(n = 5): Promise<UserRead[]> {
   try {
     const users = await fetchFromApi<UserRead[]>(`/users/latest?n=${n}`);
     return users;
@@ -374,9 +369,6 @@ export async function uploadPostAttachment(
 
   return response.json() as Promise<AttachmentUploadResponse>;
 }
-
-
-// VVV
 
 export async function searchPosts(query?: string): Promise<PostRead[]> {
   const trimmed = query?.trim();
