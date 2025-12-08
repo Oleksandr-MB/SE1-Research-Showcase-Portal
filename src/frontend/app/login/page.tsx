@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { loginUser } from "@/lib/api";
+import { Button } from "@/components/Button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,90 +35,123 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--surface_muted)] px-4 text-[var(--normal_text)]">
-      <div className="shadow-soft-md w-full max-w-md rounded-3xl border border-[var(--border_on_white)] bg-[var(--surface_primary)] p-8">
-        <div className="mb-6 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary_accent)]">
-            Welcome back
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold text-[var(--titles)]">
-            Sign in to your lab
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--page_background)] via-[var(--surface_muted)] to-[var(--surface_primary)] px-4 py-8 animate-fade-in">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary_accent)] to-[var(--DarkRedLight)] mb-6">
+            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+          </div>
+          <h1 className="h1-apple text-[var(--titles)] mb-2">
+            Welcome Back
           </h1>
-          <p className="mt-2 text-sm text-[var(--muted_text)]">
-            Enter your credentials to continue to your personal lab
+          <p className="body-apple text-[var(--muted_text)]">
+            Sign in to your research lab
           </p>
         </div>
 
-        {verified && (
-          <p className="mb-5 rounded-2xl bg-[var(--surface_muted)] px-4 py-3 text-sm text-[var(--primary_accent)]">
-            Your email is verified. You can sign in now.
-          </p>
-        )}
-
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <label
-              htmlFor="username"
-              className="text-sm font-medium text-[var(--muted_text)]"
-            >
-              Username
-            </label>
-            <input
-              id="username"
-              name="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-transparent px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[color:rgba(0,211,226,0.1)]"
-              placeholder="your-username"
-              autoComplete="username"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-[var(--muted_text)]"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-transparent px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[color:rgba(0,211,226,0.1)]"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-            />
-          </div>
-
-          {error && (
-            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
-            </p>
+        {/* Form Card */}
+        <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-8 shadow-soft-md hover-lift">
+          {verified && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-6 animate-scale-in">
+              <div className="flex items-center gap-2 text-sm text-emerald-700">
+                <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Your email is verified. You can sign in now.
+              </div>
+            </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex w-full items-center justify-center rounded-2xl bg-[var(--primary_accent)] px-4 py-3 text-sm font-semibold text-[var(--inverse_text)] transition hover:bg-[var(--titles)] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isSubmitting ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <input
+                  id="username"
+                  name="username"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
+                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
+                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  placeholder="your-username"
+                  autoComplete="username"
+                  required
+                />
+                <div className="absolute right-3 top-3.5">
+                  <svg className="w-4 h-4 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-        <p className="mt-6 text-center text-sm text-[var(--muted_text)]">
-          Not registered yet?{" "}
-          <Link
-            href="/register"
-            className="font-semibold text-[var(--primary_accent)] hover:text-[var(--titles)]"
-          >
-            Register here
-          </Link>
-        </p>
+            <div>
+              <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
+                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
+                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                />
+                <div className="absolute right-3 top-3.5">
+                  <svg className="w-4 h-4 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 animate-scale-in">
+                <div className="flex items-center gap-2 text-sm text-red-700">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  {error}
+                </div>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+              className="w-full"
+            >
+              {isSubmitting ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+
+          {/* Register Link */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-[var(--muted_text)]">
+              Not registered yet?{" "}
+              <Link
+                href="/register"
+                className="link-apple font-medium"
+              >
+                Create an account
+              </Link>
+            </p>
+          </div>
+        </div>
+
       </div>
     </div>
   );

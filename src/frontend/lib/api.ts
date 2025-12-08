@@ -33,7 +33,9 @@ export type AttachmentUploadResponse = {
   file_path: string;
   mime_type: string;
   original_filename: string;
+  file_size: number;             
 };
+
 
 export type CreatePostPayload = {
   title: string;
@@ -76,12 +78,42 @@ export type UserRead = {
   role: UserRole;
   email: string;
   created_at: string;
+
+  // Optional profile fields – backend can gradually add these
+  display_name?: string | null;
+  bio?: string | null;
+  affiliation?: string | null;
+  orcid?: string | null;
+  arxiv?: string | null;
+  website?: string | null;
+  twitter?: string | null;
+  github?: string | null;
+  linkedin?: string | null;
+
+  // Optional privacy flags
+  is_profile_public?: boolean;
+  is_orcid_public?: boolean;
+  is_socials_public?: boolean;
+  is_arxiv_public?: boolean;
+
+  // Optional verification flag (for later use)
+  is_institution_verified?: boolean;
 };
 
-export type RegisterPayload = {
-  username: string;
-  email: string;
-  password: string;
+export type ProfileUpdatePayload = {
+  display_name?: string;
+  bio?: string;
+  affiliation?: string;
+  orcid?: string;
+  arxiv?: string;
+  website?: string;
+  twitter?: string;
+  github?: string;
+  linkedin?: string;
+  is_profile_public?: boolean;
+  is_orcid_public?: boolean;
+  is_socials_public?: boolean;
+  is_arxiv_public?: boolean;
 };
 
 export type TokenResponse = {
@@ -116,6 +148,13 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
 
   return response.json() as Promise<T>;
 }
+
+export type RegisterPayload = {
+  username: string;
+  email: string;
+  password: string;
+};
+
 
 export async function registerUser(
   payload: RegisterPayload,
@@ -162,6 +201,22 @@ export async function getUserByUsername(
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+// Update the current user's profile (bio, ORCID, socials, etc.)
+// Backend TODO: implement PATCH /users/me to accept ProfileUpdatePayload
+export async function updateProfile(
+  token: string,
+  payload: ProfileUpdatePayload,
+): Promise<UserRead> {
+  return fetchFromApi<UserRead>("/users/me", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
   });
 }
 
@@ -318,4 +373,16 @@ export async function uploadPostAttachment(
   }
 
   return response.json() as Promise<AttachmentUploadResponse>;
+}
+
+
+// VVV
+
+export async function searchPosts(query?: string): Promise<PostRead[]> {
+  const trimmed = query?.trim();
+  const path = trimmed && trimmed.length > 0
+    ? `/posts?query=${encodeURIComponent(trimmed)}`
+    : "/posts";
+
+  return fetchFromApi<PostRead[]>(path);
 }

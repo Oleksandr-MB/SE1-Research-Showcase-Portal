@@ -1,84 +1,257 @@
 @import "tailwindcss";
 
 :root {
-  /* Base palette */
-  --Graphite: #373737;
-  --DarkRed: #610C04;
-  --DarkRedTransparent: #610C04A9;
-  --Iron: #484A4A;
-  --IronLight: #E9EEEE;
-  --IronTransparent: #484A4A20;
+  color-scheme: light;
+
+
+  --Graphite: #1D1D1F;
+  --DarkRed: #C7352E;
+  --DarkRedTransparent: #C7352E40;
+  --Iron: #86868B;
+  --IronLight: #F5F5F7;
+  --IronTransparent: #86868B15;
   --Black: #000000;
   --White: #FFFFFF;
 
-  /* Semantic tokens */
+  --GraphiteLight: color-mix(in srgb, var(--Graphite) 90%, var(--White));
+  --DarkRedLight: color-mix(in srgb, var(--DarkRed) 90%, var(--White));
+  --IronLighter: color-mix(in srgb, var(--IronLight) 95%, var(--White));
+
+
   --primary_accent: var(--DarkRed);
   --accent_hover: var(--Graphite);
   --titles: var(--Graphite);
-  --normal_text: var(--Black);
+  --normal_text: var(--Graphite);
   --inverse_text: var(--White);
-  --muted_text: color-mix(in srgb, var(--Black) 65%, transparent);
-  --muted_text_soft: color-mix(in srgb, var(--Black) 55%, transparent);
-  --placeholder_text: color-mix(in srgb, var(--Black) 45%, transparent);
+  --muted_text: color-mix(in srgb, var(--Graphite) 60%, transparent);
+  --muted_text_soft: color-mix(in srgb, var(--Graphite) 40%, transparent);
+  --placeholder_text: color-mix(in srgb, var(--Graphite) 25%, transparent);
   --page_background: var(--White);
   --surface_primary: var(--White);
   --surface_secondary: var(--IronLight);
-  --surface_muted: var(--IronLight);
-  --icon_on_hover: var(--DarkRedTransparent);
+  --surface_muted: var(--IronLighter);
+  --icon_on_hover: var(--DarkRed);
   --link_hover_on_white: var(--Graphite);
   --link_hover_on_color: var(--White);
   --rating_text: var(--IronTransparent);
-  --chip_border: color-mix(in srgb, var(--Graphite) 35%, transparent);
-  --chip_background: color-mix(in srgb, var(--Iron) 75%, transparent);
-  --border_on_white: color-mix(in srgb, var(--Graphite) 40%, transparent);
-  --border_on_surface_soft: color-mix(in srgb, var(--Graphite) 25%, transparent);
-  --shadow_color: var(--IronTransparent);
-  --ring_on_surface: var(--DarkRedTransparent);
+  --chip_border: color-mix(in srgb, var(--Graphite) 15%, transparent);
+  --chip_background: color-mix(in srgb, var(--Iron) 10%, transparent);
+  --border_on_white: color-mix(in srgb, var(--Graphite) 12%, transparent);
+  --border_on_surface_soft: color-mix(in srgb, var(--Graphite) 8%, transparent);
+  --shadow_color: color-mix(in srgb, var(--Graphite) 8%, transparent);
+  --ring_on_surface: var(--DarkRed);
+
+  
+  --ease-apple: cubic-bezier(0.42, 0, 0.58, 1);
+  --ease-smooth: cubic-bezier(0.2, 0, 0, 1);
 }
 
+
+
 .shadow-soft-xs {
-  box-shadow: 0 1px 3px var(--shadow_color);
+  box-shadow: 0 0.5px 1px var(--shadow_color);
 }
 
 .shadow-soft-sm {
-  box-shadow: 0 2px 6px var(--shadow_color);
+  box-shadow: 0 1px 2px var(--shadow_color);
 }
 
 .shadow-soft-md {
-  box-shadow: 0 3px 10px var(--shadow_color);
+  box-shadow: 0 2px 8px var(--shadow_color), 0 0.5px 2px var(--shadow_color);
 }
 
-.hover\:shadow-soft-xs:hover {
-  box-shadow: 0 1px 3px var(--shadow_color);
+.shadow-soft-lg {
+  box-shadow:
+    0 4px 20px color-mix(in srgb, var(--shadow_color) 60%, transparent),
+    0 1px 4px var(--shadow_color);
 }
 
-.hover\:shadow-soft-sm:hover {
-  box-shadow: 0 2px 6px var(--shadow_color);
+
+.hover-lift {
+  transition:
+    transform 0.3s var(--ease-apple),
+    box-shadow 0.3s var(--ease-apple);
 }
 
-.hover\:shadow-soft-md:hover {
-  box-shadow: 0 3px 10px var(--shadow_color);
+.hover-lift:hover {
+  transform: translateY(-2px);
 }
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.hover-lift-sm {
+  transition:
+    transform 0.25s var(--ease-apple),
+    box-shadow 0.25s var(--ease-apple);
 }
+
+.hover-lift-sm:hover {
+  transform: translateY(-1px);
+}
+
+.gradient-subtle {
+  background: linear-gradient(
+    135deg,
+    var(--surface_primary) 0%,
+    var(--surface_muted) 100%
+  );
+}
+
+.gradient-accent {
+  background: linear-gradient(
+    135deg,
+    var(--primary_accent) 0%,
+    var(--DarkRedLight) 100%
+  );
+}
+
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s var(--ease-smooth) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s var(--ease-smooth) forwards;
+}
+
+
 
 body {
   min-height: 100vh;
   background: var(--page_background);
   color: var(--normal_text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-a:hover.white {
-  color: var(--link_hover_on_white);
+
+
+.h1-apple {
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
-a:hover.color {
-  color: var(--link_hover_on_color);
+.h2-apple {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
 }
+
+.h3-apple {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.body-apple {
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+
+.caption-apple {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--muted_text);
+}
+
+
+
+.link-apple {
+  color: var(--primary_accent);
+  text-decoration: none;
+  position: relative;
+  transition: color 0.2s var(--ease-apple);
+}
+
+.link-apple:hover {
+  color: var(--accent_hover);
+}
+
+.link-apple::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s var(--ease-apple);
+}
+
+.link-apple:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+
+
+button,
+input,
+textarea {
+  font-family: inherit;
+  transition: all 0.2s var(--ease-apple);
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ring_on_surface);
+  outline-offset: 2px;
+}
+
+
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface_muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border_on_white);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--Iron);
+}
+
+
 
 details > summary::-webkit-details-marker {
   display: none;
@@ -86,4 +259,40 @@ details > summary::-webkit-details-marker {
 
 details > summary::marker {
   content: "";
+}
+
+
+
+::selection {
+  background-color: color-mix(
+    in srgb,
+    var(--primary_accent) 20%,
+    transparent
+  );
+  color: var(--normal_text);
+}
+
+
+
+.page-transition {
+  animation: fade-in 0.6s var(--ease-smooth);
+}
+
+
+
+.divider-subtle {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border_on_white) 50%,
+    transparent 100%
+  );
+}
+
+
+
+.container-apple {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
 }

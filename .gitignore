@@ -1,7 +1,38 @@
-.venv
-.vscode
+# Python venv
+venv/
+.venv/
+
+# VSCode
+.vscode/
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Local config (secrets)
 src/backend/config/private.yaml
+*.env
+*.env.*
+
+# Uploads and media
 src/backend/uploads/
+
+# Node.js dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+.turbo/
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db

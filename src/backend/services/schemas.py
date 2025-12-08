@@ -14,13 +14,30 @@ class UserCreate(BaseModel):
     email: EmailStr
 
 
-class UserRead(UserBase):
+class UserRead(BaseModel):
     id: int
-    role: UserRole
+    username: str
+    role: str
     created_at: datetime.datetime
 
+    display_name: Optional[str] = None
+    bio: Optional[str] = None
+    affiliation: Optional[str] = None
+    orcid: Optional[str] = None
+    arxiv: Optional[str] = None
+    website: Optional[str] = None
+    twitter: Optional[str] = None
+    github: Optional[str] = None
+    linkedin: Optional[str] = None
+
+    is_profile_public: Optional[bool] = True
+    is_orcid_public: Optional[bool] = True
+    is_socials_public: Optional[bool] = True
+    is_arxiv_public: Optional[bool] = True
+
     class Config:
-        from_attributes = True
+        from_attributes = True  
+
 
 
 class Token(BaseModel):
@@ -122,3 +139,20 @@ class VoteRequest(BaseModel):
 class VoteResponse(BaseModel):
     upvotes: int
     downvotes: int
+
+
+class ProfileUpdate(BaseModel):
+    display_name: Optional[str] = None
+    bio: Optional[str] = None
+    affiliation: Optional[str] = None
+    orcid: Optional[str] = None
+    arxiv: Optional[str] = None
+    website: Optional[str] = None
+    twitter: Optional[str] = None
+    github: Optional[str] = None
+    linkedin: Optional[str] = None
+
+    is_profile_public: Optional[bool] = None
+    is_orcid_public: Optional[bool] = None
+    is_socials_public: Optional[bool] = None
+    is_arxiv_public: Optional[bool] = None

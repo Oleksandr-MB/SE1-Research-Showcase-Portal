@@ -16,6 +16,8 @@ from src.backend.services.schemas import UserCreate, UserRead, Token, TokenData
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
+from src.backend.services.schemas import UserCreate, UserRead, Token, TokenData, ProfileUpdate
+
 from src.backend.config.config_utils import read_config
 
 import logging
@@ -334,13 +336,7 @@ async def logout(
 
 @router.get("/me", response_model=UserRead)
 async def read_current_user(current_user: models.User = Depends(get_current_user)):
-
-    return UserRead(
-        id=current_user.id,
-        username=current_user.username,
-        role=current_user.role,
-        created_at=current_user.created_at,
-    )
+    return current_user
 
 
 @router.get("/count", response_model=int)
@@ -456,3 +452,28 @@ async def get_user_score(
         .all()
 
     return sum(vote.value for vote in post_score) + sum(vote.value for vote in comment_score)
+
+
+@router.patch("/me", response_model=UserRead)
+async def update_current_user_profile(
+    payload: ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    data = payload.dict(exclude_unset=True)
+
+    if not data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update",
+        )
+
+    for field, value in data.items():
+        if hasattr(current_user, field):
+            setattr(current_user, field, value)
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+
+    return current_user

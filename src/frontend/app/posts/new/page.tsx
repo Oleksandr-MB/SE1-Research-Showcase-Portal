@@ -8,6 +8,8 @@ import {
   type PostPhase,
   uploadPostAttachment,
   type AttachmentUploadResponse,
+  searchPosts,
+  getCurrentUser,
 } from "@/lib/api";
 import {
   useEffect,
@@ -16,6 +18,9 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { Badge } from "@/components/Badge";
 
 type FormState = {
   title: string;
@@ -37,10 +42,20 @@ const initialState: FormState = {
   phase: "draft",
 };
 
+const splitTags = (raw: string): string[] =>
+  raw
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
 export default function NewPostPage() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialState);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [isTagLoading, setIsTagLoading] = useState(false);
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
@@ -52,19 +67,37 @@ export default function NewPostPage() {
   const redirectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const stored =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem("rsp_token")
-        : null;
-
+    const stored = localStorage.getItem("rsp_token");
     if (!stored) {
-      setCheckingAuth(false);
       router.replace("/login?next=/posts/new");
       return;
     }
-
+    
     setToken(stored);
-    setCheckingAuth(false);
+    
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await getCurrentUser(stored);
+        setCurrentUser(user);
+        
+        if (user) {
+          const authorName = user.display_name || user.username;
+          const affiliation = user.affiliation ? `, ${user.affiliation}` : '';
+          const defaultAuthorsText = `${authorName}${affiliation}`;
+          
+          setForm(prev => ({
+            ...prev,
+            authorsText: defaultAuthorsText
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch current user", error);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+    
+    fetchCurrentUser();
   }, [router]);
 
   useEffect(() => {
@@ -76,22 +109,75 @@ export default function NewPostPage() {
   }, []);
 
   const handleInputChange = (
-    event: ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAttachmentChange = async (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    setAttachmentError(null);
-    const files = event.target.files;
-    if (!files || files.length === 0) {
+  const handleTagsChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setForm((prev) => ({ ...prev, tags: value }));
+
+    const parts = value.split(",");
+    const currentFragment = parts[parts.length - 1].trim();
+
+    if (!currentFragment || currentFragment.length < 2) {
+      setTagSuggestions([]);
+      setShowTagSuggestions(false);
       return;
     }
+
+    try {
+      setIsTagLoading(true);
+      const results = await searchPosts(currentFragment);
+      const allTags = new Set<string>();
+      const existingTags = new Set(splitTags(value).map((t) => t.toLowerCase()));
+
+      for (const post of results) {
+        (post.tags || []).forEach((tag) => {
+          if (
+            tag.toLowerCase().includes(currentFragment.toLowerCase()) &&
+            !existingTags.has(tag.toLowerCase())
+          ) {
+            allTags.add(tag);
+          }
+        });
+      }
+
+      const suggestions = Array.from(allTags).slice(0, 8);
+      setTagSuggestions(suggestions);
+      setShowTagSuggestions(suggestions.length > 0);
+    } catch (error) {
+      console.error("Error loading tag suggestions", error);
+      setTagSuggestions([]);
+      setShowTagSuggestions(false);
+    } finally {
+      setIsTagLoading(false);
+    }
+  };
+
+  const handleAddTagFromSuggestion = (tag: string) => {
+    const parts = form.tags.split(",");
+    if (parts.length === 0) {
+      setForm((prev) => ({ ...prev, tags: tag }));
+    } else {
+      parts[parts.length - 1] = ` ${tag}`;
+      const next = parts
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .filter((value, index, arr) => arr.indexOf(value) === index)
+        .join(", ");
+      setForm((prev) => ({ ...prev, tags: next }));
+    }
+    setTagSuggestions([]);
+    setShowTagSuggestions(false);
+  };
+
+  const handleAttachmentChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    setAttachmentError(null);
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
     if (!token) {
       setAttachmentError("You need to be signed in to upload attachments.");
       return;
@@ -108,11 +194,7 @@ export default function NewPostPage() {
       }
       setAttachments((prev) => [...prev, ...uploaded]);
     } catch (uploadError) {
-      if (uploadError instanceof Error) {
-        setAttachmentError(uploadError.message);
-      } else {
-        setAttachmentError("Failed to upload attachments.");
-      }
+      setAttachmentError(uploadError instanceof Error ? uploadError.message : "Failed to upload attachments.");
     } finally {
       setIsUploadingAttachments(false);
       event.target.value = "";
@@ -120,9 +202,7 @@ export default function NewPostPage() {
   };
 
   const handleRemoveAttachment = (filePath: string) => {
-    setAttachments((prev) =>
-      prev.filter((attachment) => attachment.file_path !== filePath),
-    );
+    setAttachments((prev) => prev.filter((attachment) => attachment.file_path !== filePath));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -145,35 +225,29 @@ export default function NewPostPage() {
     const trimmedAuthors = form.authorsText.trim();
     const trimmedBody = form.body.trim();
 
-    if (
-      !trimmedTitle ||
-      !trimmedAbstract ||
-      !trimmedAuthors ||
-      !trimmedBody
-    ) {
-      setError("Title, abstract, authors, and body are required.");
+    if (!trimmedTitle || !trimmedAbstract || !trimmedBody) {
+      setError("Title, abstract, and body are required.");
       return;
     }
 
-    const tags = form.tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
+    let finalAuthorsText = trimmedAuthors;
+    if (!trimmedAuthors && currentUser) {
+      const authorName = currentUser.display_name || currentUser.username;
+      const affiliation = currentUser.affiliation ? `, ${currentUser.affiliation}` : '';
+      finalAuthorsText = `${authorName}${affiliation}`;
+    }
 
-    const attachmentPayload =
-      attachments.length > 0
-        ? attachments.map(({ file_path, mime_type }) => ({
-            file_path,
-            mime_type,
-          }))
-        : undefined;
+    const tags = splitTags(form.tags);
+    const attachmentPayload = attachments.length > 0
+      ? attachments.map(({ file_path, mime_type }) => ({ file_path, mime_type }))
+      : undefined;
 
     const phaseToUse: PostPhase = submitPhase ?? "draft";
 
     const payload: CreatePostPayload = {
       title: trimmedTitle,
       abstract: trimmedAbstract,
-      authors_text: trimmedAuthors,
+      authors_text: finalAuthorsText,
       body: trimmedBody,
       bibtex: form.bibtex.trim() || undefined,
       tags: tags.length ? tags : undefined,
@@ -185,22 +259,14 @@ export default function NewPostPage() {
 
     try {
       await createPost(token, payload);
-      setSuccess(
-        phaseToUse === "published"
-          ? "Post published. Redirecting you to your lab..."
-          : "Draft saved. Redirecting you to your lab...",
-      );
+      setSuccess(phaseToUse === "published"
+        ? "Post published. Redirecting you to your lab..."
+        : "Draft saved. Redirecting you to your lab...");
       setForm(initialState);
       setAttachments([]);
-      redirectTimeout.current = setTimeout(() => {
-        router.push("/me");
-      }, 1400);
+      redirectTimeout.current = setTimeout(() => router.push("/me"), 1400);
     } catch (submissionError) {
-      if (submissionError instanceof Error) {
-        setError(submissionError.message);
-      } else {
-        setError("Something went wrong while creating the post.");
-      }
+      setError(submissionError instanceof Error ? submissionError.message : "Something went wrong while creating the post.");
     } finally {
       setIsSubmitting(false);
     }
@@ -208,216 +274,381 @@ export default function NewPostPage() {
 
   if (checkingAuth) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--surface_muted)] text-[var(--muted_text)]">
-        Checking your session...
-      </div>
-    );
-  }
-
-  if (!token) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--surface_muted)] text-[var(--muted_text)]">
-        Redirecting you to sign in...
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[var(--page_background)] to-[var(--surface_muted)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary_accent)] mx-auto mb-4"></div>
+          <p className="text-sm text-[var(--muted_text)]">Checking your session...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--surface_muted)] px-4 py-10 text-[var(--normal_text)] sm:px-6">
-      <main className="shadow-soft-md mx-auto max-w-4xl rounded-[32px] bg-[var(--surface_primary)] p-6 ring-1 ring-[var(--ring_on_surface)] sm:p-10">
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary_accent)]">
-              Research post
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-[var(--titles)]">
-              Draft a new post
-            </h1>
-            <p className="mt-2 text-sm text-[var(--muted_text)]">
-              You can keep exactly one draft at a time. Publish or delete it to
-              start another.
-            </p>
-          </div>
-          <Link
-            href="/me"
-            className="rounded-full border border-[var(--primary_accent)] px-5 py-2 text-sm font-semibold text-[var(--primary_accent)] transition-colors hover:border-[var(--titles)] hover:text-[var(--titles)]"
-          >
-            Back to my lab
-          </Link>
-        </header>
-
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {success}
-            </div>
-          )}
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--titles)]">
-              Title
-              <input
-                required
-                name="title"
-                value={form.title}
-                onChange={handleInputChange}
-                className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)]"
-                placeholder="Give your research a concise title"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--titles)]">
-              Authors
-              <input
-                required
-                name="authorsText"
-                value={form.authorsText}
-                onChange={handleInputChange}
-                className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)]"
-                placeholder="List the contributing authors"
-              />
-            </label>
-          </div>
-
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--titles)]">
-            Abstract
-            <textarea
-              required
-              name="abstract"
-              value={form.abstract}
-              onChange={handleInputChange}
-              rows={4}
-              className="rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)]"
-              placeholder="Summarize your contribution..."
-            />
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--titles)]">
-            Full body
-            <textarea
-              required
-              name="body"
-              value={form.body}
-              onChange={handleInputChange}
-              rows={10}
-              className="rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)]"
-              placeholder="Include the details, results, and discussion..."
-            />
-          </label>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--titles)]">
-              BibTeX reference (optional)
-              <textarea
-                name="bibtex"
-                value={form.bibtex}
-                onChange={handleInputChange}
-                rows={4}
-                className="rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)]"
-                placeholder="@article{...}"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--titles)]">
-              Tags (comma separated)
-              <input
-                name="tags"
-                value={form.tags}
-                onChange={handleInputChange}
-                className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-base text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)]"
-                placeholder="neuroscience, robotics, ai"
-              />
-            </label>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex flex-col gap-2 text-sm font-medium text-[var(--titles)]">
-              <label htmlFor="attachments-input">Attachments</label>
-              <input
-                id="attachments-input"
-                type="file"
-                multiple
-                onChange={handleAttachmentChange}
-                disabled={isUploadingAttachments}
-                className="rounded-2xl border border-dashed border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--muted_text)] file:mr-4 file:rounded-full file:border-0 file:bg-[var(--primary_accent)] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[var(--inverse_text)]"
-              />
-              <span className="text-xs font-normal text-[var(--muted_text)]">
-                Upload figures, supplementary data, or other artifacts. Uploaded
-                items will be linked to this draft when you save it.
-              </span>
-            </div>
-
-            {isUploadingAttachments && (
-              <p className="text-xs font-medium text-[var(--muted_text_soft)]">
-                Uploading attachments...
+    <div className="min-h-screen bg-gradient-to-b from-[var(--page_background)] to-[var(--surface_muted)] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <Badge variant="accent" className="mb-2">
+                Research Post
+              </Badge>
+              <h1 className="h1-apple text-[var(--titles)]">Draft New Post</h1>
+              <p className="body-apple text-[var(--muted_text)] mt-2 max-w-2xl">
+                Share your research with the community. You can save as draft or publish immediately.
               </p>
-            )}
-            {attachmentError && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
-                {attachmentError}
-              </div>
-            )}
-            {attachments.length > 0 && (
-              <ul className="space-y-2">
-                {attachments.map((attachment) => (
-                  <li
-                    key={attachment.file_path}
-                    className="flex items-center justify-between rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_muted)] px-4 py-3 text-sm"
-                  >
-                    <div className="max-w-[75%]">
-                      <p className="font-medium text-[var(--titles)]">
-                        {attachment.original_filename}
-                      </p>
-                      <p className="text-xs text-[var(--muted_text)]">
-                        {attachment.mime_type}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleRemoveAttachment(attachment.file_path)
-                      }
-                      className="rounded-full border border-[var(--primary_accent)] px-3 py-1 text-xs font-semibold text-[var(--primary_accent)] transition-colors hover:border-[var(--titles)] hover:text-[var(--titles)]"
-                    >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4">
-            <button
-              type="submit"
-              onClick={() => setSubmitPhase("published")}
-              disabled={isSubmitting || isUploadingAttachments}
-              className="shadow-soft-xs rounded-full bg-[var(--primary_accent)] px-6 py-3 text-sm font-semibold text-[var(--inverse_text)] transition-colors hover:bg-[var(--titles)] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              Publish
-            </button>
-
-            <button
-              type="submit"
-              onClick={() => setSubmitPhase("draft")}
-              disabled={isSubmitting || isUploadingAttachments}
-              className="rounded-full border border-[var(--border_on_surface_soft)] px-6 py-3 text-sm font-semibold text-[var(--titles)] transition-colors hover:border-[var(--titles)] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              Save as draft
-            </button>
-
-            <Link
-              href="/me"
-              className="rounded-full border border-[var(--border_on_surface_soft)] px-6 py-3 text-sm font-semibold text-[var(--titles)] transition-colors hover:border-[var(--titles)]"
-            >
-              Discard
+            </div>
+            <Link href="/me">
+              <Button variant="outline" size="md">
+                Back to My Space
+              </Button>
             </Link>
           </div>
-        </form>
-      </main>
+          <div className="divider-subtle"></div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Form */}
+          <div className="lg:col-span-2">
+            <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-6 sm:p-8 shadow-soft-sm">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {error && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                    <div className="flex items-center gap-2 text-sm text-red-700">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      {error}
+                    </div>
+                  </div>
+                )}
+
+                {success && (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 animate-scale-in">
+                    <div className="flex items-center gap-2 text-sm text-emerald-700">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      {success}
+                    </div>
+                  </div>
+                )}
+
+                {/* Title & Authors */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Input
+                    label="Title"
+                    name="title"
+                    value={form.title}
+                    onChange={handleInputChange}
+                    placeholder="Give your research a concise title"
+                    required
+                  />
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                      Author
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[var(--primary_accent)] to-[var(--DarkRedLight)] flex items-center justify-center">
+                        <span className="text-sm font-medium text-white">
+                          {currentUser?.display_name?.[0] || currentUser?.username?.[0] || "U"}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          name="authorsText"
+                          value={form.authorsText}
+                          onChange={handleInputChange}
+                          className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
+                            outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
+                            focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                          placeholder="List the contributing authors"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-[var(--muted_text_soft)] mt-1">
+                      Based on your profile. You can add co-authors separated by commas.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Abstract */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                    Abstract
+                  </label>
+                  <textarea
+                    required
+                    name="abstract"
+                    value={form.abstract}
+                    onChange={handleInputChange}
+                    rows={4}
+                    className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
+                      outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
+                      focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                    placeholder="Summarize your contribution..."
+                  />
+                </div>
+
+                {/* Full Body */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                    Full Body
+                  </label>
+                  <textarea
+                    required
+                    name="body"
+                    value={form.body}
+                    onChange={handleInputChange}
+                    rows={12}
+                    className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
+                      outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
+                      focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                    placeholder="Include the details, results, and discussion..."
+                  />
+                </div>
+
+                {/* BibTeX & Tags */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                      BibTeX Reference (Optional)
+                    </label>
+                    <textarea
+                      name="bibtex"
+                      value={form.bibtex}
+                      onChange={handleInputChange}
+                      rows={4}
+                      className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
+                        outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
+                        focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                      placeholder="@article{...}"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                      Tags (comma separated)
+                    </label>
+                    <div className="relative">
+                      <input
+                        name="tags"
+                        value={form.tags}
+                        onChange={handleTagsChange}
+                        onFocus={() => tagSuggestions.length > 0 && setShowTagSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowTagSuggestions(false), 150)}
+                        className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
+                          outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
+                          focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                        placeholder="neuroscience, robotics, ai"
+                      />
+                      
+                      {showTagSuggestions && (
+                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] shadow-soft-lg">
+                          {isTagLoading && tagSuggestions.length === 0 ? (
+                            <div className="px-4 py-3 text-xs text-[var(--muted_text)]">
+                              Searching tags…
+                            </div>
+                          ) : (
+                            <>
+                              {tagSuggestions.map((tag) => (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleAddTagFromSuggestion(tag);
+                                  }}
+                                  className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-[var(--normal_text)] hover:bg-[var(--surface_muted)] transition-colors"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <svg className="w-3 h-3 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                    {tag}
+                                  </span>
+                                  <span className="text-xs text-[var(--muted_text_soft)]">
+                                    Add
+                                  </span>
+                                </button>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Attachments - упрощенная версия */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                    Attachments (Optional)
+                  </label>
+                  <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-sm font-medium text-[var(--titles)]">Upload Files</p>
+                        <p className="text-xs text-[var(--muted_text_soft)] mt-1">
+                          Supports PDF, images, datasets (max 50MB each)
+                        </p>
+                      </div>
+                      <label className="inline-block">
+                        <span className="px-4 py-2.5 text-sm font-medium rounded-full bg-gradient-to-br from-[var(--surface_secondary)] to-transparent text-[var(--titles)] hover:bg-[var(--surface_muted)] transition-colors duration-200 cursor-pointer border border-[var(--border_on_surface_soft)]">
+                          Choose Files
+                        </span>
+                        <input
+                          type="file"
+                          multiple
+                          onChange={handleAttachmentChange}
+                          disabled={isUploadingAttachments}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {isUploadingAttachments && (
+                      <div className="flex items-center gap-2 text-sm text-[var(--muted_text)] p-3 rounded-lg bg-[var(--surface_muted)]">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--primary_accent)]"></div>
+                        Uploading attachments...
+                      </div>
+                    )}
+
+                    {attachmentError && (
+                      <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3">
+                        <p className="text-sm text-red-700">{attachmentError}</p>
+                      </div>
+                    )}
+
+                    {attachments.length > 0 && (
+                      <div className="mt-6 space-y-3">
+                        <h4 className="text-sm font-medium text-[var(--titles)]">Selected Files</h4>
+                        {attachments.map((attachment) => (
+                          <div
+                            key={attachment.file_path}
+                            className="group flex items-center justify-between p-3 rounded-xl border border-[var(--border_on_surface_soft)] hover:border-[var(--primary_accent)] bg-[var(--surface_muted)] hover:bg-[var(--surface_primary)] transition-all duration-200"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--surface_secondary)] to-transparent">
+                                <svg className="w-4 h-4 text-[var(--titles)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-[var(--titles)] truncate max-w-[200px]">
+                                  {attachment.original_filename}
+                                </p>
+                                <p className="text-xs text-[var(--muted_text_soft)]">
+                                  {attachment.mime_type} · {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveAttachment(attachment.file_path)}
+                              className="p-1.5 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Submit Buttons */}
+                <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-[var(--border_on_surface_soft)]">
+                  <Button
+                    type="submit"
+                    onClick={() => setSubmitPhase("published")}
+                    loading={isSubmitting}
+                    disabled={isSubmitting || isUploadingAttachments}
+                  >
+                    Publish Post
+                  </Button>
+                  
+                  <Button
+                    type="submit"
+                    onClick={() => setSubmitPhase("draft")}
+                    variant="outline"
+                    loading={isSubmitting}
+                    disabled={isSubmitting || isUploadingAttachments}
+                  >
+                    Save as Draft
+                  </Button>
+                  
+                  <Link href="/me">
+                    <Button variant="ghost">
+                      Discard
+                    </Button>
+                  </Link>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Sidebar - только Tips */}
+          <div className="space-y-6">
+            {/* Tips */}
+            <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-b from-[var(--surface_primary)] to-transparent p-6 shadow-soft-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-2 w-2 rounded-full bg-[var(--primary_accent)]"></div>
+                <h3 className="h3-apple text-[var(--titles)]">Tips</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--titles)]">Clear Title</p>
+                    <p className="text-xs text-[var(--muted_text)]">Make it specific and descriptive</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--titles)]">Tags</p>
+                    <p className="text-xs text-[var(--muted_text)]">Use relevant tags to increase discoverability</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--titles)]">Attachments</p>
+                    <p className="text-xs text-[var(--muted_text)]">Add supplementary materials and data</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--titles)]">Authors</p>
+                    <p className="text-xs text-[var(--muted_text)]">Your name is automatically added. Add co-authors separated by commas</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

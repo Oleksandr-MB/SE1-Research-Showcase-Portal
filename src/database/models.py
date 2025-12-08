@@ -15,6 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
+from sqlalchemy import Boolean
 
 class Base(DeclarativeBase):
     pass
@@ -74,9 +75,25 @@ class User(TimestampMixin, Base):
         nullable=False,
     )
     email: Mapped[str] = mapped_column(unique=True, index=True)
-    is_email_verified: Mapped[bool] = mapped_column(
-        default=False, nullable=False)
-    social_links: Mapped[str | None] = mapped_column()
+    is_email_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    social_links: Mapped[str | None] = mapped_column(nullable=True)
+ 
+    display_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    bio: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    affiliation: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    orcid: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    arxiv: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    website: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    twitter: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    github: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    linkedin: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    is_profile_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_orcid_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_socials_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_arxiv_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
     authored_posts: Mapped[list["Post"]] = relationship(
         back_populates="poster",
         cascade="all, delete-orphan",

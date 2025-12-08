@@ -102,12 +102,13 @@ export default async function UserProfilePage({ params }: PageProps) {
                   {post.tags?.length ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {post.tags.map((tag) => (
-                        <span
+                        <Link
                           key={`${post.id}-${tag}`}
-                          className="rounded-full border border-[var(--chip_border)] bg-[var(--chip_background)] px-3 py-1 text-xs uppercase tracking-wide text-[var(--muted_text)]"
+                          href={`/search?tag=${encodeURIComponent(tag)}`}
+                          className="rounded-full border border-[var(--chip_border)] bg-[var(--chip_background)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--muted_text)] hover:border-[var(--primary_accent)] hover:text-[var(--primary_accent)]"
                         >
-                          {tag}
-                        </span>
+                          #{tag}
+                        </Link>
                       ))}
                     </div>
                   ) : null}
