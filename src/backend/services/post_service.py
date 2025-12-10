@@ -1,4 +1,5 @@
 from typing import Annotated
+import ast
 import mimetypes
 import logging
 import uuid
@@ -14,6 +15,7 @@ from sqlalchemy import or_, func
 from src.database.db import get_db
 from src.database import models
 from src.backend.services.schemas import (
+    AttachmentReference,
     PostCreate,
     PostRead,
     AttachmentUploadResponse,
@@ -47,6 +49,92 @@ def _escape(query: str) -> str:
     return q
 
 
+def _normalize_attachment_path(raw_path: str | None) -> str | None:
+    if not raw_path:
+        return None
+
+    trimmed = raw_path.strip()
+    if not trimmed:
+        return None
+
+    if trimmed.startswith("{") and trimmed.endswith("}"):
+        candidate: dict[str, object] | None = None
+        try:
+            candidate = json.loads(trimmed)
+        except json.JSONDecodeError:
+            try:
+                candidate = ast.literal_eval(trimmed)
+            except (ValueError, SyntaxError):
+                candidate = None
+        if isinstance(candidate, dict):
+            nested_path = candidate.get("file_path")
+            if isinstance(nested_path, str):
+                normalized = nested_path.strip()
+                return normalized or None
+    return trimmed
+
+
+def _normalize_attachment_string(raw_value: str) -> tuple[str | None, str | None]:
+    trimmed = raw_value.strip()
+    if not trimmed:
+        return None, None
+
+    if trimmed.startswith("{") and trimmed.endswith("}"):
+        parsed_dict: dict[str, object] | None = None
+        try:
+            parsed_dict = json.loads(trimmed)
+        except json.JSONDecodeError:
+            try:
+                parsed_dict = ast.literal_eval(trimmed)
+            except (ValueError, SyntaxError):
+                parsed_dict = None
+        if isinstance(parsed_dict, dict):
+            nested_path = parsed_dict.get("file_path")
+            nested_mime = parsed_dict.get("mime_type")
+            normalized_path = (
+                nested_path.strip()
+                if isinstance(nested_path, str)
+                else None
+            )
+            normalized_mime = (
+                nested_mime.strip()
+                if isinstance(nested_mime, str)
+                else None
+            )
+            return normalized_path, normalized_mime
+
+    return trimmed, None
+
+
+def _extract_attachment_fields(
+    attachment_data: AttachmentReference | dict[str, object] | str,
+) -> tuple[str | None, str | None]:
+    if isinstance(attachment_data, AttachmentReference):
+        return (
+            _normalize_attachment_path(attachment_data.file_path),
+            attachment_data.mime_type,
+        )
+
+    if isinstance(attachment_data, dict):
+        raw_path = attachment_data.get("file_path")
+        raw_mime = attachment_data.get("mime_type")
+        normalized_path = (
+            _normalize_attachment_path(raw_path)
+            if isinstance(raw_path, str)
+            else None
+        )
+        normalized_mime = (
+            raw_mime.strip() if isinstance(raw_mime, str) and raw_mime.strip() else None
+        )
+        return normalized_path, normalized_mime
+
+    if isinstance(attachment_data, str):
+        raw_path, raw_mime = _normalize_attachment_string(attachment_data)
+        return _normalize_attachment_path(raw_path), raw_mime
+
+    return None, None
+
+
 def _to_post_read(post: models.Post) -> PostRead:
     upvotes = sum(1 for vote in post.post_votes if vote.value == 1)
     downvotes = sum(1 for vote in post.post_votes if vote.value == -1)
@@ -56,7 +144,12 @@ def _to_post_read(post: models.Post) -> PostRead:
         authors_text=post.authors_text,
         bibtex=post.bibtex,
         tags=[tag.name for tag in post.tags],
-        attachments=[attachment.file_path for attachment in post.attachments],
+        attachments=[
+            normalized_path
+            for attachment in post.attachments
+            for normalized_path in [_normalize_attachment_path(attachment.file_path)]
+            if normalized_path
+        ],
         title=post.title,
         body=post.body,
         poster_id=post.poster_id,
@@ -271,28 +364,29 @@ async def create_research_post(
 
     if post.attachments:
         for attachment_data in post.attachments:
-            if isinstance(attachment_data, str):
-                file_path = attachment_data
-                mime_type, _ = mimetypes.guess_type(file_path)
-            elif isinstance(attachment_data, dict):
-                file_path = attachment_data.get("file_path")
-                mime_type = attachment_data.get("mime_type")
-            else:
-                logging.warning(
-                    "Unsupported attachment format: %s", attachment_data)
-                continue
+            file_path, mime_type = _extract_attachment_fields(attachment_data)
 
             if not file_path:
                 logging.warning(
-                    "Attachment skipped because file_path is empty: %s", attachment_data)
+                    "Attachment skipped because file_path is empty: %s",
+                    attachment_data,
+                )
+                continue
+
+            sanitized_path = file_path.strip()
+            if not sanitized_path:
+                logging.warning(
+                    "Attachment skipped because file_path is blank after trimming: %s",
+                    attachment_data,
+                )
                 continue
 
             if not mime_type:
-                guessed_mime_type, _ = mimetypes.guess_type(file_path)
+                guessed_mime_type, _ = mimetypes.guess_type(sanitized_path)
                 mime_type = guessed_mime_type or "application/octet-stream"
 
             attachment = models.Attachment(
-                file_path=file_path,
+                file_path=sanitized_path,
                 mime_type=mime_type,
                 post_id=db_post.id
             )

@@ -19,10 +19,10 @@ export function Button({
   const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-300 ease-apple rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2';
   
   const variants = {
-    primary: 'bg-gradient-to-br from-[var(--primary_accent)] to-[var(--DarkRedLight)] text-[var(--inverse_text)] shadow-soft-sm hover:shadow-soft-md hover-lift-sm',
-    secondary: 'bg-[var(--surface_secondary)] text-[var(--titles)] border border-[var(--border_on_surface_soft)] hover:border-[var(--titles)]',
-    outline: 'bg-transparent text-[var(--titles)] border border-[var(--border_on_surface_soft)] hover:border-[var(--titles)]',
-    ghost: 'bg-transparent text-[var(--titles)] hover:bg-[var(--surface_muted)]',
+    primary: 'bg-[var(--DarkGray)] text-[var(--White)] border border-transparent hover:bg-[var(--Black)]',
+    secondary: 'bg-[#F7F7F7] text-[var(--DarkGray)] border border-[#E5E5E5] hover:border-[var(--DarkGray)]',
+    outline: 'bg-transparent text-[var(--DarkGray)] border border-[#E5E5E5] hover:border-[var(--DarkGray)]',
+    ghost: 'bg-transparent text-[var(--DarkGray)] hover:bg-[#F3F3F3]',
   };
 
   const sizes = {

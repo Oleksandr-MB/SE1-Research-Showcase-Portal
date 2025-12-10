@@ -3,69 +3,36 @@
 :root {
   color-scheme: light;
 
-
-  --Graphite: #1D1D1F;
-  --DarkRed: #C7352E;
-  --DarkRedTransparent: #C7352E40;
-  --Iron: #86868B;
-  --IronLight: #F5F5F7;
-  --IronTransparent: #86868B15;
-  --Black: #000000;
   --White: #FFFFFF;
+  --Red: #D40000;
+  --Gray: #5B5B5B;
+  --LightGray: #DFDFDF;
+  --DarkGray: #373737;
+  --Black: #000000;
+  --GrayTransparent: #5B5B5B40;
+  --DarkGrayTransparent: #37373740;
 
-  --GraphiteLight: color-mix(in srgb, var(--Graphite) 90%, var(--White));
-  --DarkRedLight: color-mix(in srgb, var(--DarkRed) 90%, var(--White));
-  --IronLighter: color-mix(in srgb, var(--IronLight) 95%, var(--White));
-
-
-  --primary_accent: var(--DarkRed);
-  --accent_hover: var(--Graphite);
-  --titles: var(--Graphite);
-  --normal_text: var(--Graphite);
-  --inverse_text: var(--White);
-  --muted_text: color-mix(in srgb, var(--Graphite) 60%, transparent);
-  --muted_text_soft: color-mix(in srgb, var(--Graphite) 40%, transparent);
-  --placeholder_text: color-mix(in srgb, var(--Graphite) 25%, transparent);
-  --page_background: var(--White);
-  --surface_primary: var(--White);
-  --surface_secondary: var(--IronLight);
-  --surface_muted: var(--IronLighter);
-  --icon_on_hover: var(--DarkRed);
-  --link_hover_on_white: var(--Graphite);
-  --link_hover_on_color: var(--White);
-  --rating_text: var(--IronTransparent);
-  --chip_border: color-mix(in srgb, var(--Graphite) 15%, transparent);
-  --chip_background: color-mix(in srgb, var(--Iron) 10%, transparent);
-  --border_on_white: color-mix(in srgb, var(--Graphite) 12%, transparent);
-  --border_on_surface_soft: color-mix(in srgb, var(--Graphite) 8%, transparent);
-  --shadow_color: color-mix(in srgb, var(--Graphite) 8%, transparent);
-  --ring_on_surface: var(--DarkRed);
-
-  
-  --ease-apple: cubic-bezier(0.42, 0, 0.58, 1);
+  --ease-apple: cubic-bezier(0.4, 0, 0.6, 1);
   --ease-smooth: cubic-bezier(0.2, 0, 0, 1);
 }
 
-
-
 .shadow-soft-xs {
-  box-shadow: 0 0.5px 1px var(--shadow_color);
+  box-shadow: 0 0.5px 1px var(--LightGray);
 }
 
 .shadow-soft-sm {
-  box-shadow: 0 1px 2px var(--shadow_color);
+  box-shadow: 0 1px 2px var(--LightGray);
 }
 
 .shadow-soft-md {
-  box-shadow: 0 2px 8px var(--shadow_color), 0 0.5px 2px var(--shadow_color);
+  box-shadow: 0 2px 8px var(--LightGray), 0 0.5px 2px var(--LightGray);
 }
 
 .shadow-soft-lg {
   box-shadow:
-    0 4px 20px color-mix(in srgb, var(--shadow_color) 60%, transparent),
-    0 1px 4px var(--shadow_color);
+    0 4px 20px color-mix(in srgb, var(--LightGray) 60%, transparent),
+    0 1px 4px var(--LightGray);
 }
-
 
 .hover-lift {
   transition:
@@ -90,19 +57,18 @@
 .gradient-subtle {
   background: linear-gradient(
     135deg,
-    var(--surface_primary) 0%,
-    var(--surface_muted) 100%
+    var(--White) 0%,
+    var(--LightGray) 100%
   );
 }
 
 .gradient-accent {
   background: linear-gradient(
     135deg,
-    var(--primary_accent) 0%,
-    var(--DarkRedLight) 100%
+    var(--DarkGray) 0%,
+    var(--Black) 100%
   );
 }
-
 
 @keyframes fade-in {
   from {
@@ -134,23 +100,19 @@
   animation: scale-in 0.3s var(--ease-smooth) forwards;
 }
 
-
-
 body {
   min-height: 100vh;
-  background: var(--page_background);
-  color: var(--normal_text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  background: var(--White);
+  color: var(--DarkGray);
+  font-family: var(--font-normal);
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-
-
 .h1-apple {
+  font-family: var(--font-heading);
   font-size: 2.5rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -158,6 +120,7 @@ body {
 }
 
 .h2-apple {
+  font-family: var(--font-heading);
   font-size: 2rem;
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -165,6 +128,7 @@ body {
 }
 
 .h3-apple {
+  font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -180,20 +144,18 @@ body {
 .caption-apple {
   font-size: 0.875rem;
   line-height: 1.4;
-  color: var(--muted_text);
+  color: var(--Gray);
 }
 
-
-
 .link-apple {
-  color: var(--primary_accent);
+  color: var(--DarkGray);
   text-decoration: none;
   position: relative;
   transition: color 0.2s var(--ease-apple);
 }
 
 .link-apple:hover {
-  color: var(--accent_hover);
+  color: var(--Red);
 }
 
 .link-apple::after {
@@ -214,8 +176,6 @@ body {
   transform-origin: left;
 }
 
-
-
 button,
 input,
 textarea {
@@ -226,11 +186,9 @@ textarea {
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--ring_on_surface);
+  outline: 2px solid var(--DarkGray);
   outline-offset: 2px;
 }
-
-
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -238,20 +196,18 @@ textarea:focus-visible {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--surface_muted);
+  background: var(--LightGray);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border_on_white);
+  background: var(--DarkGray);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--Iron);
 }
-
-
 
 details > summary::-webkit-details-marker {
   display: none;
@@ -261,24 +217,18 @@ details > summary::marker {
   content: "";
 }
 
-
-
 ::selection {
   background-color: color-mix(
     in srgb,
-    var(--primary_accent) 20%,
+    var(--DarkGray) 20%,
     transparent
   );
-  color: var(--normal_text);
+  color: var(--DarkGray);
 }
-
-
 
 .page-transition {
   animation: fade-in 0.6s var(--ease-smooth);
 }
-
-
 
 .divider-subtle {
   height: 1px;
@@ -289,8 +239,6 @@ details > summary::marker {
     transparent 100%
   );
 }
-
-
 
 .container-apple {
   padding-left: max(1rem, env(safe-area-inset-left));

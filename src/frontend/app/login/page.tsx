@@ -35,25 +35,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--page_background)] via-[var(--surface_muted)] to-[var(--surface_primary)] px-4 py-8 animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F5F5F5] via-[#F3F3F3] to-[var(--White)] px-4 py-8 animate-fade-in">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary_accent)] to-[var(--DarkRedLight)] mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--DarkGray)] to-[var(--DarkRedLight)] mb-6">
             <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
           </div>
-          <h1 className="h1-apple text-[var(--titles)] mb-2">
+          <h1 className="h1-apple text-[var(--DarkGray)] mb-2">
             Welcome Back
           </h1>
-          <p className="body-apple text-[var(--muted_text)]">
+          <p className="body-apple text-[var(--Gray)]">
             Sign in to your research lab
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-8 shadow-soft-md hover-lift">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-8 shadow-soft-md hover-lift">
           {verified && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-6 animate-scale-in">
               <div className="flex items-center gap-2 text-sm text-emerald-700">
@@ -67,7 +67,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+              <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                 Username
               </label>
               <div className="relative">
@@ -76,15 +76,15 @@ export default function LoginPage() {
                   name="username"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
-                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                   placeholder="your-username"
                   autoComplete="username"
                   required
                 />
                 <div className="absolute right-3 top-3.5">
-                  <svg className="w-4 h-4 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
@@ -92,7 +92,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+              <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                 Password
               </label>
               <div className="relative">
@@ -102,15 +102,15 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
-                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
                 />
                 <div className="absolute right-3 top-3.5">
-                  <svg className="w-4 h-4 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
@@ -140,7 +140,7 @@ export default function LoginPage() {
 
           {/* Register Link */}
           <div className="mt-8 text-center">
-            <p className="text-sm text-[var(--muted_text)]">
+            <p className="text-sm text-[var(--Gray)]">
               Not registered yet?{" "}
               <Link
                 href="/register"

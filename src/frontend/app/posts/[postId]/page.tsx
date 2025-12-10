@@ -1,28 +1,108 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { API_BASE_URL, getPostById, getPostComments } from "@/lib/api";
+import { getPostById, getPostComments } from "@/lib/api";
 import CommentsSection from "@/components/comments-section";
 import PostVoteActions from "@/components/post-vote-actions";
 import ShareCitation from "@/components/share-citation";
-import { Button } from "@/components/Button";
-import { Badge } from "@/components/Badge";
+import MathContent from "@/components/math-content";
+import AttachmentAutoDownloadButton from "@/components/attachment-auto-download-button";
+
+const ATTACHMENT_PREFIX = "/attachments/";
+
+const extractFileName = (value: string): string | null => {
+  const normalized = value.replace(/\\/g, "/").trim();
+  if (!normalized) {
+    return null;
+  }
+  const segments = normalized.split("/").filter(Boolean);
+  if (segments.length === 0) {
+    return null;
+  }
+  const leaf = segments[segments.length - 1];
+  const [withoutQuery] = leaf.split(/[?#]/);
+  return withoutQuery || null;
+};
+
+const normalizeAttachmentPath = (value: string | undefined): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.startsWith(ATTACHMENT_PREFIX)) {
+    return trimmed;
+  }
+
+  let candidatePath = trimmed;
+  try {
+    const parsed = new URL(trimmed);
+    candidatePath = parsed.pathname || trimmed;
+  } catch {
+    // Not a full URL, continue with the original value
+  }
+
+  const normalizedCandidate = candidatePath.replace(/\\/g, "/");
+  const lowerCandidate = normalizedCandidate.toLowerCase();
+  const markerIndex = lowerCandidate.lastIndexOf(ATTACHMENT_PREFIX);
+  if (markerIndex !== -1) {
+    const afterMarker = normalizedCandidate.slice(
+      markerIndex + ATTACHMENT_PREFIX.length,
+    );
+    const fromMarker = extractFileName(afterMarker);
+    if (fromMarker) {
+      return `${ATTACHMENT_PREFIX}${fromMarker}`;
+    }
+  }
+
+  const fileName = extractFileName(normalizedCandidate);
+  if (fileName) {
+    const sanitized = fileName.replace(/^attachments\//i, "");
+    return `${ATTACHMENT_PREFIX}${sanitized}`;
+  }
+
+  return null;
+};
+
+const normalizeAttachments = (raw: unknown): string[] => {
+  if (!raw) {
+    return [];
+  }
+
+  const rawList: unknown[] = Array.isArray(raw)
+    ? raw
+    : typeof raw === "object"
+      ? Object.values(raw as Record<string, unknown>)
+      : [];
+
+  const normalized = rawList
+    .map((item) => {
+      if (typeof item === "string") {
+        return normalizeAttachmentPath(item);
+      }
+      if (item && typeof item === "object") {
+        const maybeFilePath =
+          typeof (item as { file_path?: unknown }).file_path === "string"
+            ? (item as { file_path?: string }).file_path
+            : typeof (item as { path?: unknown }).path === "string"
+              ? (item as { path?: string }).path
+              : undefined;
+        return normalizeAttachmentPath(maybeFilePath);
+      }
+      return null;
+    })
+    .filter((value): value is string => Boolean(value));
+
+  return Array.from(new Set(normalized));
+};
 
 type PageProps = {
   params: Promise<{
     postId: string;
   }>;
-};
-
-const renderParagraphs = (text: string) => {
-  const blocks = text.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
-  if (!blocks.length) {
-    return <p className="body-apple text-[var(--normal_text)]">{text}</p>;
-  }
-  return blocks.map((block, idx) => (
-    <p key={`${block.slice(0, 16)}-${idx}`} className="body-apple leading-relaxed text-[var(--normal_text)]">
-      {block}
-    </p>
-  ));
 };
 
 export default async function PostDetailsPage({ params }: PageProps) {
@@ -36,195 +116,149 @@ export default async function PostDetailsPage({ params }: PageProps) {
   const post = await getPostById(numericPostId).catch(() => notFound());
   const comments = await getPostComments(numericPostId).catch(() => []);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[var(--page_background)] to-[var(--surface_muted)] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
-      <div className="max-w-6xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="mb-8">
-          <div className="flex items-center gap-2 text-sm">
-            <Link
-              href="/"
-              className="text-[var(--muted_text_soft)] hover:text-[var(--primary_accent)] transition-colors duration-200"
-            >
-              Home
-            </Link>
-            <span className="text-[var(--muted_text_soft)]">/</span>
-            <span className="text-[var(--titles)] font-medium">Post</span>
-          </div>
-        </nav>
+  const attachments = normalizeAttachments(post.attachments);
 
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Post Header */}
-            <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-6 sm:p-8 shadow-soft-sm">
-              <div className="mb-4">
-                <Badge variant="accent" className="mb-4">
-                  Research Showcase
-                </Badge>
-                <h1 className="h1-apple text-[var(--titles)] mb-4">
-                  {post.title}
-                </h1>
-                
-                <div className="flex flex-wrap items-center gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[var(--primary_accent)] to-[var(--DarkRedLight)] flex items-center justify-center">
-                      <span className="text-xs font-medium text-white">
-                        {(post.authors_text || "A")[0].toUpperCase()}
-                      </span>
+  return (
+    <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
+              <div className="flex flex-col gap-4">
+                <h1 className="h1-apple text-[var(--DarkGray)]">{post.title}</h1>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-lg font-semibold text-[var(--DarkGray)]">
+                      {(post.authors_text || "A")[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[var(--titles)]">
-                        {post.authors_text || "Anonymous"}
-                      </p>
-                      <p className="text-xs text-[var(--muted_text_soft)]">
-                        Posted {new Date(post.created_at).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
+                      <p className="text-sm font-medium text-[var(--DarkGray)]">{post.authors_text || "Anonymous"}</p>
+                      <p className="text-xs text-[var(--Gray)]">
+                        Published {new Date(post.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
                       </p>
                     </div>
                   </div>
+                  <div className="ml-auto">
+                    <PostVoteActions
+                      postId={numericPostId}
+                      initialUpvotes={post.upvotes ?? 0}
+                      initialDownvotes={post.downvotes ?? 0}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Tags */}
-              {post.tags?.length ? (
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {post.tags.map((tag) => (
-                    <Link
-                      key={`${post.id}-${tag}`}
-                      href={`/search?tag=${encodeURIComponent(tag)}`}
-                      className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--surface_muted)] hover:bg-[var(--surface_secondary)] transition-colors duration-200 group"
-                    >
-                      <span className="text-xs font-medium text-[var(--muted_text)] group-hover:text-[var(--primary_accent)]">
-                        #{tag}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-
-              {/* Voting Actions */}
-              <PostVoteActions
-                postId={numericPostId}
-                initialUpvotes={post.upvotes ?? 0}
-                initialDownvotes={post.downvotes ?? 0}
-              />
-            </div>
-
-            {/* Abstract */}
-            {post.abstract && (
-              <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-6 sm:p-8 shadow-soft-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-2 w-2 rounded-full bg-[var(--primary_accent)]"></div>
-                  <h2 className="h3-apple text-[var(--titles)]">Abstract</h2>
-                </div>
-                <p className="body-apple text-[var(--normal_text)] leading-relaxed">
-                  {post.abstract}
-                </p>
-              </div>
-            )}
-
-            {/* Main Content */}
-            <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-6 sm:p-8 shadow-soft-sm">
-              <article className="prose prose-sm sm:prose max-w-none space-y-4">
-                {renderParagraphs(post.body)}
-              </article>
-            </div>
-
-            {/* Attachments */}
-            {post.attachments?.length ? (
-              <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-6 sm:p-8 shadow-soft-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-2 w-2 rounded-full bg-[var(--primary_accent)]"></div>
-                  <h2 className="h3-apple text-[var(--titles)]">Attachments</h2>
-                </div>
-                <div className="grid gap-3">
-                  {post.attachments.map((filePath, index) => (
-                    <div
-                      key={`${filePath}-${index}`}
-                      className="group flex items-center justify-between p-4 rounded-xl border border-[var(--border_on_surface_soft)] hover:border-[var(--primary_accent)] bg-[var(--surface_muted)] hover:bg-[var(--surface_primary)] transition-all duration-200"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--surface_secondary)] to-transparent">
-                          <svg className="w-4 h-4 text-[var(--titles)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-[var(--titles)]">
-                            Attachment {index + 1}
-                          </p>
-                          <p className="text-xs text-[var(--muted_text_soft)]">
-                            {filePath.split('/').pop()}
-                          </p>
-                        </div>
-                      </div>
-                      <a
-                        href={`${API_BASE_URL}${filePath}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-4 py-2 text-sm font-medium text-[var(--primary_accent)] hover:text-[var(--titles)] transition-colors duration-200"
+                {post.tags?.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <Link
+                        key={`${post.id}-${tag}`}
+                        href={`/search?tag=${encodeURIComponent(tag)}`}
+                        className="inline-flex items-center rounded-full border border-[var(--LightGray)] px-3 py-1 text-xs font-medium text-[var(--Gray)] transition-colors duration-200 hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
                       >
-                        Download
-                      </a>
-                    </div>
-                  ))}
+                        #{tag}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--LightGray)] pb-4">
+                <div>
+                  <h2 className="h3-apple text-[var(--DarkGray)]">Abstract & Body</h2>
                 </div>
               </div>
-            ) : null}
+              <div className="mt-4 space-y-4">
+                {post.abstract ? (
+                  <MathContent
+                    content={post.abstract}
+                    paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
+                    className="space-y-3"
+                  />
+                ) : null}
+                <hr className="border-t border-[var(--LightGray)]" />
+                {post.body ? (
+                  <MathContent
+                    content={post.body}
+                    className="space-y-3"
+                    paragraphClassName="body-apple leading-relaxed text-[var(--DarkGray)]"
+                  />
+                ) : null}
+              </div>
+            </section>
 
-            {/* Share & Citation */}
             <ShareCitation postId={numericPostId} title={post.title} bibtex={post.bibtex} />
 
-            {/* Comments */}
-            <CommentsSection
-              postId={numericPostId}
-              initialComments={comments}
-            />
+            <CommentsSection postId={numericPostId} initialComments={comments} />
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Back to Feed */}
-            <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-b from-[var(--surface_primary)] to-transparent p-6 shadow-soft-sm">
+            <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
               <Link
                 href="/"
-                className="group flex items-center gap-2 text-sm font-medium text-[var(--titles)] hover:text-[var(--primary_accent)] transition-colors duration-200"
+                className="group flex items-center gap-2 text-sm font-medium text-[var(--DarkGray)] transition-colors duration-200 hover:text-[var(--Red)]"
               >
-                <svg className="w-4 h-4 transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
                 Back to Feed
               </Link>
             </div>
 
-            {/* Stats */}
-            <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-b from-[var(--surface_primary)] to-transparent p-6 shadow-soft-sm">
-              <h3 className="h3-apple mb-4 text-[var(--titles)]">Post Stats</h3>
-              <div className="space-y-3">
+            <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
+              <h3 className="h3-apple mb-4 text-[var(--DarkGray)]">Post Stats</h3>
+              <div className="space-y-3 text-sm text-[var(--Gray)]">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--muted_text)]">Views</span>
-                  <span className="text-sm font-medium text-[var(--titles)]">
-                    {(post.upvotes || 0) + (post.downvotes || 0)}
+                  <span>Net Votes</span>
+                  <span className="font-semibold text-[var(--DarkGray)]">
+                    {(post.upvotes ?? 0) - (post.downvotes ?? 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--muted_text)]">Comments</span>
-                  <span className="text-sm font-medium text-[var(--titles)]">
-                    {comments.length}
-                  </span>
+                  <span>Comments</span>
+                  <span className="font-semibold text-[var(--DarkGray)]">{comments.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--muted_text)]">Status</span>
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700">
-                    Published
+                  <span>Status</span>
+                  <span className="inline-flex items-center rounded-full border border-[var(--LightGray)] px-3 py-1 text-xs font-medium text-emerald-700">
+                    {post.phase ? post.phase.toUpperCase() : "PUBLISHED"}
                   </span>
                 </div>
               </div>
             </div>
+
+            {attachments.length > 0 ? (
+              <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--Gray)]">Resources</p>
+                    <h3 className="h3-apple text-[var(--DarkGray)]">Attachments</h3>
+                  </div>
+                  <span className="text-xs text-[var(--Gray)]">{attachments.length} file{attachments.length > 1 ? "s" : ""}</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {attachments.map((filePath, index) => {
+                    const fileName = filePath.split("/").pop() || `Attachment-${index + 1}`;
+                    return (
+                      <div
+                        key={`${filePath}-${index}`}
+                        className="flex items-center justify-between rounded-2xl border border-[var(--LightGray)] bg-[var(--LightGray)]/40 px-4 py-3 transition-colors duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--White)]"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-[var(--DarkGray)]">{fileName}</p>
+                          <p className="text-xs text-[var(--Gray)]">Attachment {index + 1}</p>
+                        </div>
+                        <AttachmentAutoDownloadButton
+                          filePath={filePath}
+                          fileName={fileName}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

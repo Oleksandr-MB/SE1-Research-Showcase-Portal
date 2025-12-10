@@ -53,19 +53,25 @@ export default function PostVoteActions({
   const buttonClasses = (active: boolean) =>
     `rounded-full px-4 py-2 text-sm font-semibold transition ${
       active
-        ? "bg-[var(--primary_accent)] text-[var(--inverse_text)]"
-        : "border border-[var(--border_on_surface_soft)] text-[var(--muted_text)] hover:border-[var(--primary_accent)] hover:text-[var(--primary_accent)]"
+        ? "bg-[var(--Red)] text-[var(--White)]"
+        : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
     }`;
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+    <div className="flex flex-wrap items-center gap-4">
       <button
         type="button"
         onClick={() => handleVote(1)}
         disabled={isVoting}
         className={buttonClasses(currentVote === 1)}
       >
-        👍 {counts.upvotes}
+      <svg className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 15l7-7 7 7"/>
+      </svg> {counts.upvotes}
       </button>
       <button
         type="button"
@@ -73,7 +79,13 @@ export default function PostVoteActions({
         disabled={isVoting}
         className={buttonClasses(currentVote === -1)}
       >
-        👎 {counts.downvotes}
+      <svg className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"/>
+      </svg> {counts.downvotes}
       </button>
       {error && <span className="text-sm text-red-600">{error}</span>}
     </div>

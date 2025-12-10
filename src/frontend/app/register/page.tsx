@@ -38,25 +38,25 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--page_background)] via-[var(--surface_muted)] to-[var(--surface_primary)] px-4 py-8 animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F5F5F5] via-[#F3F3F3] to-[var(--White)] px-4 py-8 animate-fade-in">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary_accent)] to-[var(--DarkRedLight)] mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--DarkGray)] to-[var(--DarkRedLight)] mb-6">
             <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
-          <h1 className="h1-apple text-[var(--titles)] mb-2">
-            Join Research Showcase
+          <h1 className="h1-apple text-[var(--DarkGray)] mb-2">
+            Join the portal
           </h1>
-          <p className="body-apple text-[var(--muted_text)]">
+          <p className="body-apple text-[var(--Gray)]">
             Start sharing and discovering research
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-8 shadow-soft-md hover-lift">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-8 shadow-soft-md hover-lift">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               label="Username"
@@ -83,7 +83,7 @@ export default function RegisterPage() {
             />
 
             <div>
-              <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+              <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                 Password
               </label>
               <div className="relative">
@@ -92,15 +92,15 @@ export default function RegisterPage() {
                   name="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
-                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                   placeholder="••••••••"
                   required
                   autoComplete="new-password"
                 />
                 <div className="absolute right-3 top-3.5">
-                  <svg className="w-4 h-4 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
@@ -108,11 +108,11 @@ export default function RegisterPage() {
               </div>
               <div className="mt-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className={`h-1 flex-1 rounded-full ${password.length > 0 ? 'bg-[#10B981]' : 'bg-[var(--border_on_surface_soft)]'}`}></div>
-                  <div className={`h-1 flex-1 rounded-full ${password.length > 4 ? 'bg-[#10B981]' : 'bg-[var(--border_on_surface_soft)]'}`}></div>
-                  <div className={`h-1 flex-1 rounded-full ${password.length > 8 ? 'bg-[#10B981]' : 'bg-[var(--border_on_surface_soft)]'}`}></div>
+                  <div className={`h-1 flex-1 rounded-full ${password.length > 0 ? 'bg-[#10B981]' : 'bg-[#E5E5E5]'}`}></div>
+                  <div className={`h-1 flex-1 rounded-full ${password.length > 4 ? 'bg-[#10B981]' : 'bg-[#E5E5E5]'}`}></div>
+                  <div className={`h-1 flex-1 rounded-full ${password.length > 8 ? 'bg-[#10B981]' : 'bg-[#E5E5E5]'}`}></div>
                 </div>
-                <p className="text-xs text-[var(--muted_text_soft)]">
+                <p className="text-xs text-[#8A8A8A]">
                   Use at least 8 characters with letters and numbers
                 </p>
               </div>
@@ -154,7 +154,7 @@ export default function RegisterPage() {
 
           {/* Login Link */}
           <div className="mt-8 text-center">
-            <p className="text-sm text-[var(--muted_text)]">
+            <p className="text-sm text-[var(--Gray)]">
               Already have an account?{" "}
               <Link
                 href="/login"
@@ -168,21 +168,21 @@ export default function RegisterPage() {
 
         {/* Benefits */}
         <div className="mt-8 grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-[var(--surface_muted)] to-transparent">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--surface_secondary)] to-transparent">
-              <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-[#F3F3F3] to-transparent">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-[#F7F7F7] to-transparent">
+              <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3" />
               </svg>
             </div>
-            <span className="text-xs font-medium text-[var(--titles)]">Share Research</span>
+            <span className="text-xs font-medium text-[var(--DarkGray)]">Share Research</span>
           </div>
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-[var(--surface_muted)] to-transparent">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--surface_secondary)] to-transparent">
-              <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-[#F3F3F3] to-transparent">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-[#F7F7F7] to-transparent">
+              <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <span className="text-xs font-medium text-[var(--titles)]">Join Community</span>
+            <span className="text-xs font-medium text-[var(--DarkGray)]">Join Community</span>
           </div>
         </div>
       </div>

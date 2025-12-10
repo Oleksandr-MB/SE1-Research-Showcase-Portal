@@ -10,6 +10,7 @@ import {
   type AttachmentUploadResponse,
   searchPosts,
   getCurrentUser,
+  type UserRead,
 } from "@/lib/api";
 import {
   useEffect,
@@ -55,7 +56,7 @@ export default function NewPostPage() {
   const [isTagLoading, setIsTagLoading] = useState(false);
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [token, setToken] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<UserRead | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
@@ -91,7 +92,20 @@ export default function NewPostPage() {
           }));
         }
       } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to fetch current user";
+        const unauthorized = message.includes("(401)");
+
+        if (unauthorized) {
+          localStorage.removeItem("rsp_token");
+          setToken(null);
+          setError("Your session has expired. Please sign in again.");
+          router.replace("/login?next=/posts/new");
+          return;
+        }
+
         console.error("Failed to fetch current user", error);
+        setError("Unable to verify your session. Please try again.");
       } finally {
         setCheckingAuth(false);
       }
@@ -274,18 +288,18 @@ export default function NewPostPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[var(--page_background)] to-[var(--surface_muted)]">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#F5F5F5] to-[#F3F3F3]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary_accent)] mx-auto mb-4"></div>
-          <p className="text-sm text-[var(--muted_text)]">Checking your session...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--DarkGray)] mx-auto mb-4"></div>
+          <p className="text-sm text-[var(--Gray)]">Checking your session...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[var(--page_background)] to-[var(--surface_muted)] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-[#F5F5F5] to-[#F3F3F3] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -293,8 +307,8 @@ export default function NewPostPage() {
               <Badge variant="accent" className="mb-2">
                 Research Post
               </Badge>
-              <h1 className="h1-apple text-[var(--titles)]">Draft New Post</h1>
-              <p className="body-apple text-[var(--muted_text)] mt-2 max-w-2xl">
+              <h1 className="h1-apple text-[var(--DarkGray)]">Draft New Post</h1>
+              <p className="body-apple text-[var(--Gray)] mt-2 max-w-2xl">
                 Share your research with the community. You can save as draft or publish immediately.
               </p>
             </div>
@@ -310,7 +324,7 @@ export default function NewPostPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-2">
-            <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-6 sm:p-8 shadow-soft-sm">
+            <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-6 sm:p-8 shadow-soft-sm">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {error && (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-4">
@@ -345,11 +359,11 @@ export default function NewPostPage() {
                     required
                   />
                   <div>
-                    <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                    <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                       Author
                     </label>
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[var(--primary_accent)] to-[var(--DarkRedLight)] flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[var(--DarkGray)] to-[var(--DarkRedLight)] flex items-center justify-center">
                         <span className="text-sm font-medium text-white">
                           {currentUser?.display_name?.[0] || currentUser?.username?.[0] || "U"}
                         </span>
@@ -359,15 +373,15 @@ export default function NewPostPage() {
                           name="authorsText"
                           value={form.authorsText}
                           onChange={handleInputChange}
-                          className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
-                            outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                            focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                          className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                            outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                            focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                           placeholder="List the contributing authors"
                           required
                         />
                       </div>
                     </div>
-                    <p className="text-xs text-[var(--muted_text_soft)] mt-1">
+                    <p className="text-xs text-[#8A8A8A] mt-1">
                       Based on your profile. You can add co-authors separated by commas.
                     </p>
                   </div>
@@ -375,7 +389,7 @@ export default function NewPostPage() {
 
                 {/* Abstract */}
                 <div>
-                  <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                  <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                     Abstract
                   </label>
                   <textarea
@@ -384,16 +398,16 @@ export default function NewPostPage() {
                     value={form.abstract}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
-                      outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                      focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                    className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                      outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                      focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                     placeholder="Summarize your contribution..."
                   />
                 </div>
 
                 {/* Full Body */}
                 <div>
-                  <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                  <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                     Full Body
                   </label>
                   <textarea
@@ -402,9 +416,9 @@ export default function NewPostPage() {
                     value={form.body}
                     onChange={handleInputChange}
                     rows={12}
-                    className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
-                      outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                      focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                    className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                      outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                      focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                     placeholder="Include the details, results, and discussion..."
                   />
                 </div>
@@ -412,7 +426,7 @@ export default function NewPostPage() {
                 {/* BibTeX & Tags */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                    <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                       BibTeX Reference (Optional)
                     </label>
                     <textarea
@@ -420,15 +434,15 @@ export default function NewPostPage() {
                       value={form.bibtex}
                       onChange={handleInputChange}
                       rows={4}
-                      className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
-                        outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                        focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                      className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                        outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                        focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                       placeholder="@article{...}"
                     />
                   </div>
 
                   <div className="relative">
-                    <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                    <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                       Tags (comma separated)
                     </label>
                     <div className="relative">
@@ -438,16 +452,16 @@ export default function NewPostPage() {
                         onChange={handleTagsChange}
                         onFocus={() => tagSuggestions.length > 0 && setShowTagSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowTagSuggestions(false), 150)}
-                        className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] 
-                          outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                          focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                        className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                          outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                          focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                         placeholder="neuroscience, robotics, ai"
                       />
                       
                       {showTagSuggestions && (
-                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] shadow-soft-lg">
+                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-[#E5E5E5] bg-[var(--White)] shadow-soft-lg">
                           {isTagLoading && tagSuggestions.length === 0 ? (
-                            <div className="px-4 py-3 text-xs text-[var(--muted_text)]">
+                            <div className="px-4 py-3 text-xs text-[var(--Gray)]">
                               Searching tags…
                             </div>
                           ) : (
@@ -460,15 +474,15 @@ export default function NewPostPage() {
                                     e.preventDefault();
                                     handleAddTagFromSuggestion(tag);
                                   }}
-                                  className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-[var(--normal_text)] hover:bg-[var(--surface_muted)] transition-colors"
+                                  className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-[var(--DarkGray)] hover:bg-[#F3F3F3] transition-colors"
                                 >
                                   <span className="flex items-center gap-2">
-                                    <svg className="w-3 h-3 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-3 h-3 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                     </svg>
                                     {tag}
                                   </span>
-                                  <span className="text-xs text-[var(--muted_text_soft)]">
+                                  <span className="text-xs text-[#8A8A8A]">
                                     Add
                                   </span>
                                 </button>
@@ -483,19 +497,19 @@ export default function NewPostPage() {
 
                 {/* Attachments - упрощенная версия */}
                 <div>
-                  <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                  <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                     Attachments (Optional)
                   </label>
-                  <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-6">
+                  <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm font-medium text-[var(--titles)]">Upload Files</p>
-                        <p className="text-xs text-[var(--muted_text_soft)] mt-1">
+                        <p className="text-sm font-medium text-[var(--DarkGray)]">Upload Files</p>
+                        <p className="text-xs text-[#8A8A8A] mt-1">
                           Supports PDF, images, datasets (max 50MB each)
                         </p>
                       </div>
                       <label className="inline-block">
-                        <span className="px-4 py-2.5 text-sm font-medium rounded-full bg-gradient-to-br from-[var(--surface_secondary)] to-transparent text-[var(--titles)] hover:bg-[var(--surface_muted)] transition-colors duration-200 cursor-pointer border border-[var(--border_on_surface_soft)]">
+                        <span className="px-4 py-2.5 text-sm font-medium rounded-full bg-gradient-to-br from-[#F7F7F7] to-transparent text-[var(--DarkGray)] hover:bg-[#F3F3F3] transition-colors duration-200 cursor-pointer border border-[#E5E5E5]">
                           Choose Files
                         </span>
                         <input
@@ -509,8 +523,8 @@ export default function NewPostPage() {
                     </div>
 
                     {isUploadingAttachments && (
-                      <div className="flex items-center gap-2 text-sm text-[var(--muted_text)] p-3 rounded-lg bg-[var(--surface_muted)]">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--primary_accent)]"></div>
+                      <div className="flex items-center gap-2 text-sm text-[var(--Gray)] p-3 rounded-lg bg-[#F3F3F3]">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--DarkGray)]"></div>
                         Uploading attachments...
                       </div>
                     )}
@@ -523,23 +537,23 @@ export default function NewPostPage() {
 
                     {attachments.length > 0 && (
                       <div className="mt-6 space-y-3">
-                        <h4 className="text-sm font-medium text-[var(--titles)]">Selected Files</h4>
+                        <h4 className="text-sm font-medium text-[var(--DarkGray)]">Selected Files</h4>
                         {attachments.map((attachment) => (
                           <div
                             key={attachment.file_path}
-                            className="group flex items-center justify-between p-3 rounded-xl border border-[var(--border_on_surface_soft)] hover:border-[var(--primary_accent)] bg-[var(--surface_muted)] hover:bg-[var(--surface_primary)] transition-all duration-200"
+                            className="group flex items-center justify-between p-3 rounded-xl border border-[#E5E5E5] hover:border-[var(--DarkGray)] bg-[#F3F3F3] hover:bg-[var(--White)] transition-all duration-200"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--surface_secondary)] to-transparent">
-                                <svg className="w-4 h-4 text-[var(--titles)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <div className="p-2 rounded-lg bg-gradient-to-br from-[#F7F7F7] to-transparent">
+                                <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-[var(--titles)] truncate max-w-[200px]">
+                                <p className="text-sm font-medium text-[var(--DarkGray)] truncate max-w-[200px]">
                                   {attachment.original_filename}
                                 </p>
-                                <p className="text-xs text-[var(--muted_text_soft)]">
+                                <p className="text-xs text-[#8A8A8A]">
                                   {attachment.mime_type} · {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
                                 </p>
                               </div>
@@ -561,7 +575,7 @@ export default function NewPostPage() {
                 </div>
 
                 {/* Submit Buttons */}
-                <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-[var(--border_on_surface_soft)]">
+                <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-[#E5E5E5]">
                   <Button
                     type="submit"
                     onClick={() => setSubmitPhase("published")}
@@ -594,54 +608,54 @@ export default function NewPostPage() {
           {/* Sidebar - только Tips */}
           <div className="space-y-6">
             {/* Tips */}
-            <div className="rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-b from-[var(--surface_primary)] to-transparent p-6 shadow-soft-sm">
+            <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-b from-[var(--White)] to-transparent p-6 shadow-soft-sm">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-2 w-2 rounded-full bg-[var(--primary_accent)]"></div>
-                <h3 className="h3-apple text-[var(--titles)]">Tips</h3>
+                <div className="h-2 w-2 rounded-full bg-[var(--DarkGray)]"></div>
+                <h3 className="h3-apple text-[var(--DarkGray)]">Tips</h3>
               </div>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[var(--titles)]">Clear Title</p>
-                    <p className="text-xs text-[var(--muted_text)]">Make it specific and descriptive</p>
+                    <p className="text-sm font-medium text-[var(--DarkGray)]">Clear Title</p>
+                    <p className="text-xs text-[var(--Gray)]">Make it specific and descriptive</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[var(--titles)]">Tags</p>
-                    <p className="text-xs text-[var(--muted_text)]">Use relevant tags to increase discoverability</p>
+                    <p className="text-sm font-medium text-[var(--DarkGray)]">Tags</p>
+                    <p className="text-xs text-[var(--Gray)]">Use relevant tags to increase discoverability</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[var(--titles)]">Attachments</p>
-                    <p className="text-xs text-[var(--muted_text)]">Add supplementary materials and data</p>
+                    <p className="text-sm font-medium text-[var(--DarkGray)]">Attachments</p>
+                    <p className="text-xs text-[var(--Gray)]">Add supplementary materials and data</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <svg className="w-4 h-4 text-[var(--primary_accent)]" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[var(--titles)]">Authors</p>
-                    <p className="text-xs text-[var(--muted_text)]">Your name is automatically added. Add co-authors separated by commas</p>
+                    <p className="text-sm font-medium text-[var(--DarkGray)]">Authors</p>
+                    <p className="text-xs text-[var(--Gray)]">Your name is automatically added. Add co-authors separated by commas</p>
                   </div>
                 </div>
               </div>

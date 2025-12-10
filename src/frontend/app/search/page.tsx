@@ -14,7 +14,7 @@ type SearchPageProps = {
 };
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
+  new Date(iso).toLocaleDateString("en-GB", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -97,14 +97,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resultsCount = sorted.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[var(--page_background)] to-[var(--surface_muted)] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
+    <div className="min-h-screen bg-gradient-to-b from-[#F5F5F5] to-[#F3F3F3] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="h1-apple text-[var(--titles)] mb-2">Discover Research</h1>
-              <p className="body-apple text-[var(--muted_text)]">
+              <h1 className="h1-apple text-[var(--DarkGray)] mb-2">Discover Research</h1>
+              <p className="body-apple text-[var(--Gray)]">
                 Search and filter through the latest research publications
               </p>
             </div>
@@ -121,11 +121,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
 
         {/* Search Card */}
-        <div className="mb-8 rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-6 shadow-soft-md">
+        <div className="mb-8 rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-6 shadow-soft-md">
           <form method="get" className="space-y-6">
             {/* Main Search */}
             <div>
-              <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+              <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                 Search
               </label>
               <div className="relative">
@@ -134,12 +134,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   name="query"
                   defaultValue={query}
                   placeholder="Search titles, abstracts, authors, or tags..."
-                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] pl-12 pr-4 py-3.5 text-sm text-[var(--normal_text)] 
-                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] pl-12 pr-4 py-3.5 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                 />
                 <div className="absolute left-4 top-3.5">
-                  <svg className="w-5 h-5 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
@@ -149,7 +149,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {/* Filters Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                   Author
                 </label>
                 <input
@@ -157,14 +157,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   name="author"
                   defaultValue={authorFilter}
                   placeholder="Search by author..."
-                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-2.5 text-sm text-[var(--normal_text)] 
-                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-2.5 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                   Tag
                 </label>
                 <input
@@ -172,43 +172,43 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   name="tag"
                   defaultValue={tagFilters}
                   placeholder="e.g., quantum, ML"
-                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-2.5 text-sm text-[var(--normal_text)] 
-                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-2.5 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                   From Date
                 </label>
                 <input
                   type="date"
                   name="from"
                   defaultValue={from}
-                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-2.5 text-sm text-[var(--normal_text)] 
-                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-2.5 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[var(--titles)] mb-2">
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                   To Date
                 </label>
                 <input
                   type="date"
                   name="to"
                   defaultValue={to}
-                  className="w-full rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-2.5 text-sm text-[var(--normal_text)] 
-                    outline-none placeholder:text-[var(--placeholder_text)] transition-all duration-200
-                    focus:border-[var(--primary_accent)] focus:ring-2 focus:ring-[var(--ring_on_surface)] focus:ring-offset-2"
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-2.5 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
                 />
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[var(--border_on_surface_soft)]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#E5E5E5]">
               <div className="flex items-center gap-3">
                 <Button type="submit" variant="primary">
                   Apply Filters
@@ -222,8 +222,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 )}
               </div>
               {hasAnyFilter && (
-                <div className="text-sm text-[var(--muted_text)]">
-                  <span className="font-medium text-[var(--titles)]">{resultsCount}</span> results found
+                <div className="text-sm text-[var(--Gray)]">
+                  <span className="font-medium text-[var(--DarkGray)]">{resultsCount}</span> results found
                 </div>
               )}
             </div>
@@ -233,7 +233,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         {/* Active Filters */}
         {hasAnyFilter && (
           <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-[var(--muted_text)]">Active filters:</span>
+            <span className="text-sm text-[var(--Gray)]">Active filters:</span>
             {query && (
               <Badge variant="secondary">
                 Search: {query}
@@ -287,18 +287,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {/* Results Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="h3-apple text-[var(--titles)]">
+              <h2 className="h3-apple text-[var(--DarkGray)]">
                 {hasAnyFilter ? "Search Results" : "Latest Research"}
               </h2>
-              <p className="body-apple text-[var(--muted_text)]">
+              <p className="body-apple text-[var(--Gray)]">
                 {hasAnyFilter
                   ? `Found ${resultsCount} matching post${resultsCount !== 1 ? 's' : ''}`
                   : `Showing ${resultsCount} post${resultsCount !== 1 ? 's' : ''}`}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-[var(--muted_text)]">Sort:</span>
-              <select className="text-sm bg-transparent border-0 focus:ring-0 text-[var(--titles)] outline-none">
+              <span className="text-sm text-[var(--Gray)]">Sort:</span>
+              <select className="text-sm bg-transparent border-0 focus:ring-0 text-[var(--DarkGray)] outline-none">
                 <option>Newest first</option>
                 <option>Most popular</option>
                 <option>Oldest first</option>
@@ -308,15 +308,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
           {/* Results Grid */}
           {sorted.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-12 text-center">
+            <div className="rounded-2xl border border-dashed border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-12 text-center">
               <div className="max-w-md mx-auto">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[var(--surface_muted)] to-transparent flex items-center justify-center">
-                  <svg className="w-8 h-8 text-[var(--muted_text_soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#F3F3F3] to-transparent flex items-center justify-center">
+                  <svg className="w-8 h-8 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="h3-apple text-[var(--titles)] mb-2">No results found</h3>
-                <p className="body-apple text-[var(--muted_text)] mb-6">
+                <h3 className="h3-apple text-[var(--DarkGray)] mb-2">No results found</h3>
+                <p className="body-apple text-[var(--Gray)] mb-6">
                   Try adjusting your search filters or browse all posts
                 </p>
                 <Link href="/search">
@@ -329,16 +329,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               {sorted.map((post) => (
                 <div
                   key={post.id}
-                  className="group rounded-2xl border border-[var(--border_on_surface_soft)] bg-gradient-to-br from-[var(--surface_primary)] to-transparent p-6 shadow-soft-sm hover:shadow-soft-md hover-lift transition-all duration-300"
+                  className="group rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-6 shadow-soft-sm hover:shadow-soft-md hover-lift transition-all duration-300"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <Link href={`/posts/${post.id}`}>
-                        <h3 className="text-lg font-semibold text-[var(--titles)] group-hover:text-[var(--primary_accent)] transition-colors duration-200 line-clamp-2 mb-2">
+                        <h3 className="text-lg font-semibold text-[var(--DarkGray)] group-hover:text-[var(--DarkGray)] transition-colors duration-200 line-clamp-2 mb-2">
                           {post.title}
                         </h3>
                       </Link>
-                      <div className="flex items-center gap-2 text-sm text-[var(--muted_text)]">
+                      <div className="flex items-center gap-2 text-sm text-[var(--Gray)]">
                         <div className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -355,13 +355,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <div className="flex items-center gap-1 text-sm text-[var(--muted_text)]">
+                      <div className="flex items-center gap-1 text-sm text-[var(--Gray)]">
                         <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                         </svg>
                         <span>{post.upvotes ?? 0}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-[var(--muted_text)]">
+                      <div className="flex items-center gap-1 text-sm text-[var(--Gray)]">
                         <svg className="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -371,7 +371,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
 
                   {post.abstract && (
-                    <p className="text-sm text-[var(--muted_text)] mb-4 line-clamp-3 leading-relaxed">
+                    <p className="text-sm text-[var(--Gray)] mb-4 line-clamp-3 leading-relaxed">
                       {post.abstract}
                     </p>
                   )}
@@ -382,15 +382,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         <Link
                           key={`${post.id}-${tag}`}
                           href={`/search?tag=${encodeURIComponent(tag)}`}
-                          className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--surface_muted)] hover:bg-[var(--surface_secondary)] transition-colors duration-200 group"
+                          className="inline-flex items-center px-3 py-1 rounded-full bg-[#F3F3F3] hover:bg-[#F7F7F7] transition-colors duration-200 group"
                         >
-                          <span className="text-xs font-medium text-[var(--muted_text)] group-hover:text-[var(--primary_accent)]">
+                          <span className="text-xs font-medium text-[var(--Gray)] group-hover:text-[var(--DarkGray)]">
                             #{tag}
                           </span>
                         </Link>
                       ))}
                       {post.tags && post.tags.length > 3 && (
-                        <span className="text-xs text-[var(--muted_text_soft)]">
+                        <span className="text-xs text-[#8A8A8A]">
                           +{post.tags.length - 3} more
                         </span>
                       )}
@@ -398,7 +398,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
                     <Link
                       href={`/posts/${post.id}`}
-                      className="flex items-center gap-1 text-sm font-medium text-[var(--primary_accent)] hover:text-[var(--titles)] transition-colors duration-200"
+                      className="flex items-center gap-1 text-sm font-medium text-[var(--DarkGray)] hover:text-[var(--DarkGray)] transition-colors duration-200"
                     >
                       Read more
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -417,7 +417,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <Button variant="outline" disabled>
                 Load more posts
               </Button>
-              <p className="text-xs text-[var(--muted_text_soft)] mt-2">
+              <p className="text-xs text-[#8A8A8A] mt-2">
                 Showing {Math.min(sorted.length, 12)} of {sorted.length} posts
               </p>
             </div>

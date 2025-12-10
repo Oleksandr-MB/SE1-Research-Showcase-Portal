@@ -51,17 +51,17 @@ export default function LogoutPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--surface_muted)] px-4 text-center text-[var(--muted_text)]">
-      <div className="shadow-soft-md w-full max-w-md rounded-3xl border border-[var(--border_on_white)] bg-[var(--surface_primary)] p-8">
-        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary_accent)]">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3F3F3] px-4 text-center text-[var(--Gray)]">
+      <div className="shadow-soft-md w-full max-w-md rounded-3xl border border-[var(--border_on_white)] bg-[var(--White)] p-8">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--DarkGray)]">
           Signing out
         </p>
-        <p className="mt-3 text-lg text-[var(--titles)]">{message}</p>
-        <p className="mt-4 text-sm text-[var(--muted_text)]">
+        <p className="mt-3 text-lg text-[var(--DarkGray)]">{message}</p>
+        <p className="mt-4 text-sm text-[var(--Gray)]">
           You will be redirected shortly. If nothing happens,{" "}
           <button
             onClick={() => router.replace("/login")}
-            className="font-semibold text-[var(--primary_accent)] underline hover:text-[var(--titles)]"
+            className="font-semibold text-[var(--DarkGray)] underline hover:text-[var(--DarkGray)]"
           >
             continue to login
           </button>

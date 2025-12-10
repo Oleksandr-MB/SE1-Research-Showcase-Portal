@@ -35,25 +35,25 @@ export default async function UserProfilePage({ params }: PageProps) {
   });
 
   return (
-    <div className="min-h-screen bg-[var(--surface_muted)] px-4 py-10 text-[var(--normal_text)] sm:px-6">
+    <div className="min-h-screen bg-[#F3F3F3] px-4 py-10 text-[var(--DarkGray)] sm:px-6">
       <SelfRedirector targetUsername={userProfile.username} />
-      <main className="shadow-soft-md mx-auto max-w-4xl rounded-[32px] bg-[var(--surface_primary)] p-6 ring-1 ring-[var(--ring_on_surface)] sm:p-10">
-        <header className="flex flex-col gap-4 rounded-[28px] border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-6 sm:flex-row sm:items-center sm:justify-between">
+      <main className="shadow-soft-md mx-auto max-w-7xl rounded-[32px] bg-[var(--White)] p-6 ring-1 ring-[rgba(55,55,55,0.15)] sm:p-10">
+        <header className="flex flex-col gap-4 rounded-[28px] border border-[#E5E5E5] bg-[var(--White)] p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary_accent)]">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--DarkGray)]">
               Researcher profile
             </p>
-            <h1 className="mt-1 text-3xl font-semibold text-[var(--titles)]">
+            <h1 className="mt-1 text-3xl font-semibold text-[var(--DarkGray)]">
               {userProfile.username}
             </h1>
-            <p className="text-sm text-[var(--muted_text)]">
+            <p className="text-sm text-[var(--Gray)]">
               Role: {userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1)}
             </p>
-            <p className="text-xs text-[var(--muted_text_soft)]">Member since {joinDate}</p>
+            <p className="text-xs text-[#8A8A8A]">Member since {joinDate}</p>
           </div>
           <Link
             href="/"
-            className="rounded-full border border-[var(--primary_accent)] px-5 py-2 text-sm font-semibold text-[var(--primary_accent)] transition-colors hover:border-[var(--titles)] hover:text-[var(--titles)]"
+            className="rounded-full border border-[var(--DarkGray)] px-5 py-2 text-sm font-semibold text-[var(--DarkGray)] transition-colors hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
           >
             Back to explore
           </Link>
@@ -61,16 +61,16 @@ export default async function UserProfilePage({ params }: PageProps) {
 
         <section className="mt-8 space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-[var(--titles)]">
+            <h2 className="text-xl font-semibold text-[var(--DarkGray)]">
               Authored posts
             </h2>
-            <span className="text-sm text-[var(--muted_text)]">
+            <span className="text-sm text-[var(--Gray)]">
               {posts.length} {posts.length === 1 ? "publication" : "publications"}
             </span>
           </div>
 
           {posts.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-[var(--border_on_surface_soft)] bg-[var(--surface_muted)] px-6 py-10 text-center text-[var(--muted_text)]">
+            <div className="rounded-3xl border border-dashed border-[#E5E5E5] bg-[#F3F3F3] px-6 py-10 text-center text-[var(--Gray)]">
               No published posts yet. Check back soon!
             </div>
           ) : (
@@ -78,25 +78,25 @@ export default async function UserProfilePage({ params }: PageProps) {
               {posts.map((post) => (
                 <li
                   key={post.id}
-                  className="rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-5 shadow-soft-sm"
+                  className="rounded-3xl border border-[#E5E5E5] bg-[var(--White)] p-5 shadow-soft-sm"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-xl font-semibold text-[var(--titles)]">
+                      <p className="text-xl font-semibold text-[var(--DarkGray)]">
                         {post.title}
                       </p>
-                      <p className="text-xs text-[var(--muted_text_soft)]">
+                      <p className="text-xs text-[#8A8A8A]">
                         Published {new Date(post.created_at).toLocaleDateString()}
                       </p>
                     </div>
                     <Link
                       href={`/posts/${post.id}`}
-                      className="rounded-full bg-[var(--primary_accent)] px-4 py-2 text-sm font-semibold text-[var(--inverse_text)] transition-colors hover:bg-[var(--titles)]"
+                      className="rounded-full bg-[var(--DarkGray)] px-4 py-2 text-sm font-semibold text-[var(--White)] transition-colors hover:bg-[var(--DarkGray)]"
                     >
                       View post
                     </Link>
                   </div>
-                  <p className="mt-3 text-sm text-[var(--muted_text)]">
+                  <p className="mt-3 text-sm text-[var(--Gray)]">
                     {summarize(post.abstract || post.body)}
                   </p>
                   {post.tags?.length ? (
@@ -105,7 +105,7 @@ export default async function UserProfilePage({ params }: PageProps) {
                         <Link
                           key={`${post.id}-${tag}`}
                           href={`/search?tag=${encodeURIComponent(tag)}`}
-                          className="rounded-full border border-[var(--chip_border)] bg-[var(--chip_background)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--muted_text)] hover:border-[var(--primary_accent)] hover:text-[var(--primary_accent)]"
+                          className="rounded-full border border-[#E5E5E5] bg-[#F3F3F3] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
                         >
                           #{tag}
                         </Link>

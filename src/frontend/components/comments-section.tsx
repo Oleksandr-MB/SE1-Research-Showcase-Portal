@@ -13,12 +13,14 @@ type Props = {
   initialComments: CommentThread[];
 };
 
+const commentDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
 const formatDateTime = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  commentDateFormatter.format(new Date(iso));
 
 type ThreadNode = {
   comment: CommentThread;
@@ -225,7 +227,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
           }
           rows={2}
           placeholder={`Reply to @${targetUsername}`}
-          className="ml-1 mt-1 w-[calc(100%-0.25rem)] rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-2 text-sm text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)]"
+          className="ml-1 mt-1 w-[calc(100%-0.25rem)] rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-2 text-sm text-[var(--DarkGray)] outline-none transition-colors focus:border-[var(--DarkGray)]"
         />
         <div className="flex items-center justify-end gap-3">
           <button
@@ -237,7 +239,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                 [targetId]: "",
               }));
             }}
-            className="text-sm font-semibold text-[var(--muted_text)] hover:text-[var(--titles)]"
+            className="text-sm font-semibold text-[var(--Gray)] hover:text-[var(--DarkGray)]"
           >
             Cancel
           </button>
@@ -245,7 +247,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             type="button"
             onClick={() => handleReplySubmit(targetId)}
             disabled={replyLoading[targetId]}
-            className="rounded-full border border-[var(--primary_accent)] px-4 py-1.5 text-xs font-semibold text-[var(--primary_accent)] transition hover:border-[var(--titles)] hover:text-[var(--titles)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full border border-[var(--DarkGray)] px-4 py-1.5 text-xs font-semibold text-[var(--DarkGray)] transition hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {replyLoading[targetId] ? "Replying..." : "Reply"}
           </button>
@@ -257,28 +259,28 @@ export default function CommentsSection({ postId, initialComments }: Props) {
   return (
     <section className="space-y-6">
       <div className="flex flex-wrap items-baseline gap-3">
-        <h2 className="text-2xl font-semibold text-[var(--titles)]">
+        <h2 className="text-2xl font-semibold text-[var(--DarkGray)]">
           Comments
         </h2>
-        <span className="text-sm text-[var(--muted_text)]">
+        <span className="text-sm text-[var(--Gray)]">
           {comments.length} {comments.length === 1 ? "comment" : "comments"}
         </span>
       </div>
 
-      <div className="rounded-3xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+      <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-sm">
         <div className="space-y-3">
           <textarea
             value={newComment}
             onChange={(event) => setNewComment(event.target.value)}
             rows={3}
             placeholder="Add a comment..."
-            className="ml-1 mt-1 w-[calc(100%-0.25rem)] rounded-2xl border border-[var(--border_on_surface_soft)] bg-[var(--surface_primary)] px-4 py-3 text-sm text-[var(--normal_text)] outline-none focus:border-[var(--primary_accent)]"
+            className="ml-1 mt-1 w-[calc(100%-0.25rem)] rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] outline-none transition-colors focus:border-[var(--DarkGray)]"
           />
           <div className="flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => setNewComment("")}
-              className="text-sm font-semibold text-[var(--muted_text)] hover:text-[var(--titles)]"
+              className="text-sm font-semibold text-[var(--Gray)] hover:text-[var(--DarkGray)]"
             >
               Cancel
             </button>
@@ -286,7 +288,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
               type="button"
               onClick={handleNewComment}
               disabled={isSubmitting}
-              className="rounded-full bg-[var(--primary_accent)] px-5 py-2 text-sm font-semibold text-[var(--inverse_text)] transition disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-full bg-[var(--DarkGray)] px-5 py-2 text-sm font-semibold text-[var(--White)] transition disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isSubmitting ? "Posting..." : "Comment"}
             </button>
@@ -297,24 +299,24 @@ export default function CommentsSection({ postId, initialComments }: Props) {
 
       <ul className="space-y-6">
         {threads.length === 0 ? (
-          <li className="rounded-3xl border border-dashed border-[var(--border_on_surface_soft)] px-4 py-10 text-center text-sm text-[var(--muted_text)]">
+          <li className="rounded-3xl border border-dashed border-[var(--LightGray)] px-4 py-10 text-center text-sm text-[var(--Gray)]">
             No comments yet. Start the conversation!
           </li>
         ) : (
           threads.map(({ comment, replies }, index) => (
             <li
               key={comment.id}
-              className={`space-y-4 rounded-3xl bg-[var(--surface_primary)] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.08)] ${index === threads.length - 1 ? "" : "mb-4"}`}
+              className={`space-y-4 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-xs ${index === threads.length - 1 ? "" : "mb-4"}`}
             >
               <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--muted_text)]">
-                  <span className="font-semibold text-[var(--titles)]">
+                <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--Gray)]">
+                  <span className="font-semibold text-[var(--DarkGray)]">
                     {comment.commenter_username}
                   </span>
                   <span>{formatDateTime(comment.created_at)}</span>
                 </div>
-                <p className="text-[var(--normal_text)]">{comment.body}</p>
-                <div className="flex items-center gap-4 text-xs text-[var(--muted_text)]">
+                <p className="text-[var(--DarkGray)]">{comment.body}</p>
+                <div className="flex items-center gap-4 text-xs text-[var(--Gray)]">
                   <button
                     type="button"
                     onClick={() =>
@@ -322,8 +324,8 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                     }
                     className={`rounded-full px-3 py-1 font-semibold transition ${
                       commentVoteState[comment.id] === 1
-                        ? "bg-[var(--primary_accent)] text-[var(--inverse_text)]"
-                        : "border border-[var(--border_on_surface_soft)] text-[var(--muted_text)] hover:border-[var(--primary_accent)] hover:text-[var(--primary_accent)]"
+                        ? "bg-[var(--DarkGray)] text-[var(--White)]"
+                        : "border border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
                     }`}
                   >
                     👍 {comment.upvotes}
@@ -335,8 +337,8 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                     }
                     className={`rounded-full px-3 py-1 font-semibold transition ${
                       commentVoteState[comment.id] === -1
-                        ? "bg-[var(--primary_accent)] text-[var(--inverse_text)]"
-                        : "border border-[var(--border_on_surface_soft)] text-[var(--muted_text)] hover:border-[var(--primary_accent)] hover:text-[var(--primary_accent)]"
+                        ? "bg-[var(--DarkGray)] text-[var(--White)]"
+                        : "border border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
                     }`}
                   >
                     👎 {comment.downvotes}
@@ -349,7 +351,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                       prev === comment.id ? null : comment.id,
                     )
                   }
-                  className="text-sm font-semibold text-[var(--muted_text)] transition hover:text-[var(--primary_accent)]"
+                  className="text-sm font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
                 >
                   Reply
                 </button>
@@ -362,21 +364,21 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                   {replies.map(({ comment: replyComment, parentUsername }) => (
                     <div
                       key={replyComment.id}
-                      className="mb-4 rounded-2xl bg-[var(--surface_primary)] px-4 py-3 text-sm shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
+                      className="mb-4 rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm shadow-soft-xs"
                     >
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--muted_text)]">
-                        <span className="font-semibold text-[var(--titles)]">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--Gray)]">
+                        <span className="font-semibold text-[var(--DarkGray)]">
                           {replyComment.commenter_username}
                         </span>
                         <span>{formatDateTime(replyComment.created_at)}</span>
                       </div>
-                      <p className="mt-1 text-[var(--normal_text)]">
-                        <span className="font-semibold text-[var(--primary_accent)]">
+                      <p className="mt-1 text-[var(--DarkGray)]">
+                        <span className="font-semibold text-[var(--DarkGray)]">
                           @{parentUsername}
                         </span>{" "}
                         {replyComment.body}
                       </p>
-                      <div className="mt-2 flex items-center gap-3 text-xs text-[var(--muted_text)]">
+                      <div className="mt-2 flex items-center gap-3 text-xs text-[var(--Gray)]">
                         <button
                           type="button"
                           onClick={() =>
@@ -388,8 +390,8 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                           }
                           className={`rounded-full px-3 py-1 font-semibold transition ${
                             commentVoteState[replyComment.id] === 1
-                              ? "bg-[var(--primary_accent)] text-[var(--inverse_text)]"
-                              : "border border-[var(--border_on_surface_soft)] text-[var(--muted_text)] hover:border-[var(--primary_accent)] hover:text-[var(--primary_accent)]"
+                              ? "bg-[var(--DarkGray)] text-[var(--White)]"
+                              : "border border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
                           }`}
                         >
                           👍 {replyComment.upvotes}
@@ -405,8 +407,8 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                           }
                           className={`rounded-full px-3 py-1 font-semibold transition ${
                             commentVoteState[replyComment.id] === -1
-                              ? "bg-[var(--primary_accent)] text-[var(--inverse_text)]"
-                              : "border border-[var(--border_on_surface_soft)] text-[var(--muted_text)] hover:border-[var(--primary_accent)] hover:text-[var(--primary_accent)]"
+                              ? "bg-[var(--DarkGray)] text-[var(--White)]"
+                              : "border border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
                           }`}
                         >
                           👎 {replyComment.downvotes}
@@ -419,7 +421,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                             prev === replyComment.id ? null : replyComment.id,
                           )
                         }
-                        className="text-xs font-semibold text-[var(--muted_text)] transition hover:text-[var(--primary_accent)]"
+                        className="text-xs font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
                       >
                         Reply
                       </button>

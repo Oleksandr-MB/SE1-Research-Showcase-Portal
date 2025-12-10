@@ -64,7 +64,7 @@ class AttachmentReference(BaseModel):
 
 class PostCreate(PostBase):
     tags: Optional[list[str]] = None
-    attachments: Optional[list[str | AttachmentReference]] = None
+    attachments: Optional[list[AttachmentReference | str]] = None
     phase: PostPhase = PostPhase.DRAFT
 
 

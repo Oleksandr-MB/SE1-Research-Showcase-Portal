@@ -7,9 +7,9 @@ export function Badge({ variant = 'default', children, className = '', ...props 
   const baseClasses = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all duration-200';
   
   const variants = {
-    default: 'bg-[var(--surface_muted)] text-[var(--muted_text)]',
-    accent: 'bg-gradient-to-r from-[var(--primary_accent)] to-[var(--DarkRedLight)] text-white',
-    secondary: 'bg-[var(--surface_secondary)] text-[var(--titles)]',
+    default: 'bg-[#F3F3F3] text-[var(--Gray)]',
+    accent: 'bg-[var(--DarkGray)] text-[var(--White)]',
+    secondary: 'bg-[#F7F7F7] text-[var(--DarkGray)] border border-[#E5E5E5]',
   };
 
   return (

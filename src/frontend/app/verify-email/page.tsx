@@ -11,24 +11,33 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  const [state, setState] = useState<VerifyState>("checking");
+  const [status, setStatus] = useState<VerifyState>("checking");
   const [message, setMessage] = useState("Verifying your email address...");
   const [countdown, setCountdown] = useState(4);
 
   useEffect(() => {
     if (!token) {
-      setState("missing");
-      setMessage("We could not find a verification token in this link.");
       return;
     }
+
+    let isCancelled = false;
 
     const runVerification = async () => {
       try {
         const response = await verifyEmailToken(token);
-        setState("success");
+        if (isCancelled) {
+          return;
+        }
+
+        setCountdown(4);
+        setStatus("success");
         setMessage(response.message || "Email verified successfully!");
       } catch (error) {
-        setState("error");
+        if (isCancelled) {
+          return;
+        }
+
+        setStatus("error");
         setMessage(
           error instanceof Error
             ? error.message
@@ -38,14 +47,17 @@ export default function VerifyEmailPage() {
     };
 
     runVerification();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [token]);
 
   useEffect(() => {
-    if (state !== "success") {
+    if (status !== "success") {
       return;
     }
 
-    setCountdown(4);
     const tick = setInterval(() => {
       setCountdown((prev) => (prev > 1 ? prev - 1 : prev));
     }, 1000);
@@ -58,7 +70,7 @@ export default function VerifyEmailPage() {
       clearInterval(tick);
       clearTimeout(redirect);
     };
-  }, [router, state]);
+  }, [router, status]);
 
   const headingMap: Record<VerifyState, string> = {
     checking: "Verifying your email",
@@ -66,20 +78,30 @@ export default function VerifyEmailPage() {
     error: "Something went wrong",
     missing: "Link incomplete",
   };
+  const missingTokenMessage =
+    "We could not find a verification token in this link.";
+  const displayState: VerifyState = token ? status : "missing";
+  const displayMessage = token ? message : missingTokenMessage;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--surface_muted)] px-4 text-[var(--normal_text)]">
-      <div className="shadow-soft-md w-full max-w-md rounded-3xl border border-[var(--border_on_white)] bg-[var(--surface_primary)] p-8 text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary_accent)]">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--LightGray)] px-4 text-[var(--DarkGray)]">
+      <div className="w-full max-w-md rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-8 text-center shadow-soft-md">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)]">
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9 5-9 5-9-5 9-5z" />
+          </svg>
+        </div>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--Gray)]">
           Email verification
         </p>
-        <h1 className="mt-2 text-2xl font-semibold text-[var(--titles)]">
-          {headingMap[state]}
+        <h1 className="mt-2 text-2xl font-semibold text-[var(--DarkGray)]">
+          {headingMap[displayState]}
         </h1>
-        <p className="mt-3 text-sm text-[var(--muted_text)]">{message}</p>
+        <p className="mt-3 text-sm text-[var(--Gray)]">{displayMessage}</p>
 
-        {state === "success" && (
-          <p className="mt-2 text-xs text-[var(--muted_text_soft)]">
+        {displayState === "success" && (
+          <p className="mt-2 text-xs text-[var(--Gray)]">
             Redirecting to sign in in {countdown}s...
           </p>
         )}
@@ -87,15 +109,15 @@ export default function VerifyEmailPage() {
         <div className="mt-6 flex flex-col gap-3 text-sm">
           <button
             type="button"
-            className="rounded-2xl border border-[var(--primary_accent)] px-4 py-3 font-semibold text-[var(--primary_accent)] transition-colors hover:border-[var(--titles)] hover:text-[var(--titles)]"
+            className="rounded-2xl border border-[var(--DarkGray)] px-4 py-3 font-semibold text-[var(--DarkGray)] transition-all duration-200 hover:bg-[var(--DarkGray)] hover:text-[var(--White)]"
             onClick={() => router.push("/login")}
           >
             Go to sign in
           </button>
-          {state !== "success" && (
+          {displayState !== "success" && (
             <button
               type="button"
-              className="rounded-2xl border border-[var(--border_on_surface_soft)] px-4 py-3 text-[var(--muted_text)] transition-colors hover:text-[var(--titles)]"
+              className="rounded-2xl border border-[var(--LightGray)] px-4 py-3 text-[var(--Gray)] transition-colors duration-200 hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
               onClick={() => router.push("/register")}
             >
               Need a new link? Register again

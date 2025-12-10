@@ -1,0 +1,66 @@
+"use client";
+
+import { useState } from "react";
+import { API_BASE_URL } from "@/lib/api";
+
+type Props = {
+  filePath: string;
+  fileName: string;
+};
+
+export default function AttachmentAutoDownloadButton({
+  filePath,
+  fileName,
+}: Props) {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDownload = async () => {
+    setError(null);
+    setIsDownloading(true);
+
+    const targetUrl = `${API_BASE_URL}${filePath}`;
+    try {
+      const response = await fetch(targetUrl);
+      if (!response.ok) {
+        throw new Error(`Fetch failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const anchor = document.createElement("a");
+      anchor.href = blobUrl;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (downloadError) {
+      console.error("Unable to auto download attachment", downloadError);
+      setError("Auto download failed. Opening file in a new tab...");
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={handleDownload}
+        disabled={isDownloading}
+        className="text-sm font-semibold text-[var(--DarkGray)] transition-colors duration-200 hover:text-[var(--Red)] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isDownloading ? "Downloading..." : "Auto Download"}
+      </button>
+      {error ? (
+        <span className="text-xs text-red-600 text-right">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+}
