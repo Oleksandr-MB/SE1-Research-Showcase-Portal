@@ -1,11 +1,11 @@
 from typing import Annotated
-import ast
 import mimetypes
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import json
+from urllib.parse import urlparse
 
 from fastapi import Depends, APIRouter, HTTPException, UploadFile, File, Body
 from pydantic import ValidationError
@@ -15,7 +15,6 @@ from sqlalchemy import or_, func
 from src.database.db import get_db
 from src.database import models
 from src.backend.services.schemas import (
-    AttachmentReference,
     PostCreate,
     PostRead,
     AttachmentUploadResponse,
@@ -31,6 +30,8 @@ from src.backend.services.paths import ATTACHMENTS_DIR
 logging.basicConfig(level=logging.INFO)
 
 router = APIRouter()
+
+ATTACHMENT_PREFIX = "/attachments/"
 
 
 def _escape(query: str) -> str:
@@ -49,90 +50,45 @@ def _escape(query: str) -> str:
     return q
 
 
-def _normalize_attachment_path(raw_path: str | None) -> str | None:
-    if not raw_path:
+def _normalize_attachment_value(raw_value: str | None) -> str | None:
+    if not raw_value:
         return None
 
-    trimmed = raw_path.strip()
-    if not trimmed:
+    candidate = raw_value.strip()
+    if not candidate:
         return None
 
-    if trimmed.startswith("{") and trimmed.endswith("}"):
-        candidate: dict[str, object] | None = None
+    if candidate.startswith("{") and candidate.endswith("}"):
+        target_from_dict: str | None = None
         try:
-            candidate = json.loads(trimmed)
+            parsed_json = json.loads(candidate)
+            if isinstance(parsed_json, dict):
+                for key in ("file_path", "path"):
+                    value = parsed_json.get(key)
+                    if isinstance(value, str) and value.strip():
+                        target_from_dict = value.strip()
+                        break
         except json.JSONDecodeError:
-            try:
-                candidate = ast.literal_eval(trimmed)
-            except (ValueError, SyntaxError):
-                candidate = None
-        if isinstance(candidate, dict):
-            nested_path = candidate.get("file_path")
-            if isinstance(nested_path, str):
-                normalized = nested_path.strip()
-                return normalized or None
-    return trimmed
+            target_from_dict = None
 
+        if target_from_dict:
+            candidate = target_from_dict
 
-def _normalize_attachment_string(raw_value: str) -> tuple[str | None, str | None]:
-    trimmed = raw_value.strip()
-    if not trimmed:
-        return None, None
+    try:
+        parsed = urlparse(candidate)
+        candidate = parsed.path or candidate
+    except ValueError:
+        pass
 
-    if trimmed.startswith("{") and trimmed.endswith("}"):
-        parsed_dict: dict[str, object] | None = None
-        try:
-            parsed_dict = json.loads(trimmed)
-        except json.JSONDecodeError:
-            try:
-                parsed_dict = ast.literal_eval(trimmed)
-            except (ValueError, SyntaxError):
-                parsed_dict = None
-        if isinstance(parsed_dict, dict):
-            nested_path = parsed_dict.get("file_path")
-            nested_mime = parsed_dict.get("mime_type")
-            normalized_path = (
-                nested_path.strip()
-                if isinstance(nested_path, str)
-                else None
-            )
-            normalized_mime = (
-                nested_mime.strip()
-                if isinstance(nested_mime, str)
-                else None
-            )
-            return normalized_path, normalized_mime
+    normalized = candidate.replace("\\", "/")
+    if normalized.startswith(ATTACHMENT_PREFIX):
+        return normalized
 
-    return trimmed, None
+    parts = [segment for segment in normalized.split("/") if segment]
+    if not parts:
+        return None
 
-
-def _extract_attachment_fields(
-    attachment_data: AttachmentReference | dict[str, object] | str,
-) -> tuple[str | None, str | None]:
-    if isinstance(attachment_data, AttachmentReference):
-        return (
-            _normalize_attachment_path(attachment_data.file_path),
-            attachment_data.mime_type,
-        )
-
-    if isinstance(attachment_data, dict):
-        raw_path = attachment_data.get("file_path")
-        raw_mime = attachment_data.get("mime_type")
-        normalized_path = (
-            _normalize_attachment_path(raw_path)
-            if isinstance(raw_path, str)
-            else None
-        )
-        normalized_mime = (
-            raw_mime.strip() if isinstance(raw_mime, str) and raw_mime.strip() else None
-        )
-        return normalized_path, normalized_mime
-
-    if isinstance(attachment_data, str):
-        raw_path, raw_mime = _normalize_attachment_string(attachment_data)
-        return _normalize_attachment_path(raw_path), raw_mime
-
-    return None, None
+    return f"{ATTACHMENT_PREFIX}{parts[-1]}"
 
 
 def _to_post_read(post: models.Post) -> PostRead:
@@ -145,10 +101,10 @@ def _to_post_read(post: models.Post) -> PostRead:
         bibtex=post.bibtex,
         tags=[tag.name for tag in post.tags],
         attachments=[
-            normalized_path
+            normalized
             for attachment in post.attachments
-            for normalized_path in [_normalize_attachment_path(attachment.file_path)]
-            if normalized_path
+            for normalized in [_normalize_attachment_value(attachment.file_path)]
+            if normalized
         ],
         title=post.title,
         body=post.body,
@@ -363,32 +319,26 @@ async def create_research_post(
             db_post.tags.append(tag)
 
     if post.attachments:
-        for attachment_data in post.attachments:
-            file_path, mime_type = _extract_attachment_fields(attachment_data)
-
-            if not file_path:
+        for attachment_path in post.attachments:
+            normalized = (
+                _normalize_attachment_value(attachment_path)
+                if isinstance(attachment_path, str)
+                else None
+            )
+            if not normalized:
                 logging.warning(
-                    "Attachment skipped because file_path is empty: %s",
-                    attachment_data,
+                    "Attachment skipped because file_path is invalid: %s",
+                    attachment_path,
                 )
                 continue
 
-            sanitized_path = file_path.strip()
-            if not sanitized_path:
-                logging.warning(
-                    "Attachment skipped because file_path is blank after trimming: %s",
-                    attachment_data,
-                )
-                continue
-
-            if not mime_type:
-                guessed_mime_type, _ = mimetypes.guess_type(sanitized_path)
-                mime_type = guessed_mime_type or "application/octet-stream"
+            guessed_mime_type, _ = mimetypes.guess_type(normalized)
+            mime_type = guessed_mime_type or "application/octet-stream"
 
             attachment = models.Attachment(
-                file_path=sanitized_path,
+                file_path=normalized,
                 mime_type=mime_type,
-                post_id=db_post.id
+                post_id=db_post.id,
             )
             db.add(attachment)
 

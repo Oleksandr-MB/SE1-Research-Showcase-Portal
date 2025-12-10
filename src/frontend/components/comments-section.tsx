@@ -95,6 +95,32 @@ const buildThreads = (comments: CommentThread[]): ThreadNode[] => {
   return threads;
 };
 
+const commentVoteButtonClasses = (active: boolean) =>
+  `flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+    active
+      ? "bg-[var(--Red)] border-[var(--Red)] text-[var(--White)]"
+      : "border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
+  }`;
+
+const ArrowIcon = ({ direction }: { direction: "up" | "down" }) => (
+  <svg
+    className="h-4 w-4"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {direction === "up" ? (
+      <path d="M5 15l7-7 7 7" />
+    ) : (
+      <path d="M19 9l-7 7-7-7" />
+    )}
+  </svg>
+);
+
 export default function CommentsSection({ postId, initialComments }: Props) {
   const [comments, setComments] = useState<CommentThread[]>(initialComments);
   const [newComment, setNewComment] = useState("");
@@ -316,32 +342,32 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                   <span>{formatDateTime(comment.created_at)}</span>
                 </div>
                 <p className="text-[var(--DarkGray)]">{comment.body}</p>
-                <div className="flex items-center gap-4 text-xs text-[var(--Gray)]">
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() =>
                       handleCommentVote(comment.id, comment.post_id, 1)
                     }
-                    className={`rounded-full px-3 py-1 font-semibold transition ${
-                      commentVoteState[comment.id] === 1
-                        ? "bg-[var(--DarkGray)] text-[var(--White)]"
-                        : "border border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
-                    }`}
+                    className={commentVoteButtonClasses(
+                      commentVoteState[comment.id] === 1,
+                    )}
+                    aria-label="Upvote comment"
                   >
-                    👍 {comment.upvotes}
+                    <ArrowIcon direction="up" />
+                    <span>{comment.upvotes}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() =>
                       handleCommentVote(comment.id, comment.post_id, -1)
                     }
-                    className={`rounded-full px-3 py-1 font-semibold transition ${
-                      commentVoteState[comment.id] === -1
-                        ? "bg-[var(--DarkGray)] text-[var(--White)]"
-                        : "border border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
-                    }`}
+                    className={commentVoteButtonClasses(
+                      commentVoteState[comment.id] === -1,
+                    )}
+                    aria-label="Downvote comment"
                   >
-                    👎 {comment.downvotes}
+                    <ArrowIcon direction="down" />
+                    <span>{comment.downvotes}</span>
                   </button>
                 </div>
                 <button
@@ -378,7 +404,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                         </span>{" "}
                         {replyComment.body}
                       </p>
-                      <div className="mt-2 flex items-center gap-3 text-xs text-[var(--Gray)]">
+                      <div className="mt-2 flex items-center gap-3">
                         <button
                           type="button"
                           onClick={() =>
@@ -388,13 +414,13 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                               1,
                             )
                           }
-                          className={`rounded-full px-3 py-1 font-semibold transition ${
-                            commentVoteState[replyComment.id] === 1
-                              ? "bg-[var(--DarkGray)] text-[var(--White)]"
-                              : "border border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
-                          }`}
+                          className={commentVoteButtonClasses(
+                            commentVoteState[replyComment.id] === 1,
+                          )}
+                          aria-label="Upvote comment"
                         >
-                          👍 {replyComment.upvotes}
+                          <ArrowIcon direction="up" />
+                          <span>{replyComment.upvotes}</span>
                         </button>
                         <button
                           type="button"
@@ -405,13 +431,13 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                               -1,
                             )
                           }
-                          className={`rounded-full px-3 py-1 font-semibold transition ${
-                            commentVoteState[replyComment.id] === -1
-                              ? "bg-[var(--DarkGray)] text-[var(--White)]"
-                              : "border border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
-                          }`}
+                          className={commentVoteButtonClasses(
+                            commentVoteState[replyComment.id] === -1,
+                          )}
+                          aria-label="Downvote comment"
                         >
-                          👎 {replyComment.downvotes}
+                          <ArrowIcon direction="down" />
+                          <span>{replyComment.downvotes}</span>
                         </button>
                       </div>
                       <button

@@ -45,7 +45,7 @@ export type CreatePostPayload = {
   bibtex?: string;
   tags?: string[];
   phase?: PostPhase;
-  attachments?: AttachmentDescriptor[];
+  attachments?: string[];
 };
 
 export type CommentThread = {

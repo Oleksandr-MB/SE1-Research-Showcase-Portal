@@ -57,14 +57,9 @@ class PostBase(BaseModel):
     bibtex: Optional[str] = None
 
 
-class AttachmentReference(BaseModel):
-    file_path: str
-    mime_type: Optional[str] = None
-
-
 class PostCreate(PostBase):
     tags: Optional[list[str]] = None
-    attachments: Optional[list[AttachmentReference | str]] = None
+    attachments: Optional[list[str]] = None
     phase: PostPhase = PostPhase.DRAFT
 
 

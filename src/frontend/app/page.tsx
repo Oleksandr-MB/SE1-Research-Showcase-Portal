@@ -213,7 +213,10 @@ export default async function Home({
   const from = resolved.from?.trim() ?? "";
   const to = resolved.to?.trim() ?? "";
   const sortParam = resolved.sort?.toLowerCase();
-  const sortOption = sortParam === "popular" || sortParam === "oldest" ? sortParam : "newest";
+  const sortOption =
+    sortParam === "popular" || sortParam === "newest" || sortParam === "oldest"
+      ? sortParam
+      : "popular";
   const requestedPage = Number.parseInt(resolved.page ?? "1", 10);
   let currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
@@ -308,7 +311,7 @@ export default async function Home({
     }
     append("from", from);
     append("to", to);
-    if (sortOption !== "newest") {
+    if (sortOption !== "popular") {
       params.set("sort", sortOption);
     }
     if (currentPage > 1) {

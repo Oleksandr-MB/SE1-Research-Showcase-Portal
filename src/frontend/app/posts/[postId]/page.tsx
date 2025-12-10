@@ -5,7 +5,7 @@ import CommentsSection from "@/components/comments-section";
 import PostVoteActions from "@/components/post-vote-actions";
 import ShareCitation from "@/components/share-citation";
 import MathContent from "@/components/math-content";
-import AttachmentAutoDownloadButton from "@/components/attachment-auto-download-button";
+import AttachmentDownloadButton from "@/components/attachment-download-button";
 
 const ATTACHMENT_PREFIX = "/attachments/";
 
@@ -232,7 +232,6 @@ export default async function PostDetailsPage({ params }: PageProps) {
               <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--Gray)]">Resources</p>
                     <h3 className="h3-apple text-[var(--DarkGray)]">Attachments</h3>
                   </div>
                   <span className="text-xs text-[var(--Gray)]">{attachments.length} file{attachments.length > 1 ? "s" : ""}</span>
@@ -249,7 +248,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
                           <p className="text-sm font-medium text-[var(--DarkGray)]">{fileName}</p>
                           <p className="text-xs text-[var(--Gray)]">Attachment {index + 1}</p>
                         </div>
-                        <AttachmentAutoDownloadButton
+                        <AttachmentDownloadButton
                           filePath={filePath}
                           fileName={fileName}
                         />

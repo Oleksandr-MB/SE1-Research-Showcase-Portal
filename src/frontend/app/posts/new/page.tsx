@@ -252,9 +252,14 @@ export default function NewPostPage() {
     }
 
     const tags = splitTags(form.tags);
-    const attachmentPayload = attachments.length > 0
-      ? attachments.map(({ file_path, mime_type }) => ({ file_path, mime_type }))
-      : undefined;
+    const sanitizedAttachments =
+      attachments.length > 0
+        ? attachments
+            .map(({ file_path }) => file_path?.trim())
+            .filter((path): path is string => Boolean(path))
+        : [];
+    const attachmentPayload =
+      sanitizedAttachments.length > 0 ? sanitizedAttachments : undefined;
 
     const phaseToUse: PostPhase = submitPhase ?? "draft";
 
