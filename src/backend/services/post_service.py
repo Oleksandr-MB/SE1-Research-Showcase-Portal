@@ -139,8 +139,8 @@ def _parse_vote_payload(payload: VoteRequest | dict | str) -> VoteRequest:
 
 @router.post("/attachments/upload", response_model=AttachmentUploadResponse)
 async def upload_post_attachment(
-    file: UploadFile = File(...),
     current_user: Annotated[models.User, Depends(get_current_user)],
+    file: UploadFile = File(...),
 ) -> AttachmentUploadResponse:
     if not file or not file.filename:
         raise HTTPException(
