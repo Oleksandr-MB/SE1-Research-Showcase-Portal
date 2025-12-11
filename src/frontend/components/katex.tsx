@@ -10,7 +10,7 @@ type KatexProps = {
 
 declare global {
   interface Window {
-    renderMathInElement?: (element: HTMLElement, options: unknown) => void;
+    renderKatex?: (element: HTMLElement, options: unknown) => void;
     __katexLoadingPromise?: Promise<void>;
   }
 }
@@ -32,7 +32,7 @@ const loadScript = (id: string, src: string) =>
 
 const ensureKatex = async () => {
   if (typeof window === "undefined") return;
-  if (window.renderMathInElement) {
+  if (window.renderKatex) {
     return;
   }
   if (window.__katexLoadingPromise) {
@@ -77,8 +77,8 @@ export default function Katex({ content, className, paragraphClassName }: KatexP
     }
     ensureKatex()
       .then(() => {
-        if (containerRef.current && window.renderMathInElement) {
-          window.renderMathInElement(containerRef.current, {
+        if (containerRef.current && window.renderKatex) {
+          window.renderKatex(containerRef.current, {
             delimiters: [
               { left: "$$", right: "$$", display: true },
               { left: "\\[", right: "\\]", display: true },
