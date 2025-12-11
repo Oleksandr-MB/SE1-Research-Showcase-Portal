@@ -158,9 +158,6 @@ export default function PersonalLab() {
         const currentUser = await getCurrentUser(token);
         if (!isMounted) return;
 
-        console.log('Full user object:', currentUser);
-        console.log('Email from currentUser:', currentUser.email);
-
         setUser(currentUser);
         setForm({
           displayName: currentUser.display_name || currentUser.username || "",
