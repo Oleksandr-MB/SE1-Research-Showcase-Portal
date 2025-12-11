@@ -21,7 +21,6 @@ import {
 } from "react";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
-import { Badge } from "@/components/Badge";
 
 type FormState = {
   title: string;
@@ -309,9 +308,6 @@ export default function NewPostPage() {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <Badge variant="accent" className="mb-2">
-                Research Post
-              </Badge>
               <h1 className="h1-apple text-[var(--DarkGray)]">Draft New Post</h1>
               <p className="body-apple text-[var(--Gray)] mt-2 max-w-2xl">
                 Share your research with the community. You can save as draft or publish immediately.
@@ -500,7 +496,7 @@ export default function NewPostPage() {
                   </div>
                 </div>
 
-                {/* Attachments - упрощенная версия */}
+                {/* Attachments */}
                 <div>
                   <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
                     Attachments (Optional)
@@ -610,12 +606,11 @@ export default function NewPostPage() {
             </div>
           </div>
 
-          {/* Sidebar - только Tips */}
+          {/* Sidebar */}
           <div className="space-y-6">
             {/* Tips */}
             <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-b from-[var(--White)] to-transparent p-6 shadow-soft-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-2 w-2 rounded-full bg-[var(--DarkGray)]"></div>
+              <div className="flex items-center gap-3 mb-4 text-center justify-center">
                 <h3 className="h3-apple text-[var(--DarkGray)]">Tips</h3>
               </div>
               <div className="space-y-3">

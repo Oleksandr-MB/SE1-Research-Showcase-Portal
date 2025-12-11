@@ -109,6 +109,7 @@ def _to_post_read(post: models.Post) -> PostRead:
         title=post.title,
         body=post.body,
         poster_id=post.poster_id,
+        poster_username=post.poster.username if post.poster else "",
         created_at=post.created_at,
         phase=post.phase,
         upvotes=upvotes,
@@ -139,7 +140,7 @@ def _parse_vote_payload(payload: VoteRequest | dict | str) -> VoteRequest:
 @router.post("/attachments/upload", response_model=AttachmentUploadResponse)
 async def upload_post_attachment(
     file: UploadFile = File(...),
-    current_user: Annotated[models.User, Depends(get_current_user)] = None,
+    current_user: Annotated[models.User, Depends(get_current_user)],
 ) -> AttachmentUploadResponse:
     if not file or not file.filename:
         raise HTTPException(
@@ -165,7 +166,7 @@ async def upload_post_attachment(
 
     logging.info(
         "User %s uploaded attachment %s saved as %s",
-        current_user.id if current_user else "anonymous",
+        current_user.id,
         file.filename,
         destination_name,
     )
@@ -241,7 +242,8 @@ async def create_research_post(
 ) -> PostRead:
     if not raw_body:
         logging.error("Empty body received for post creation")
-        raise HTTPException(status_code=400, detail="Request body cannot be empty")
+        raise HTTPException(
+            status_code=400, detail="Request body cannot be empty")
 
     try:
         raw_payload = json.loads(raw_body)
@@ -270,7 +272,8 @@ async def create_research_post(
             logging.error("Invalid post payload provided as dict")
             raise HTTPException(status_code=422, detail="Invalid post payload")
     else:
-        logging.error("Unsupported payload type %s for post creation", type(payload))
+        logging.error(
+            "Unsupported payload type %s for post creation", type(payload))
         raise HTTPException(status_code=422, detail="Invalid post payload")
     requested_phase = post.phase or models.PostPhase.DRAFT
     if requested_phase == models.PostPhase.DRAFT:
@@ -347,31 +350,6 @@ async def create_research_post(
     return _to_post_read(db_post)
 
 
-@router.get("/top", response_model=list[PostRead])
-def list_top_research_posts(
-    db: Annotated[Session, Depends(get_db)],
-    n: int = 10,
-    limit_days: int = 7,
-) -> list[PostRead]:
-
-    time_threshold = datetime.now(timezone.utc) - timedelta(days=limit_days)
-    db_posts = (
-        db.query(models.Post)
-        .outerjoin(models.PostVote)
-        .filter(models.Post.created_at >= time_threshold)
-        .group_by(models.Post.id)
-        .order_by(func.sum(func.coalesce(models.PostVote.value, 0)).desc())
-        .limit(n)
-        .all()
-    )
-
-    if not db_posts:
-        logging.info("No top posts found in the given time frame")
-        return []
-
-    return [_to_post_read(post) for post in db_posts]
-
-
 @router.get("/by/{username}", response_model=list[PostRead])
 def get_posts_by_username(
     username: str,
@@ -423,7 +401,8 @@ def get_post_comments(
         .first()
     )
     if not post_exists:
-        logging.error("Post with ID %s not found when listing comments", post_id)
+        logging.error(
+            "Post with ID %s not found when listing comments", post_id)
         raise HTTPException(status_code=404, detail="Post not found")
 
     db_comments = (
@@ -444,8 +423,10 @@ def get_post_comments(
             parent_comment_id=comment.parent_comment_id,
             body=comment.body,
             created_at=comment.created_at,
-            upvotes=sum(1 for vote in comment.comment_votes if vote.value == 1),
-            downvotes=sum(1 for vote in comment.comment_votes if vote.value == -1),
+            upvotes=sum(
+                1 for vote in comment.comment_votes if vote.value == 1),
+            downvotes=sum(
+                1 for vote in comment.comment_votes if vote.value == -1),
         )
         for comment in db_comments
     ]
@@ -480,7 +461,8 @@ def create_post_comment(
         .first()
     )
     if not post_exists:
-        logging.error("Post with ID %s not found when creating comment", post_id)
+        logging.error(
+            "Post with ID %s not found when creating comment", post_id)
         raise HTTPException(status_code=404, detail="Post not found")
 
     parent_comment_id = parsed_payload.parent_comment_id
@@ -499,11 +481,13 @@ def create_post_comment(
                 parent_comment_id,
                 post_id,
             )
-            raise HTTPException(status_code=404, detail="Parent comment not found")
+            raise HTTPException(
+                status_code=404, detail="Parent comment not found")
 
     body = (parsed_payload.body or "").strip()
     if not body:
-        raise HTTPException(status_code=400, detail="Comment body cannot be empty")
+        raise HTTPException(
+            status_code=400, detail="Comment body cannot be empty")
 
     db_comment = models.Comment(
         post_id=post_id,
@@ -569,7 +553,8 @@ def vote_on_comment(
     if vote_model.value == 0:
         vote_service.remove_comment_vote(db, current_user.id, comment_id)
     else:
-        vote_service.vote_comment(db, current_user.id, comment_id, vote_model.value)
+        vote_service.vote_comment(
+            db, current_user.id, comment_id, vote_model.value)
 
     counts = vote_service.get_comment_votes(db, comment_id)
     return VoteResponse(**counts)
@@ -607,7 +592,7 @@ def get_my_research_posts(
 
     logging.info(
         f"Retrieved {len(db_posts)} posts for user ID {current_user.id}")
-    
+
     if not db_posts:
         logging.info(f"No posts found for user ID {current_user.id}")
         return []

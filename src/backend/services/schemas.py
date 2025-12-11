@@ -66,6 +66,7 @@ class PostCreate(PostBase):
 class PostRead(PostBase):
     id: int
     poster_id: int
+    poster_username: str
     created_at: datetime.datetime
     tags: Optional[list[str]] = None
     attachments: Optional[list[str]] = None

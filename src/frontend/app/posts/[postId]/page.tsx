@@ -124,23 +124,25 @@ export default async function PostDetailsPage({ params }: PageProps) {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <div className="space-y-6">
             <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
-              <div className="flex flex-col gap-4">
-                <h1 className="h1-apple text-[var(--DarkGray)]">{post.title}</h1>
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-lg font-semibold text-[var(--DarkGray)]">
-                      {(post.authors_text || "A")[0].toUpperCase()}
+                <div className="flex flex-col gap-4">
+                  <h1 className="h1-apple text-[var(--DarkGray)]">{post.title}</h1>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-lg font-semibold text-[var(--DarkGray)]">
+                        {(post.poster_username || "A")[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[var(--DarkGray)]">
+                          @{post.poster_username ?? `Researcher #${post.poster_id}`}
+                        </p>
+                        <p className="text-xs text-[var(--Gray)]">
+                          Published {new Date(post.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-[var(--DarkGray)]">{post.authors_text || "Anonymous"}</p>
-                      <p className="text-xs text-[var(--Gray)]">
-                        Published {new Date(post.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="ml-auto">
-                    <PostVoteActions
-                      postId={numericPostId}
+                    <div className="ml-auto">
+                      <PostVoteActions
+                        postId={numericPostId}
                       initialUpvotes={post.upvotes ?? 0}
                       initialDownvotes={post.downvotes ?? 0}
                     />
@@ -162,6 +164,20 @@ export default async function PostDetailsPage({ params }: PageProps) {
                 ) : null}
               </div>
             </section>
+            {post.authors_text ? (
+              <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--LightGray)] pb-4">
+                  <div>
+                    <h2 className="h3-apple text-[var(--DarkGray)]">Authors</h2>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-4">
+                  <p className="body-apple leading-relaxed text-[var(--DarkGray)]">
+                    {post.authors_text}
+                  </p>
+                </div>
+              </section>
+            ) : null}
 
             <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--LightGray)] pb-4">

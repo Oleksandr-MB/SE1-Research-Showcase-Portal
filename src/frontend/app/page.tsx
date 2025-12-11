@@ -65,10 +65,7 @@ const formatLatestUsers = (
     }),
   }));
 
-const formatAuthor = (post: PostSummary) => {
-  if (post.authors_text?.trim()) {
-    return post.authors_text.trim();
-  }
+const formatPoster = (post: PostSummary) => {
   if (post.poster_username) {
     return `@${post.poster_username}`;
   }
@@ -92,108 +89,118 @@ const PostCard = ({
 }: {
   post: PostSummary;
   buildTagHref?: (tag: string) => string;
-}) => (
-  <article className="group rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm transition-all duration-300 hover:border-[var(--DarkGray)] hover:shadow-soft-md">
-    <div className="space-y-4">
-      <div className="space-y-3">
-        <Link href={`/posts/${post.id}`}>
-          <h3 className="text-xl font-semibold leading-tight text-[var(--DarkGray)] transition-colors duration-200 group-hover:text-[var(--Red)] line-clamp-2">
-            {post.title}
-          </h3>
-        </Link>
-
-        <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--Gray)]">
-          <div className="flex items-center gap-1">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            <span>{formatAuthor(post)}</span>
-          </div>
-          <span className="text-[var(--GrayTransparent)]">/</span>
-          <span className="text-xs uppercase tracking-wide text-[var(--Gray)]">
-            {new Date(post.created_at).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {post.tags.map((tag) => {
-            const href = buildTagHref
-              ? buildTagHref(tag)
-              : `/?tag=${encodeURIComponent(tag)}`;
-            return (
-              <Link
-                key={`${post.id}-${tag}`}
-                href={href}
-                className="inline-flex items-center rounded-full border border-[var(--LightGray)] px-3 py-1 text-xs font-medium text-[var(--DarkGray)] transition-colors duration-200 hover:border-[var(--DarkGray)]"
-              >
-                #{tag}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      <p className="text-sm leading-relaxed text-[var(--Gray)] line-clamp-3">
-        {getAbstractPreview(post.abstract)}
-      </p>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--LightGray)] pt-4 text-sm">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 text-[var(--DarkGray)]">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 15l7-7 7 7"
-              />
-            </svg>
-            <span>{post.upvotes ?? 0}</span>
-          </div>
-          <div className="flex items-center gap-1 text-[var(--Red)]">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-            <span>{post.downvotes ?? 0}</span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4">
-          <Link
-            href={`/posts/${post.id}`}
-            className="inline-flex items-center gap-1 text-[var(--DarkGray)] transition-colors duration-200 hover:text-[var(--Red)]"
-          >
-            Read full post
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+}) => {
+  const authorsText = post.authors_text?.trim();
+  return (
+    <article className="group rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm transition-all duration-300 hover:border-[var(--DarkGray)] hover:shadow-soft-md">
+      <div className="space-y-4">
+        <div className="space-y-3">
+          <Link href={`/posts/${post.id}`}>
+            <h3 className="text-xl font-semibold leading-tight text-[var(--DarkGray)] transition-colors duration-200 group-hover:text-[var(--Red)] line-clamp-2">
+              {post.title}
+            </h3>
           </Link>
-          <span className="text-xs text-[var(--Gray)]">
-            {new Date(post.created_at).toLocaleDateString("en-GB", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
+
+          <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--Gray)]">
+            <div className="flex items-center gap-1">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              <span>{formatPoster(post)}</span>
+            </div>
+            <span className="text-[var(--GrayTransparent)]">/</span>
+            <span className="text-xs uppercase tracking-wide text-[var(--Gray)]">
+              {new Date(post.created_at).toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </span>
+          </div>
+
+          {authorsText ? (
+            <p className="text-sm text-[var(--Gray)]">
+              <span className="text-xs tracking-wide text-[var(--Gray)]">Author(s):</span>{" "}
+              <span className="font-medium text-[var(--DarkGray)]">{authorsText}</span>
+            </p>
+          ) : null}
+
+          <div className="flex flex-wrap gap-2">
+            {post.tags.map((tag) => {
+              const href = buildTagHref
+                ? buildTagHref(tag)
+                : `/?tag=${encodeURIComponent(tag)}`;
+              return (
+                <Link
+                  key={`${post.id}-${tag}`}
+                  href={href}
+                  className="inline-flex items-center rounded-full border border-[var(--LightGray)] px-3 py-1 text-xs font-medium text-[var(--DarkGray)] transition-colors duration-200 hover:border-[var(--DarkGray)]"
+                >
+                  #{tag}
+                </Link>
+              );
             })}
-          </span>
+          </div>
+        </div>
+
+        <p className="text-sm leading-relaxed text-[var(--Gray)] line-clamp-3">
+          {getAbstractPreview(post.abstract)}
+        </p>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--LightGray)] pt-4 text-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 text-[var(--DarkGray)]">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
+              </svg>
+              <span>{post.upvotes ?? 0}</span>
+            </div>
+            <div className="flex items-center gap-1 text-[var(--Red)]">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+              <span>{post.downvotes ?? 0}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href={`/posts/${post.id}`}
+              className="inline-flex items-center gap-1 text-[var(--DarkGray)] transition-colors duration-200 hover:text-[var(--Red)]"
+            >
+              Read full post
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <span className="text-xs text-[var(--Gray)]">
+              {new Date(post.created_at).toLocaleDateString("en-GB", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-  </article>
-);
+    </article>
+  );
+};
 
 export default async function Home({
   searchParams,

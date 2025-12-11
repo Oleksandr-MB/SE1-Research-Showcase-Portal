@@ -168,7 +168,7 @@ export default function MePage() {
                   }
                 />
                 <QuickAction
-                  href={`/search?author=${user.username}`}
+                  href={`/?author=${user.username}`}
                   label="My Posts"
                   description="Browse and manage your publications"
                   icon={

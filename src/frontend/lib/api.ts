@@ -7,7 +7,7 @@ export type PostSummary = {
   title: string;
   abstract: string;
   authors_text: string;
-  poster_username?: string;
+  poster_username: string;
   tags: string[];
   poster_id: number;
   created_at: string;
