@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-type MathContentProps = {
+type KatexProps = {
   content: string;
   className?: string;
   paragraphClassName?: string;
@@ -67,7 +67,7 @@ const buildParagraphs = (text: string) =>
     .map((block) => block.trim())
     .filter(Boolean);
 
-export default function MathContent({ content, className, paragraphClassName }: MathContentProps) {
+export default function Katex({ content, className, paragraphClassName }: KatexProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const paragraphs = buildParagraphs(content);
 

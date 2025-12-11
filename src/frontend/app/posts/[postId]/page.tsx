@@ -4,7 +4,7 @@ import { getPostById, getPostComments } from "@/lib/api";
 import CommentsSection from "@/components/comments-section";
 import PostVoteActions from "@/components/post-vote-actions";
 import ShareCitation from "@/components/share-citation";
-import MathContent from "@/components/math-content";
+import Katex from "@/components/katex";
 import AttachmentDownloadButton from "@/components/attachment-download-button";
 import { Button } from "@/components/Button";
 
@@ -192,7 +192,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
           </div>
           <div className="mt-4 space-y-4">
             {post.abstract ? (
-              <MathContent
+              <Katex
                 content={post.abstract}
                 paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
                 className="space-y-3"
@@ -200,23 +200,13 @@ export default async function PostDetailsPage({ params }: PageProps) {
             ) : null}
             <hr className="border-t border-[var(--LightGray)]" />
             {post.body ? (
-              <MathContent
+              <Katex
                 content={post.body}
                 className="space-y-3"
                 paragraphClassName="body-apple leading-relaxed text-[var(--DarkGray)]"
               />
             ) : null}
           </div>
-        </section>
-
-        <ShareCitation postId={numericPostId} title={post.title} bibtex={post.bibtex} />
-
-        <CommentsSection postId={numericPostId} initialComments={comments} />
-
-        <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
-          <Button href="/" variant="secondary" size="md" className="w-full justify-center">
-            Back to Feed
-          </Button>
         </section>
 
         {attachments.length > 0 ? (
@@ -251,6 +241,11 @@ export default async function PostDetailsPage({ params }: PageProps) {
             </div>
           </section>
         ) : null}
+
+        <ShareCitation postId={numericPostId} title={post.title} bibtex={post.bibtex} />
+
+        <CommentsSection postId={numericPostId} initialComments={comments} />
+
       </div>
     </div>
   );
