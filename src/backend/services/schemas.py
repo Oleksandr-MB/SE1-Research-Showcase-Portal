@@ -18,6 +18,7 @@ class UserRead(BaseModel):
     id: int
     username: str
     role: str
+    email: str
     created_at: datetime.datetime
 
     display_name: Optional[str] = None

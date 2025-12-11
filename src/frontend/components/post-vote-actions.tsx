@@ -50,12 +50,12 @@ export default function PostVoteActions({
     }
   };
 
-  const buttonClasses = (active: boolean) =>
-    `rounded-full px-4 py-2 text-sm font-semibold transition ${
-      active
-        ? "bg-[var(--Red)] text-[var(--White)]"
-        : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
-    }`;
+const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
+  `rounded-full px-4 py-2 text-sm font-semibold transition ${
+    active
+      ? (variant === "up" ? "bg-green-500 text-[var(--White)]" : "bg-[var(--Red)] text-[var(--White)]")
+      : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
+  } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
 
   return (
     <div className="flex flex-wrap items-center gap-4">
@@ -63,9 +63,9 @@ export default function PostVoteActions({
         type="button"
         onClick={() => handleVote(1)}
         disabled={isVoting}
-        className={buttonClasses(currentVote === 1)}
+        className={buttonClasses(currentVote === 1, "up")}
       >
-      <svg className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -77,9 +77,9 @@ export default function PostVoteActions({
         type="button"
         onClick={() => handleVote(-1)}
         disabled={isVoting}
-        className={buttonClasses(currentVote === -1)}
+        className={buttonClasses(currentVote === -1, "down")}
       >
-      <svg className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"

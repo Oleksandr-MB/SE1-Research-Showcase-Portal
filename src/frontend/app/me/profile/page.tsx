@@ -158,6 +158,9 @@ export default function PersonalLab() {
         const currentUser = await getCurrentUser(token);
         if (!isMounted) return;
 
+        console.log('Full user object:', currentUser);
+        console.log('Email from currentUser:', currentUser.email);
+
         setUser(currentUser);
         setForm({
           displayName: currentUser.display_name || currentUser.username || "",
@@ -262,11 +265,6 @@ export default function PersonalLab() {
               <Link href={`/${user.username}`}>
                 <Button variant="outline" size="md">
                   View public profile
-                </Button>
-              </Link>
-              <Link href="/posts/new">
-                <Button variant="primary" size="md">
-                  New Post
                 </Button>
               </Link>
             </div>
@@ -428,6 +426,7 @@ export default function PersonalLab() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--Gray)]">Email</span>
                   <span className="max-w-[180px] truncate text-sm text-[var(--DarkGray)]">{user.email}</span>
+                  
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--Gray)]">Role</span>
@@ -443,46 +442,87 @@ export default function PersonalLab() {
             </div>
 
             <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
-              <h3 className="h3-apple mb-4 text-[var(--DarkGray)]">Quick Actions</h3>
-              <div className="space-y-3">
+              <h3 className="h3-apple text-[var(--DarkGray)]">Quick Actions</h3>
+              <div className="mt-4 space-y-3">
                 <Link
                   href="/posts/new"
-                  className="group flex items-center justify-between rounded-2xl border border-[var(--LightGray)] px-4 py-3 transition-colors duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--LightGray)]"
+                  className="group flex items-center justify-between rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 shadow-soft-xs transition-all duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--LightGray)]"
                 >
-                  <span className="text-sm font-medium text-[var(--DarkGray)]">Create New Post</span>
-                  <svg
-                    className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </Link>
-                <Link
-                  href={`/?author=${user.username}`}
-                  className="group flex items-center justify-between rounded-2xl border border-[var(--LightGray)] px-4 py-3 transition-colors duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--LightGray)]"
-                >
-                  <span className="text-sm font-medium text-[var(--DarkGray)]">View My Posts</span>
-                  <svg
-                    className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)] transition-colors duration-200 group-hover:bg-[var(--DarkGray)] group-hover:text-[var(--White)]">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[var(--DarkGray)]">
+                        Create Post
+                      </p>
+                      <p className="text-xs text-[var(--Gray)]">Share a new study with the portal.</p>
+                    </div>
+                  </div>
+                  <svg className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
                 <Link
-                  href="/logout"
-                  className="group flex items-center justify-between rounded-2xl border border-[var(--LightGray)] px-4 py-3 transition-colors duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--LightGray)]"
+                  href="/"
+                  className="group flex items-center justify-between rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 shadow-soft-xs transition-all duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--LightGray)]"
                 >
-                  <span className="text-sm font-medium text-[var(--Red)]">Log Out</span>
-                  <svg className="h-4 w-4 text-[var(--Red)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)] transition-colors duration-200 group-hover:bg-[var(--DarkGray)] group-hover:text-[var(--White)]">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[var(--DarkGray)]">
+                        Browse Research
+                      </p>
+                      <p className="text-xs text-[var(--Gray)]">Jump directly to the search filters.</p>
+                    </div>
+                  </div>
+                  <svg className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+                <Link
+                  href="/me"
+                  className="group flex items-center justify-between rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 shadow-soft-xs transition-all duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--LightGray)]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)] transition-colors duration-200 group-hover:bg-[var(--DarkGray)] group-hover:text-[var(--White)]">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A6 6 0 0112 14a6 6 0 016.879 3.804M12 14a4 4 0 10-4-4 4 4 0 004 4z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[var(--DarkGray)]">
+                        My Profile
+                      </p>
+                      <p className="text-xs text-[var(--Gray)]">Review your contributions and stats.</p>
+                    </div>
+                  </div>
+                  <svg className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
               </div>
+            </div>
+
+            <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
+              <Link
+                href="/logout"
+                className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--Red)] px-4 py-3 text-sm font-semibold text-[var(--White)] transition-colors duration-200"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Log Out
+              </Link>
+              <p className="mt-3 text-center text-xs text-[var(--Gray)]">
+                Signed in as <span className="font-medium text-[var(--DarkGray)]">{user.username}</span>
+              </p>
             </div>
           </div>
         </div>
