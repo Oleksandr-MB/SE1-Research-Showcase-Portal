@@ -165,7 +165,7 @@ const PostCard = ({
               </svg>
               <span>{post.upvotes ?? 0}</span>
             </div>
-            <div className="flex items-center gap-1 text-[var(--Red)]">
+            <div className="flex items-center gap-1 text-[var(--DarkGray)]">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"

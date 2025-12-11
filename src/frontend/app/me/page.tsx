@@ -110,7 +110,7 @@ export default function MePage() {
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/">
                 <Button variant="primary" size="md">
-                  Back to search
+                  Return to the main page
                 </Button>
               </Link>
             </div>

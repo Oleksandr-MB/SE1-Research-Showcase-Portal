@@ -104,7 +104,7 @@ export default async function UserProfilePage({ params }: PageProps) {
                       {post.tags.map((tag) => (
                         <Link
                           key={`${post.id}-${tag}`}
-                          href={`/search?tag=${encodeURIComponent(tag)}`}
+                          href={`/?tag=${encodeURIComponent(tag)}`}
                           className="rounded-full border border-[#E5E5E5] bg-[#F3F3F3] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
                         >
                           #{tag}

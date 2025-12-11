@@ -460,7 +460,7 @@ export default function PersonalLab() {
                   </svg>
                 </Link>
                 <Link
-                  href={`/search?author=${user.username}`}
+                  href={`/?author=${user.username}`}
                   className="group flex items-center justify-between rounded-2xl border border-[var(--LightGray)] px-4 py-3 transition-colors duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--LightGray)]"
                 >
                   <span className="text-sm font-medium text-[var(--DarkGray)]">View My Posts</span>
