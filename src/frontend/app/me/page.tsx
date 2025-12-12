@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { UserRead } from "@/lib/api";
-import { getCurrentUser } from "@/lib/api";
+import type { UserRead, PostSummary } from "@/lib/api";
+import { getCurrentUser, getPublishedPostsByUsername } from "@/lib/api";
 import { Button } from "@/components/Button";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 
@@ -60,9 +60,41 @@ export default function MePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserRead | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [recentPosts, setRecentPosts] = useState<PostSummary[]>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
 
-  useEffect(() => {
+    useEffect(() => {
     let isMounted = true;
+
+    const fetchActivity = async (username: string) => {
+      try {
+        if (!isMounted) return;
+        setIsLoadingActivity(true);
+
+        const posts = await getPublishedPostsByUsername(username);
+        if (!isMounted) return;
+
+        const sorted = [...posts]
+          .filter((p) => p.phase === "published")
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          )
+          .slice(0, 5); // last 5 posts
+
+        setRecentPosts(sorted);
+      } catch (error) {
+        console.error("Unable to load recent activity", error);
+        if (isMounted) {
+          setRecentPosts([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingActivity(false);
+        }
+      }
+    };
 
     const fetchUser = async () => {
       const token = localStorage.getItem("rsp_token");
@@ -75,6 +107,7 @@ export default function MePage() {
         const currentUser = await getCurrentUser(token);
         if (!isMounted) return;
         setUser(currentUser);
+        await fetchActivity(currentUser.username);
       } catch (error) {
         console.error("Unable to load current user", error);
         localStorage.removeItem("rsp_token");
@@ -185,24 +218,71 @@ export default function MePage() {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="h3-apple text-[var(--DarkGray)]">Recent Activity</h2>
-                </div>
-              </div>
               <div className="mt-6 space-y-4">
-                <div className="flex items-center gap-3 rounded-2xl border border-dashed border-[var(--LightGray)] bg-[var(--LightGray)]/40 px-4 py-3">
-                  <div className="h-2 w-2 rounded-full bg-[var(--DarkGray)] animate-pulse"></div>
-                  <p className="text-sm text-[var(--Gray)]">
-                    Activity tracking is being implemented right now.
-                  </p>
-                </div>
-                <p className="text-sm text-[var(--Gray)]">
-                  Coming soon: See your recent posts, comments, and interactions all in one place to keep track of your contributions.
+    {isLoadingActivity ? (
+      // Skeletons while loading
+      <div className="space-y-3">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="flex items-center justify-between rounded-2xl border border-[var(--LightGray)] bg-[var(--LightGray)]/40 px-4 py-3"
+          >
+            <div className="space-y-2">
+              <div className="h-3 w-40 rounded-full bg-[var(--LightGray)]" />
+              <div className="h-3 w-24 rounded-full bg-[var(--LightGray)]" />
+            </div>
+            <div className="h-6 w-16 rounded-full bg-[var(--LightGray)]" />
+          </div>
+        ))}
+      </div>
+    ) : recentPosts.length === 0 ? (
+      // Empty state when no activity
+      <div className="rounded-2xl border border-dashed border-[var(--LightGray)] bg-[#FAFAFA] px-4 py-5 text-sm text-[var(--Gray)]">
+        You don&apos;t have any recent activity yet. Start by{" "}
+        <Link
+          href="/posts/new"
+          className="font-medium text-[var(--Red)] hover:underline"
+        >
+          creating your first research post
+        </Link>
+        .
+      </div>
+    ) : (
+      // List recent posts
+      <ul className="space-y-3">
+        {recentPosts.map((post) => (
+          <li key={post.id}>
+            <Link
+              href={`/posts/${post.id}`}
+              className="flex items-center justify-between rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm shadow-soft-xs transition-colors duration-200 hover:border-[var(--Red)]"
+            >
+              <div className="space-y-1">
+                <p className="font-medium text-[var(--DarkGray)]">
+                  {post.title}
+                </p>
+                <p className="text-xs text-[var(--Gray)]">
+                  {new Date(post.created_at).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}{" "}
+                  • {post.phase === "draft" ? "Draft" : "Published"}
                 </p>
               </div>
-            </section>
+              <div className="flex items-center gap-2 text-[var(--Gray)]">
+                <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
+                  ▲ {post.upvotes ?? 0}
+                </span>
+                <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
+                  ▼ {post.downvotes ?? 0}
+                </span>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
           </div>
 
           <div className="space-y-6">
@@ -253,3 +333,5 @@ export default function MePage() {
     </div>
   );
 }
+
+

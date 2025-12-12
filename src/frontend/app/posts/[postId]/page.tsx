@@ -134,10 +134,24 @@ export default async function PostDetailsPage({ params }: PageProps) {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--DarkGray)]">
-                      @{post.poster_username ?? `Researcher #${post.poster_id}`}
+                      {post.poster_username ? (
+                        <Link
+                          href={`/${encodeURIComponent(post.poster_username)}`}
+                          className="hover:text-[var(--Red)]"
+                        >
+                          @{post.poster_username}
+                        </Link>
+                      ) : (
+                        <>Researcher #{post.poster_id}</>
+                      )}
                     </p>
                     <p className="text-xs text-[var(--Gray)]">
-                      Published {new Date(post.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+                      Published{" "}
+                      {new Date(post.created_at).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </p>
                   </div>
                 </div>
