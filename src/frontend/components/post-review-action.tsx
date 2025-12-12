@@ -33,11 +33,10 @@ export default function PostReviewAction({ postId }: Props) {
 
         
         setUser(currentUser);
-        // Check if user is researcher or moderator
-        const isResearcherOrModerator =
-          currentUser.role === "researcher" || currentUser.role === "moderator";
-        console.log('Is researcher or moderator:', isResearcherOrModerator);
-        setIsAuthorized(isResearcherOrModerator);
+        // Check if user is researcher
+        const isResearcher =
+          currentUser.role === "researcher"  ;
+        setIsAuthorized(isResearcher);
       } catch (error) {
         console.error("Unable to fetch user:", error);
       } finally {
