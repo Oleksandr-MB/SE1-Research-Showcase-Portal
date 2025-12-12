@@ -95,12 +95,12 @@ const buildThreads = (comments: CommentThread[]): ThreadNode[] => {
   return threads;
 };
 
-const commentVoteButtonClasses = (active: boolean) =>
+const commentVoteButtonClasses = (active: boolean, variant: "up" | "down" = "up") =>
   `flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
     active
-      ? "bg-[var(--Red)] border-[var(--Red)] text-[var(--White)]"
-      : "border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
-  }`;
+      ? (variant === "up" ? "bg-[var(--Green)] text-[var(--White)]" : "bg-[var(--Red)] text-[var(--White)]")
+      : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
+  } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
 
 const ArrowIcon = ({ direction }: { direction: "up" | "down" }) => (
   <svg
@@ -284,23 +284,16 @@ export default function CommentsSection({ postId, initialComments }: Props) {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-baseline gap-3">
-        <h2 className="text-2xl font-semibold text-[var(--DarkGray)]">
-          Comments
-        </h2>
-        <span className="text-sm text-[var(--Gray)]">
-          {comments.length} {comments.length === 1 ? "comment" : "comments"}
-        </span>
-      </div>
-
       <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-sm">
+        <h2 className="ml-3 h3-apple text-[var(--DarkGray)]">Comments</h2>
+        <br/>
         <div className="space-y-3">
           <textarea
             value={newComment}
             onChange={(event) => setNewComment(event.target.value)}
             rows={3}
             placeholder="Add a comment..."
-            className="ml-1 mt-1 w-[calc(100%-0.25rem)] rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] outline-none transition-colors focus:border-[var(--DarkGray)]"
+            className="ml-3 mt-1 w-[calc(100%-0.75rem)] rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] outline-none transition-colors focus:border-[var(--DarkGray)]"
           />
           <div className="flex items-center justify-end gap-3">
             <button
