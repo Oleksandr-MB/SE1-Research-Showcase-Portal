@@ -343,6 +343,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                     }
                     className={commentVoteButtonClasses(
                       commentVoteState[comment.id] === 1,
+                      "up",
                     )}
                     aria-label="Upvote comment"
                   >
@@ -356,6 +357,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                     }
                     className={commentVoteButtonClasses(
                       commentVoteState[comment.id] === -1,
+                      "down",
                     )}
                     aria-label="Downvote comment"
                   >
@@ -409,6 +411,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                           }
                           className={commentVoteButtonClasses(
                             commentVoteState[replyComment.id] === 1,
+                            "up",
                           )}
                           aria-label="Upvote comment"
                         >
@@ -426,6 +429,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                           }
                           className={commentVoteButtonClasses(
                             commentVoteState[replyComment.id] === -1,
+                            "down",
                           )}
                           aria-label="Downvote comment"
                         >
