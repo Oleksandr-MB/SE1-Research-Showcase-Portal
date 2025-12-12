@@ -8,6 +8,7 @@ export type PostSummary = {
   abstract: string;
   authors_text: string;
   poster_username: string;
+  poster_role: string;
   tags: string[];
   poster_id: number;
   created_at: string;
@@ -73,6 +74,8 @@ export type VoteResponse = {
 export type ReviewCreate = {
   body: string;
   is_positive: boolean;
+  strengths: string;
+  weaknesses: string;
 };
 
 export type ReviewRead = {
@@ -82,6 +85,10 @@ export type ReviewRead = {
   reviewer_username: string;
   body: string;
   is_positive: boolean;
+  strengths?: string | null;
+  weaknesses?: string | null;
+  upvotes: number;
+  downvotes: number;
   created_at: string;
 };
 
@@ -411,5 +418,23 @@ export async function createReview(
 
 export async function getPostReviews(postId: number): Promise<ReviewRead[]> {
   return fetchFromApi<ReviewRead[]>(`/posts/${postId}/reviews`);
+}
+
+export async function getReviewById(reviewId: number): Promise<ReviewRead> {
+  return fetchFromApi<ReviewRead>(`/reviews/${reviewId}`);
+}
+
+export async function voteOnReview(
+  token: string,
+  reviewId: number,
+  value: 1 | -1,
+): Promise<ReviewRead> {
+  return fetchFromApi<ReviewRead>(`/reviews/${reviewId}/vote`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ value }),
+  });
 }
 

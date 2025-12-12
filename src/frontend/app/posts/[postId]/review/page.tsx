@@ -20,6 +20,8 @@ export default function ReviewPage() {
   
   const [reviewBody, setReviewBody] = useState("");
   const [isPositive, setIsPositive] = useState(true);
+  const [strengths, setStrengths] = useState("");
+  const [weaknesses, setWeaknesses] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -48,14 +50,19 @@ export default function ReviewPage() {
           return;
         }
 
-        setUser(currentUser);
-
         // Fetch the post
         try {
           const postData = await getPostById(numericPostId);
-          if (isMounted) {
-            setPost(postData);
+          if (!isMounted) return;
+
+          // If researcher is the author, redirect back to post
+          if (currentUser.id === postData.poster_id) {
+            router.replace(`/posts/${postId}`);
+            return;
           }
+
+          setUser(currentUser);
+          setPost(postData);
         } catch (err) {
           console.error("Failed to fetch post:", err);
           if (isMounted) {
@@ -91,17 +98,26 @@ export default function ReviewPage() {
       return;
     }
 
+    if (!strengths.trim() || !weaknesses.trim()) {
+      setError("Please fill in both strengths and weaknesses.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       await createReview(token, numericPostId, {
         body: reviewBody,
         is_positive: isPositive,
+        strengths,
+        weaknesses,
       });
 
       setSuccess("Review submitted successfully!");
       setReviewBody("");
       setIsPositive(true);
+      setStrengths("");
+      setWeaknesses("");
 
       // Redirect back to post after 1.5 seconds
       setTimeout(() => {
@@ -254,6 +270,43 @@ export default function ReviewPage() {
               <p className="text-xs text-[#8A8A8A] mt-2">
                 {reviewBody.length} / 10000 characters
               </p>
+            </div>
+
+            {/* Strengths & Weaknesses */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
+                  Strengths
+                </label>
+                <textarea
+                  required
+                  value={strengths}
+                  onChange={(e) => setStrengths(e.target.value)}
+                  rows={6}
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
+                  placeholder="Highlight the key strengths of this work"
+                />
+                <p className="text-xs text-[#8A8A8A] mt-1">{strengths.length} / 5000 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
+                  Weaknesses
+                </label>
+                <textarea
+                  required
+                  value={weaknesses}
+                  onChange={(e) => setWeaknesses(e.target.value)}
+                  rows={6}
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
+                  placeholder="Describe weaknesses or areas to improve"
+                />
+                <p className="text-xs text-[#8A8A8A] mt-1">{weaknesses.length} / 5000 characters</p>
+              </div>
             </div>
 
             {/* Submit Buttons */}

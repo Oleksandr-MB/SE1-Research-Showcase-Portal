@@ -118,6 +118,10 @@ class User(TimestampMixin, Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    review_votes: Mapped[list["ReviewVote"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -231,7 +235,7 @@ class Attachment(TimestampMixin, Base):
     post: Mapped[Post] = relationship(back_populates="attachments")
 
 
-class Review(TimestampMixin, Base):
+class Review(TimestampMixin, VotableMixin, Base):
     __tablename__ = "reviews"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -245,8 +249,14 @@ class Review(TimestampMixin, Base):
     )
     is_positive: Mapped[bool] = mapped_column(nullable=False)
     body: Mapped[str] = mapped_column(nullable=False)
+    strengths: Mapped[str | None] = mapped_column(Text, nullable=True)
+    weaknesses: Mapped[str | None] = mapped_column(Text, nullable=True)
     post: Mapped[Post] = relationship(back_populates="reviews")
     reviewer: Mapped[User] = relationship(back_populates="authored_reviews")
+    review_votes: Mapped[list["ReviewVote"]] = relationship(
+        back_populates="review",
+        cascade="all, delete-orphan",
+    )
 
 
 class Report(TimestampMixin, Base):
@@ -318,3 +328,24 @@ class CommentVote(TimestampMixin, Base):
     value: Mapped[int] = mapped_column(Integer, nullable=False)
     user: Mapped[User] = relationship(back_populates="comment_votes")
     comment: Mapped[Comment] = relationship(back_populates="comment_votes")
+
+
+class ReviewVote(TimestampMixin, Base):
+    __tablename__ = "review_votes"
+    __table_args__ = (
+        CheckConstraint("value in (-1, 1)", name="review_vote_value_check"),
+        UniqueConstraint("user_id", "review_id", name="uq_review_vote")
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    review_id: Mapped[int] = mapped_column(
+        ForeignKey("reviews.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    value: Mapped[int] = mapped_column(Integer, nullable=False)
+    user: Mapped[User] = relationship(back_populates="review_votes")
+    review: Mapped["Review"] = relationship(back_populates="review_votes")

@@ -92,17 +92,18 @@ def _normalize_attachment_value(raw_value: str | None) -> str | None:
 
 
 def _to_post_read(post: models.Post) -> PostRead:
-    upvotes = sum(1 for vote in post.post_votes if vote.value == 1)
-    downvotes = sum(1 for vote in post.post_votes if vote.value == -1)
+    upvotes = sum(1 for vote in post.post_votes if vote.value == 1) if post.post_votes else 0
+    downvotes = sum(1 for vote in post.post_votes if vote.value == -1) if post.post_votes else 0
+    
     return PostRead(
         id=post.id,
         abstract=post.abstract,
         authors_text=post.authors_text,
         bibtex=post.bibtex,
-        tags=[tag.name for tag in post.tags],
+        tags=[tag.name for tag in post.tags] if post.tags else [],
         attachments=[
             normalized
-            for attachment in post.attachments
+            for attachment in (post.attachments or [])
             for normalized in [_normalize_attachment_value(attachment.file_path)]
             if normalized
         ],
@@ -110,6 +111,7 @@ def _to_post_read(post: models.Post) -> PostRead:
         body=post.body,
         poster_id=post.poster_id,
         poster_username=post.poster.username if post.poster else "",
+        poster_role=post.poster.role.value if post.poster and post.poster.role else "user",
         created_at=post.created_at,
         phase=post.phase,
         upvotes=upvotes,
@@ -184,11 +186,29 @@ def find_research_posts(
     query: str | None = None,
 ) -> list[PostRead]:
     if not query:
-        db_posts = db.query(models.Post).all()
+        db_posts = (
+            db.query(models.Post)
+            .options(
+                joinedload(models.Post.poster),
+                joinedload(models.Post.tags),
+                joinedload(models.Post.attachments),
+                joinedload(models.Post.post_votes)
+            )
+            .all()
+        )
     else:
         raw_query = query.strip()
         if not raw_query:
-            db_posts = db.query(models.Post).all()
+            db_posts = (
+                db.query(models.Post)
+                .options(
+                    joinedload(models.Post.poster),
+                    joinedload(models.Post.tags),
+                    joinedload(models.Post.attachments),
+                    joinedload(models.Post.post_votes)
+                )
+                .all()
+            )
         else:
             query_lower = raw_query.lower()
 
@@ -197,6 +217,12 @@ def find_research_posts(
 
             posts_by_text = (
                 db.query(models.Post)
+                .options(
+                    joinedload(models.Post.poster),
+                    joinedload(models.Post.tags),
+                    joinedload(models.Post.attachments),
+                    joinedload(models.Post.post_votes)
+                )
                 .filter(
                     or_(
                         models.Post.title.ilike(pattern, escape="\\"),
@@ -210,6 +236,12 @@ def find_research_posts(
 
             posts_by_tags = (
                 db.query(models.Post)
+                .options(
+                    joinedload(models.Post.poster),
+                    joinedload(models.Post.tags),
+                    joinedload(models.Post.attachments),
+                    joinedload(models.Post.post_votes)
+                )
                 .join(models.Post.tags)
                 .filter(models.Tag.name.ilike(pattern, escape="\\"))
                 .all()

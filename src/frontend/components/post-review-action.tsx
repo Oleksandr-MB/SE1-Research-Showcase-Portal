@@ -6,9 +6,10 @@ import { getCurrentUser } from "@/lib/api";
 
 type Props = {
   postId: number;
+  posterId: number;
 };
 
-export default function PostReviewAction({ postId }: Props) {
+export default function PostReviewAction({ postId, posterId }: Props) {
   const [user, setUser] = useState<UserRead | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -33,9 +34,10 @@ export default function PostReviewAction({ postId }: Props) {
 
         
         setUser(currentUser);
-        // Check if user is researcher (only researchers can review)
+        // Only researchers who are NOT the post author can review
         const isResearcher = currentUser.role === "researcher";
-        setIsAuthorized(isResearcher);
+        const isNotAuthor = currentUser.id !== posterId;
+        setIsAuthorized(isResearcher && isNotAuthor);
       } catch (error) {
         console.error("Unable to fetch user:", error);
       } finally {
