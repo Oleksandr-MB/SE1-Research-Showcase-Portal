@@ -246,9 +246,9 @@ export default async function PostDetailsPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        <ShareCitation postId={numericPostId} title={post.title} bibtex={post.bibtex} />
-
         <CommentsSection postId={numericPostId} initialComments={comments} />
+
+        <ShareCitation postId={numericPostId} title={post.title} bibtex={post.bibtex} />
 
       </div>
     </div>
