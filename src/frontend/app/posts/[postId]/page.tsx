@@ -206,8 +206,8 @@ export default async function PostDetailsPage({ params }: PageProps) {
             {post.body ? (
               <Katex
                 content={post.body}
+                paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
                 className="space-y-3"
-                paragraphClassName="body-apple leading-relaxed text-[var(--DarkGray)]"
               />
             ) : null}
           </div>
