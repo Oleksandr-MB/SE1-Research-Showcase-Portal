@@ -283,10 +283,9 @@ export default function CommentsSection({ postId, initialComments }: Props) {
   };
 
   return (
-    <section className="space-y-6">
-      <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-sm">
+    <section>
+      <div className="space-y-6 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5">
         <h2 className="ml-3 h3-apple text-[var(--DarkGray)]">Comments</h2>
-        <br/>
         <div className="space-y-3">
           <textarea
             value={newComment}
@@ -314,154 +313,151 @@ export default function CommentsSection({ postId, initialComments }: Props) {
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
-      </div>
 
-      <ul className="space-y-6">
-        {threads.length === 0 ? (
-          <li className="rounded-3xl border border-dashed border-[var(--LightGray)] px-4 py-10 text-center text-sm text-[var(--Gray)]">
-            No comments yet. Start the conversation!
-          </li>
-        ) : (
-          threads.map(({ comment, replies }, index) => (
-            <li
-              key={comment.id}
-              className={`space-y-4 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-xs ${index === threads.length - 1 ? "" : "mb-4"}`}
-            >
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--Gray)]">
-                  <span className="font-semibold text-[var(--DarkGray)]">
-                    {comment.commenter_username}
-                  </span>
-                  <span>{formatDateTime(comment.created_at)}</span>
-                </div>
-                <p className="text-[var(--DarkGray)]">{comment.body}</p>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleCommentVote(comment.id, comment.post_id, 1)
-                    }
-                    className={commentVoteButtonClasses(
-                      commentVoteState[comment.id] === 1,
-                      "up",
-                    )}
-                    aria-label="Upvote comment"
-                  >
-                    <ArrowIcon direction="up" />
-                    <span>{comment.upvotes}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleCommentVote(comment.id, comment.post_id, -1)
-                    }
-                    className={commentVoteButtonClasses(
-                      commentVoteState[comment.id] === -1,
-                      "down",
-                    )}
-                    aria-label="Downvote comment"
-                  >
-                    <ArrowIcon direction="down" />
-                    <span>{comment.downvotes}</span>
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setActiveReplyTarget((prev) =>
-                      prev === comment.id ? null : comment.id,
-                    )
-                  }
-                  className="text-sm font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
-                >
-                  Reply
-                </button>
-
-                {renderReplyComposer(comment.id, comment.commenter_username)}
-              </div>
-
-              {replies.length > 0 && (
-                <div className="ml-6 pl-6">
-                  {replies.map(({ comment: replyComment, parentUsername }) => (
-                    <div
-                      key={replyComment.id}
-                      className="mb-4 rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm shadow-soft-xs"
-                    >
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--Gray)]">
-                        <span className="font-semibold text-[var(--DarkGray)]">
-                          {replyComment.commenter_username}
-                        </span>
-                        <span>{formatDateTime(replyComment.created_at)}</span>
-                      </div>
-                      <p className="mt-1 text-[var(--DarkGray)]">
-                        <span className="font-semibold text-[var(--DarkGray)]">
-                          @{parentUsername}
-                        </span>{" "}
-                        {replyComment.body}
-                      </p>
-                      <div className="mt-2 flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCommentVote(
-                              replyComment.id,
-                              replyComment.post_id,
-                              1,
-                            )
-                          }
-                          className={commentVoteButtonClasses(
-                            commentVoteState[replyComment.id] === 1,
-                            "up",
-                          )}
-                          aria-label="Upvote comment"
-                        >
-                          <ArrowIcon direction="up" />
-                          <span>{replyComment.upvotes}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCommentVote(
-                              replyComment.id,
-                              replyComment.post_id,
-                              -1,
-                            )
-                          }
-                          className={commentVoteButtonClasses(
-                            commentVoteState[replyComment.id] === -1,
-                            "down",
-                          )}
-                          aria-label="Downvote comment"
-                        >
-                          <ArrowIcon direction="down" />
-                          <span>{replyComment.downvotes}</span>
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveReplyTarget((prev) =>
-                            prev === replyComment.id ? null : replyComment.id,
-                          )
-                        }
-                        className="text-xs font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
-                      >
-                        Reply
-                      </button>
-                      <div className="mt-2">
-                        {renderReplyComposer(
-                          replyComment.id,
-                          replyComment.commenter_username,
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+        <ul className="space-y-6">
+          {threads.length === 0 ? (
+            <li className="rounded-3xl border border-dashed border-[var(--LightGray)] px-4 py-10 text-center text-sm text-[var(--Gray)]">
+              No comments yet. Start the conversation!
             </li>
-          ))
-        )}
-      </ul>
+          ) : (
+            threads.map(({ comment, replies }, index) => (
+                <li
+                  key={comment.id}
+                  className={`space-y-4 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 ${index === threads.length - 1 ? "" : "mb-4"}`}
+                >
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--Gray)]">
+                    <span className="font-semibold text-[var(--DarkGray)]">
+                      {comment.commenter_username}
+                    </span>
+                    <span>{formatDateTime(comment.created_at)}</span>
+                  </div>
+                  <p className="text-[var(--DarkGray)]">{comment.body}</p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleCommentVote(comment.id, comment.post_id, 1)
+                      }
+                      className={commentVoteButtonClasses(
+                        commentVoteState[comment.id] === 1,
+                        "up",
+                      )}
+                      aria-label="Upvote comment"
+                    >
+                      <ArrowIcon direction="up" />
+                      <span>{comment.upvotes}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleCommentVote(comment.id, comment.post_id, -1)
+                      }
+                      className={commentVoteButtonClasses(
+                        commentVoteState[comment.id] === -1,
+                        "down",
+                      )}
+                      aria-label="Downvote comment"
+                    >
+                      <ArrowIcon direction="down" />
+                      <span>{comment.downvotes}</span>
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveReplyTarget((prev) =>
+                        prev === comment.id ? null : comment.id,
+                      )
+                    }
+                    className="text-sm font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
+                  >
+                    Reply
+                  </button>
+
+                  {renderReplyComposer(comment.id, comment.commenter_username)}
+                </div>
+
+                {replies.length > 0 && (
+                  <div className="ml-6 pl-6">
+                    {replies.map(({ comment: replyComment, parentUsername }) => (
+                      <div key={replyComment.id} className="mb-4 rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--Gray)]">
+                          <span className="font-semibold text-[var(--DarkGray)]">
+                            {replyComment.commenter_username}
+                          </span>
+                          <span>{formatDateTime(replyComment.created_at)}</span>
+                        </div>
+                        <p className="mt-1 text-[var(--DarkGray)]">
+                          <span className="font-semibold text-[var(--DarkGray)]">
+                            @{parentUsername}
+                          </span>{" "}
+                          {replyComment.body}
+                        </p>
+                        <div className="mt-2 flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCommentVote(
+                                replyComment.id,
+                                replyComment.post_id,
+                                1,
+                              )
+                            }
+                            className={commentVoteButtonClasses(
+                              commentVoteState[replyComment.id] === 1,
+                              "up",
+                            )}
+                            aria-label="Upvote comment"
+                          >
+                            <ArrowIcon direction="up" />
+                            <span>{replyComment.upvotes}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCommentVote(
+                                replyComment.id,
+                                replyComment.post_id,
+                                -1,
+                              )
+                            }
+                            className={commentVoteButtonClasses(
+                              commentVoteState[replyComment.id] === -1,
+                              "down",
+                            )}
+                            aria-label="Downvote comment"
+                          >
+                            <ArrowIcon direction="down" />
+                            <span>{replyComment.downvotes}</span>
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveReplyTarget((prev) =>
+                              prev === replyComment.id ? null : replyComment.id,
+                            )
+                          }
+                          className="text-xs font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
+                        >
+                          Reply
+                        </button>
+                        <div className="mt-2">
+                          {renderReplyComposer(
+                            replyComment.id,
+                            replyComment.commenter_username,
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
     </section>
   );
 }
