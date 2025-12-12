@@ -82,12 +82,10 @@ export default function NewPostPage() {
         
         if (user) {
           const authorName = user.display_name || user.username;
-          const affiliation = user.affiliation ? `, ${user.affiliation}` : '';
-          const defaultAuthorsText = `${authorName}${affiliation}`;
           
           setForm(prev => ({
             ...prev,
-            authorsText: defaultAuthorsText
+            authorsText: authorName
           }));
         }
       } catch (error) {
@@ -315,7 +313,7 @@ export default function NewPostPage() {
             </div>
             <Link href="/me">
               <Button variant="outline" size="md">
-                Back to My Space
+                Back to your lab
               </Button>
             </Link>
           </div>
@@ -325,7 +323,7 @@ export default function NewPostPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-2">
-            <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-6 sm:p-8 shadow-soft-sm">
+            <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-6 sm:p-8 shadow-soft-sm">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {error && (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-4">
@@ -364,9 +362,9 @@ export default function NewPostPage() {
                       Author
                     </label>
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[var(--DarkGray)] to-[var(--DarkRedLight)] flex items-center justify-center">
-                        <span className="text-sm font-medium text-white">
-                          {currentUser?.display_name?.[0] || currentUser?.username?.[0] || "U"}
+                      <div className="h-10 w-10 rounded-full bg-[var(--LightGray)] flex items-center justify-center">
+                        <span className="text-sm font-medium text-[var(--DarkGray)]">
+                          {currentUser?.username?.[0].toUpperCase() || "A"}
                         </span>
                       </div>
                       <div className="flex-1">

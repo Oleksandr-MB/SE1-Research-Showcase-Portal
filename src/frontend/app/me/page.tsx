@@ -101,7 +101,7 @@ export default function MePage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
               <h1 className="h1-apple text-[var(--DarkGray)]">
-                Welcome back, {user.display_name || user.username}
+                How it's going, {user.display_name || user.username}?
               </h1>
               <p className="body-apple text-[var(--Gray)]">
                 Manage your research profile, publications, and account settings.
@@ -209,7 +209,7 @@ export default function MePage() {
             <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-lg font-semibold text-[var(--DarkGray)]">
-                  {(user.display_name || user.username).charAt(0).toUpperCase()}
+                  {(user.username).charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <h3 className="font-semibold text-[var(--DarkGray)]">{user.display_name || user.username}</h3>

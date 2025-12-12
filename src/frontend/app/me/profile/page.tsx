@@ -86,19 +86,21 @@ function PrivacyCheckbox({
           name={name}
           checked={checked}
           onChange={onChange}
-          className="peer sr-only"
+          className="sr-only"
         />
         <div
-          className="flex h-4 w-4 items-center justify-center rounded-[4px] border border-[var(--LightGray)] bg-[var(--White)] transition-colors duration-200 peer-checked:border-[var(--DarkGray)] peer-checked:bg-[var(--DarkGray)]"
+          className="flex h-4 w-4 items-center justify-center rounded-[4px] border border-[var(--LightGray)] bg-[var(--White)] transition-colors duration-200"
         >
-          <svg
-            className="h-2.5 w-2.5 text-[var(--White)] opacity-0 transition-opacity peer-checked:opacity-100"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-          </svg>
+          {!checked && (
+            <svg
+              className="h-3 w-3 text-[var(--DarkGray)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 5l14 14M5 19L19 5" />
+            </svg>
+          )}
         </div>
       </div>
       <div className="min-w-0 flex-1">
@@ -252,16 +254,15 @@ export default function PersonalLab() {
         <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--Gray)]">Profile settings</p>
               <h1 className="h1-apple text-[var(--DarkGray)]">Edit Profile</h1>
               <p className="caption-apple max-w-2xl text-[var(--Gray)]">
                 Customize how others see you on Research Showcase Portal.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Link href={`/${user.username}`}>
+              <Link href={`/me`}>
                 <Button variant="outline" size="md">
-                  View public profile
+                  Back to profile
                 </Button>
               </Link>
             </div>

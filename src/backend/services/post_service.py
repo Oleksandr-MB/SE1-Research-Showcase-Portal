@@ -202,7 +202,6 @@ def find_research_posts(
                         models.Post.title.ilike(pattern, escape="\\"),
                         models.Post.body.ilike(pattern, escape="\\"),
                         models.Post.abstract.ilike(pattern, escape="\\"),
-                        models.Post.authors_text.ilike(pattern, escape="\\"),
                     )
                 )
                 .all()
@@ -215,8 +214,17 @@ def find_research_posts(
                 .all()
             )
 
+            posts_by_authors = (
+                db.query(models.Post)
+                .filter(
+                    models.Post.authors_text.ilike(pattern, escape="\\")
+                )
+                .all()
+            )
+
             combined = {
-                post.id: post for post in posts_by_text + posts_by_tags}
+                post.id: post for post in posts_by_text + posts_by_tags + posts_by_authors
+            }
             db_posts = list(combined.values())
 
             db_posts = [
@@ -224,14 +232,24 @@ def find_research_posts(
                 if (query_lower in (post.title or "").lower())
                 or (query_lower in (post.body or "").lower())
                 or (query_lower in (post.abstract or "").lower())
-                or (query_lower in (post.authors_text or "").lower())
                 or any(
                     query_lower in (tag.name or "").lower()
                     for tag in post.tags
                 )
+                or (query_lower in (post.authors_text or "").lower())
             ]
 
     return [_to_post_read(post) for post in db_posts]
+
+
+@router.get("/count", response_model=int)
+def get_published_post_count(
+    db: Annotated[Session, Depends(get_db)],
+) -> int:
+    """Return the total number of published research posts."""
+    return int(
+        db.query(models.Post).filter(models.Post.phase == models.PostPhase.PUBLISHED).count()
+    )
 
 
 @router.post("/create")

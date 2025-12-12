@@ -44,7 +44,7 @@ const normalizeAttachmentPath = (value: string | undefined): string | null => {
     const parsed = new URL(trimmed);
     candidatePath = parsed.pathname || trimmed;
   } catch {
-    // Not a full URL, continue with the original value
+
   }
 
   const normalizedCandidate = candidatePath.replace(/\\/g, "/");
@@ -134,7 +134,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--DarkGray)]">
-                      @{post.poster_username ?? `Researcher #${post.poster_id}`}
+                      {(post.poster_display_name || `@${post.poster_username}`) ?? `Researcher #${post.poster_id}`}
                     </p>
                     <p className="text-xs text-[var(--Gray)]">
                       Published {new Date(post.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}

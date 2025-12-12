@@ -8,6 +8,7 @@ export type PostSummary = {
   abstract: string;
   authors_text: string;
   poster_username: string;
+  poster_display_name?: string | null;
   tags: string[];
   poster_id: number;
   created_at: string;
@@ -271,6 +272,7 @@ export async function createPost(
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
+      "Content-Type": "text/plain",
     },
     body: JSON.stringify(payload),
   });
@@ -292,6 +294,16 @@ export async function getUserCount(): Promise<number> {
     return count;
   } catch (error) {
     console.warn("Failed to fetch user count:", error);
+    return 0;
+  }
+}
+
+export async function getPublishedPostCount(): Promise<number> {
+  try {
+    const count = await fetchFromApi<number>(`/posts/count`);
+    return count;
+  } catch (error) {
+    console.warn("Failed to fetch published post count:", error);
     return 0;
   }
 }
@@ -411,4 +423,3 @@ export async function createReview(
 export async function getPostReviews(postId: number): Promise<ReviewRead[]> {
   return fetchFromApi<ReviewRead[]>(`/posts/${postId}/reviews`);
 }
-

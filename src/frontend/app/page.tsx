@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   type PostSummary,
   getLatestUsers,
+  getPublishedPostCount,
   getUserCount,
   searchPosts,
 } from "@/lib/api";
@@ -227,10 +228,11 @@ export default async function Home({
   const requestedPage = Number.parseInt(resolved.page ?? "1", 10);
   let currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
-  const [searchResults, latestUsersRaw, totalUsers] = await Promise.all([
+  const [searchResults, latestUsersRaw, totalUsers, totalPublishedPosts] = await Promise.all([
     searchPosts(query),
     getLatestUsers(),
     getUserCount(),
+    getPublishedPostCount(),
   ]);
 
   const latestUsers = formatLatestUsers(latestUsersRaw);
@@ -300,7 +302,10 @@ export default async function Home({
 
   const communitySummary = [
     { label: "Registered Users", value: totalUsers.toLocaleString() },
-    { label: "Published Posts", value: sortedPosts.length.toString() },
+    {
+      label: "Published Posts",
+      value: totalPublishedPosts.toLocaleString(),
+    },
   ];
 
   const buildHref = (overrides?: Partial<Record<keyof HomeSearchParams, string | undefined>>) => {
