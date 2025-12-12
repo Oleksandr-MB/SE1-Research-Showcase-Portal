@@ -23,11 +23,11 @@ async def create_review(
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
-    # Check if user is researcher or moderator
-    if current_user.role not in ["researcher", "moderator"]:
+    # Only researchers may create reviews
+    if current_user.role != "researcher":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only researchers and moderators can create reviews",
+            detail="Only researchers can create reviews",
         )
 
     # Check if user already reviewed this post

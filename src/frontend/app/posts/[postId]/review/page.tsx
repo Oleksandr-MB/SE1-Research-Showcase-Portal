@@ -40,10 +40,10 @@ export default function ReviewPage() {
         const currentUser = await getCurrentUser(storedToken);
         if (!isMounted) return;
 
-        const isResearcherOrModerator =
-          currentUser.role === "researcher" || currentUser.role === "moderator";
+        // Only researchers can access the review page
+        const isResearcher = currentUser.role === "researcher";
 
-        if (!isResearcherOrModerator) {
+        if (!isResearcher) {
           router.replace(`/posts/${postId}`);
           return;
         }
