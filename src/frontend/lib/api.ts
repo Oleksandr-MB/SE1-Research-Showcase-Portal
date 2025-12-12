@@ -271,6 +271,7 @@ export async function createPost(
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
+      "Content-Type": "text/plain",
     },
     body: JSON.stringify(payload),
   });

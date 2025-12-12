@@ -111,7 +111,18 @@ const PostCard = ({
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              <span>{formatPoster(post)}</span>
+              {post.poster_username ? (
+                <Link
+                  href={`/${encodeURIComponent(post.poster_username)}`}
+                  className="text-sm font-medium text-[var(--DarkGray)] hover:text-[var(--Red)]"
+                >
+                  @{post.poster_username}
+                </Link>
+              ) : (
+                <span className="text-sm text-[var(--Gray)]">
+                  Researcher #{post.poster_id}
+                </span>
+              )}
             </div>
             <span className="text-[var(--GrayTransparent)]">/</span>
             <span className="text-xs uppercase tracking-wide text-[var(--Gray)]">

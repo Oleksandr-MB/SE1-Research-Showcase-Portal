@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   type CommentThread,
@@ -335,10 +336,13 @@ export default function CommentsSection({ postId, initialComments }: Props) {
               className={`space-y-4 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-xs ${index === threads.length - 1 ? "" : "mb-4"}`}
             >
               <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--Gray)]">
-                  <span className="font-semibold text-[var(--DarkGray)]">
+                <div className="flex items-center gap-2 text-xs text-[var(--Gray)]">
+                  <Link
+                    href={`/${encodeURIComponent(comment.commenter_username)}`}
+                    className="font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
+                  >
                     {comment.commenter_username}
-                  </span>
+                  </Link>
                   <span>{formatDateTime(comment.created_at)}</span>
                 </div>
                 <p className="text-[var(--DarkGray)]">{comment.body}</p>
