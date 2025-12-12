@@ -70,6 +70,21 @@ export type VoteResponse = {
   downvotes: number;
 };
 
+export type ReviewCreate = {
+  body: string;
+  is_positive: boolean;
+};
+
+export type ReviewRead = {
+  id: number;
+  post_id: number;
+  reviewer_id: number;
+  reviewer_username: string;
+  body: string;
+  is_positive: boolean;
+  created_at: string;
+};
+
 export type UserRole = "user" | "researcher" | "moderator";
 
 export type UserRead = {
@@ -129,11 +144,11 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
 
   const response = await fetch(sanitizedPath, {
     cache: "no-store",
+    ...init,
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers || {}),
     },
-    ...init,
   });
 
   if (!response.ok) {
@@ -378,3 +393,22 @@ export async function searchPosts(query?: string): Promise<PostRead[]> {
 
   return fetchFromApi<PostRead[]>(path);
 }
+
+export async function createReview(
+  token: string,
+  postId: number,
+  payload: ReviewCreate,
+): Promise<ReviewRead> {
+  return fetchFromApi<ReviewRead>(`/posts/${postId}/reviews`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getPostReviews(postId: number): Promise<ReviewRead[]> {
+  return fetchFromApi<ReviewRead[]>(`/posts/${postId}/reviews`);
+}
+

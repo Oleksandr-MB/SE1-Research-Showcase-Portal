@@ -2,6 +2,14 @@
 
 import { useEffect, useRef } from "react";
 
+type RenderKatexOptions = {
+  delimiters: Array<{
+    left: string;
+    right: string;
+    display: boolean;
+  }>;
+};
+
 type KatexProps = {
   content: string;
   className?: string;
@@ -10,8 +18,8 @@ type KatexProps = {
 
 declare global {
   interface Window {
-    renderKatex?: (element: HTMLElement, options: unknown) => void;
-    __katexLoadingPromise?: Promise<void>;
+    renderKatex?: (element: HTMLElement, options: RenderKatexOptions) => void;
+    renderMathInElement?: (element: HTMLElement, options?: RenderKatexOptions) => void;
   }
 }
 
@@ -30,36 +38,39 @@ const loadScript = (id: string, src: string) =>
     document.body.appendChild(script);
   });
 
-const ensureKatex = async () => {
-  if (typeof window === "undefined") return;
-  if (window.renderKatex) {
-    return;
-  }
-  if (window.__katexLoadingPromise) {
-    await window.__katexLoadingPromise;
-    return;
-  }
+const ensureKatex = (() => {
+  let katexPromise: Promise<void> | null = null;
 
-  window.__katexLoadingPromise = (async () => {
-    if (!document.getElementById("katex-css")) {
-      const link = document.createElement("link");
-      link.id = "katex-css";
-      link.rel = "stylesheet";
-      link.href = "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css";
-      document.head.appendChild(link);
+  return async () => {
+    if (typeof window === "undefined" || window.renderKatex) return;
+    if (katexPromise) {
+      await katexPromise;
+      return;
     }
-    await loadScript(
-      "katex-script",
-      "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js",
-    );
-    await loadScript(
-      "katex-auto-render",
-      "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js",
-    );
-  })();
 
-  await window.__katexLoadingPromise;
-};
+    katexPromise = (async () => {
+      if (!document.getElementById("katex-css")) {
+        const link = document.createElement("link");
+        link.id = "katex-css";
+        link.rel = "stylesheet";
+        link.href = "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css";
+        document.head.appendChild(link);
+      }
+      await loadScript("katex-script", "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js");
+      await loadScript(
+        "katex-auto-render",
+        "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js",
+      );
+      if (!window.renderKatex) {
+        window.renderKatex = (element, options) => {
+          window.renderMathInElement?.(element, options);
+        };
+      }
+    })();
+
+    await katexPromise;
+  };
+})();
 
 const buildParagraphs = (text: string) =>
   text
@@ -72,25 +83,29 @@ export default function Katex({ content, className, paragraphClassName }: KatexP
   const paragraphs = buildParagraphs(content);
 
   useEffect(() => {
-    if (!containerRef.current) {
-      return;
-    }
+    const element = containerRef.current;
+    if (!element) return;
+
+    let cancelled = false;
     ensureKatex()
       .then(() => {
-        if (containerRef.current && window.renderKatex) {
-          window.renderKatex(containerRef.current, {
-            delimiters: [
-              { left: "$$", right: "$$", display: true },
-              { left: "\\[", right: "\\]", display: true },
-              { left: "$", right: "$", display: false },
-              { left: "\\(", right: "\\)", display: false },
-            ],
-          });
-        }
+        if (cancelled || !window.renderKatex) return;
+        window.renderKatex(element, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "\\[", right: "\\]", display: true },
+            { left: "$", right: "$", display: false },
+            { left: "\\(", right: "\\)", display: false },
+          ],
+        });
       })
       .catch(() => {
         /* Swallow failures and keep plain text */
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [content]);
 
   return (

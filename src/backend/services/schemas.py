@@ -153,3 +153,48 @@ class ProfileUpdate(BaseModel):
     is_orcid_public: Optional[bool] = None
     is_socials_public: Optional[bool] = None
     is_arxiv_public: Optional[bool] = None
+
+
+class ReviewCreate(BaseModel):
+    """
+    Schema for creating a review.
+    
+    Only accepts the user-provided data. The backend automatically fills in:
+    - id: Auto-generated primary key
+    - post_id: From URL parameter (path)
+    - reviewer_id: From authenticated user token
+    - created_at: Auto-generated timestamp
+    """
+    body: str
+    is_positive: bool
+
+
+class ReviewRead(BaseModel):
+    """
+    Schema for reading/returning review data to the client.
+    
+    Contains ALL fields from the database Review table:
+    - id: Auto-generated primary key
+    - post_id: ID of the reviewed post
+    - reviewer_id: ID of the user who wrote the review
+    - reviewer_username: Username of reviewer (for display)
+    - body: The review text content
+    - is_positive: Boolean sentiment (True = positive/upvote, False = negative/downvote)
+    - created_at: Auto-generated timestamp
+    
+    This is returned when:
+    1. Creating a review (POST) - returns the newly created review with all fields populated
+    2. Fetching reviews (GET) - returns list of reviews with all their data
+    """
+    id: int
+    post_id: int
+    reviewer_id: int
+    reviewer_username: str
+    body: str
+    is_positive: bool
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+

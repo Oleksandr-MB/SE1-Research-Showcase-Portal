@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getPostById, getPostComments } from "@/lib/api";
 import CommentsSection from "@/components/comments-section";
 import PostVoteActions from "@/components/post-vote-actions";
+import PostReviewAction from "@/components/post-review-action";
 import ShareCitation from "@/components/share-citation";
 import Katex from "@/components/katex";
 import AttachmentDownloadButton from "@/components/attachment-download-button";
@@ -125,26 +126,29 @@ export default async function PostDetailsPage({ params }: PageProps) {
         <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
           <div className="flex flex-col gap-4">
             <h1 className="h1-apple text-[var(--DarkGray)]">{post.title}</h1>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-lg font-semibold text-[var(--DarkGray)]">
-                  {(post.poster_username || "A")[0].toUpperCase()}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-lg font-semibold text-[var(--DarkGray)]">
+                    {(post.poster_username || "A")[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--DarkGray)]">
+                      @{post.poster_username ?? `Researcher #${post.poster_id}`}
+                    </p>
+                    <p className="text-xs text-[var(--Gray)]">
+                      Published {new Date(post.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-[var(--DarkGray)]">
-                    @{post.poster_username ?? `Researcher #${post.poster_id}`}
-                  </p>
-                  <p className="text-xs text-[var(--Gray)]">
-                    Published {new Date(post.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
-                  </p>
+                <div className="ml-auto flex items-center gap-4">
+                  <PostReviewAction postId={numericPostId} />
+                  <PostVoteActions
+                    postId={numericPostId}
+                    initialUpvotes={post.upvotes ?? 0}
+                    initialDownvotes={post.downvotes ?? 0}
+                  />
                 </div>
-              </div>
-              <div className="ml-auto">
-                <PostVoteActions
-                  postId={numericPostId}
-                  initialUpvotes={post.upvotes ?? 0}
-                  initialDownvotes={post.downvotes ?? 0}
-                />
               </div>
             </div>
 
