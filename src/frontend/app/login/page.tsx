@@ -36,27 +36,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F5F5F5] via-[#F3F3F3] to-[var(--White)] px-4 py-8 animate-fade-in">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--DarkGray)] to-[var(--DarkRedLight)] mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--LightGray)] px-4 py-8">
+      <div className="w-full max-w-lg">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-8 shadow-soft-md">
+            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--DarkGray)] mb-6 mx-auto">
             <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
           </div>
-          <h1 className="h1-apple text-[var(--DarkGray)] mb-2">
-            Welcome Back
+          <h1 className="h1-apple text-[var(--DarkGray)] text-center mb-4">
+            Welcome Back!
           </h1>
-          <p className="body-apple text-[var(--Gray)]">
-            Sign in to your research lab
-          </p>
-        </div>
+          <br/>
 
-        {/* Form Card */}
-        <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-8 shadow-soft-md hover-lift">
           {verified && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-6 animate-scale-in">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-6">
               <div className="flex items-center gap-2 text-sm text-emerald-700">
                 <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -130,12 +124,12 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 animate-scale-in">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                 <div className="flex items-center gap-2 text-sm text-red-700">
                   <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                  {error}
+                  {"Wrong username or password."}
                 </div>
               </div>
             )}

@@ -200,7 +200,7 @@ export default function ReviewPage() {
                   onClick={() => setIsPositive(true)}
                   className={`flex-1 rounded-2xl px-4 py-3 font-medium transition ${
                     isPositive
-                      ? "bg-green-500 text-white border border-green-600"
+                      ? "bg-[var(--Green)] text-[var(--White)] border border-[var(--Green)]"
                       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)]"
                   }`}
                 >
@@ -219,7 +219,7 @@ export default function ReviewPage() {
                   onClick={() => setIsPositive(false)}
                   className={`flex-1 rounded-2xl px-4 py-3 font-medium transition ${
                     !isPositive
-                      ? "bg-[var(--Red)] text-white border border-red-600"
+                      ? "bg-[var(--Red)] text-[var(--White)] border border-[var(--Red)]"
                       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)]"
                   }`}
                 >

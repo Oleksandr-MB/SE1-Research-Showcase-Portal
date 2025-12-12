@@ -53,7 +53,7 @@ export default function PostVoteActions({
 const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
   `rounded-full px-4 py-2 text-sm font-semibold transition ${
     active
-      ? (variant === "up" ? "bg-green-500 text-[var(--White)]" : "bg-[var(--Red)] text-[var(--White)]")
+      ? (variant === "up" ? "bg-[var(--Green)] text-[var(--White)]" : "bg-[var(--Red)] text-[var(--White)]")
       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
   } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
 
