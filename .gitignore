@@ -5,6 +5,9 @@ venv/
 # VSCode
 .vscode/
 
+# Idea
+.idea/
+
 # Python cache
 __pycache__/
 *.py[cod]
