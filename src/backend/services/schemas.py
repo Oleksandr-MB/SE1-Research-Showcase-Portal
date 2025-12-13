@@ -68,6 +68,7 @@ class PostRead(PostBase):
     id: int
     poster_id: int
     poster_username: str
+    poster_role: str
     created_at: datetime.datetime
     tags: Optional[list[str]] = None
     attachments: Optional[list[str]] = None
@@ -167,6 +168,8 @@ class ReviewCreate(BaseModel):
     """
     body: str
     is_positive: bool
+    strengths: str
+    weaknesses: str
 
 
 class ReviewRead(BaseModel):
@@ -180,6 +183,7 @@ class ReviewRead(BaseModel):
     - reviewer_username: Username of reviewer (for display)
     - body: The review text content
     - is_positive: Boolean sentiment (True = positive/upvote, False = negative/downvote)
+    - upvotes/downvotes: Vote counts for this review
     - created_at: Auto-generated timestamp
     
     This is returned when:
@@ -192,6 +196,10 @@ class ReviewRead(BaseModel):
     reviewer_username: str
     body: str
     is_positive: bool
+    strengths: Optional[str] = None
+    weaknesses: Optional[str] = None
+    upvotes: int = 0
+    downvotes: int = 0
     created_at: datetime.datetime
 
     class Config:
