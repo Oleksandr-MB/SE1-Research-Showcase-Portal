@@ -274,7 +274,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             type="button"
             onClick={() => handleReplySubmit(targetId)}
             disabled={replyLoading[targetId]}
-            className="rounded-full border border-[var(--DarkGray)] px-4 py-1.5 text-xs font-semibold text-[var(--DarkGray)] transition hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full border bg-[var(--DarkGray)] border-[var(--DarkGray)] px-4 py-1.5 text-xs font-semibold text-[var(--White)] transition hover:border-[var(--Black)] hover:bg-[var(--Black)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {replyLoading[targetId] ? "Replying..." : "Reply"}
           </button>
@@ -370,7 +370,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
               type="button"
               onClick={handleNewComment}
               disabled={isSubmitting}
-              className="rounded-full bg-[var(--DarkGray)] px-5 py-2 text-sm font-semibold text-[var(--White)] transition disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-full bg-[var(--DarkGray)] hover:bg-[var(--Black)] px-5 py-2 text-sm font-semibold text-[var(--White)] transition disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isSubmitting ? "Posting..." : "Comment"}
             </button>
