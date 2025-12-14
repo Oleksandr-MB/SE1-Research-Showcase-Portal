@@ -1,122 +1,206 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { ReviewRead, getPostReviews } from "@/lib/api";
-import ReviewVoteActions from "@/components/review-vote-actions";
 import Link from "next/link";
-
-type SortOption = "popular" | "newest" | "oldest";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import type { PostRead, ReviewRead, UserRead } from "@/lib/api";
+import { getCurrentUser, getPostById, getPostReviews } from "@/lib/api";
+import ReviewVoteActions from "@/components/review-vote-actions";
+import { Button } from "@/components/Button";
 
 export default function ReviewsFeedPage() {
   const params = useParams();
   const router = useRouter();
-  const [reviews, setReviews] = useState<ReviewRead[]>([]);
-  const [sortBy, setSortBy] = useState<SortOption>("popular");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const postId = Number(params.postId as string);
 
-  const postId = parseInt(params.postId as string);
+  const [post, setPost] = useState<PostRead | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserRead | null>(null);
+  const [reviews, setReviews] = useState<ReviewRead[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("rsp_token");
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("rsp_token") : null;
     if (!token) {
-      alert("Please log in to view reviews");
-      router.push(`/posts/${postId}`);
-      return;
+      router.replace(`/login?next=/posts/${postId}/reviews`);
     }
-    setIsLoggedIn(true);
   }, [postId, router]);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
-
+    let isMounted = true;
     const fetchReviews = async () => {
       try {
-        const data = await getPostReviews(postId);
-        setReviews(data);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-        alert("Failed to load reviews");
+        setError(null);
+        setActionError(null);
+
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("rsp_token") : null;
+        if (!token) {
+          router.replace(`/login?next=/posts/${postId}/reviews`);
+          return;
+        }
+
+        const [reviewsData, postData, userData] = await Promise.all([
+          getPostReviews(postId),
+          getPostById(postId),
+          getCurrentUser(token),
+        ]);
+        if (!isMounted) return;
+
+        setReviews(reviewsData);
+        setPost(postData);
+        setCurrentUser(userData);
+      } catch (e) {
+        if (!isMounted) return;
+        const message = e instanceof Error ? e.message : "Failed to load reviews.";
+        setError(message);
+        if (message.includes("(401)") || message.toLowerCase().includes("token")) {
+          router.replace(`/login?next=/posts/${postId}/reviews`);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchReviews();
-  }, [postId, isLoggedIn]);
+    return () => {
+      isMounted = false;
+    };
+  }, [postId, router]);
 
-  const sortedReviews = [...reviews].sort((a, b) => {
-    switch (sortBy) {
-      case "popular":
-        return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
-      case "newest":
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case "oldest":
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      default:
-        return 0;
+  const canWriteReview = useMemo(() => {
+    if (!post || !currentUser) return false;
+    if (currentUser.role !== "researcher") return false;
+    if (currentUser.id === post.poster_id) return false;
+    if (reviews.some((r) => r.reviewer_username === currentUser.username)) return false;
+    return true;
+  }, [currentUser, post, reviews]);
+
+  const reviewEligibilityMessage = useMemo(() => {
+    if (!post || !currentUser) return "Unable to verify review permissions.";
+    if (currentUser.role !== "researcher") return "Only researchers can write reviews.";
+    if (currentUser.id === post.poster_id) return "You cannot review your own post.";
+    if (reviews.some((r) => r.reviewer_username === currentUser.username)) {
+      return "You have already reviewed this post.";
     }
-  });
+    return null;
+  }, [currentUser, post, reviews]);
+
+  const handleWriteReview = () => {
+    setActionError(null);
+    if (!canWriteReview) {
+      setActionError(reviewEligibilityMessage || "You cannot write a review.");
+      return;
+    }
+    window.open(`/posts/${postId}/review`, "_blank");
+  };
+
+  const sortedReviews = useMemo(() => {
+    const list = [...reviews];
+    list.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    return list;
+  }, [reviews]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--LightGray)] flex items-center justify-center">
-        <p className="text-lg text-[var(--Gray)]">Loading reviews...</p>
+      <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--DarkGray)] mx-auto mb-4"></div>
+          <p className="text-sm text-[var(--Gray)]">Loading reviews...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-[var(--DarkGray)]">Reviews</h1>
-          <Link
-            href={`/posts/${postId}`}
-            className="inline-flex items-center justify-center font-medium transition-all duration-300 ease-apple rounded-full px-5 py-2.5 text-sm bg-transparent text-[var(--DarkGray)] border border-[#E5E5E5] hover:border-[var(--DarkGray)] focus:outline-none focus:ring-2 focus:ring-offset-2"
-          >
-            ← Back to Post
-          </Link>
-        </div>
-
-        <div className="mb-6 flex items-center justify-between">
-          <p className="text-sm text-[var(--Gray)]">
-            {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
-          </p>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-[var(--Gray)]">Sort by:</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="rounded border border-[var(--LightGray)] bg-white px-3 py-1.5 text-sm text-[var(--DarkGray)] focus:outline-none focus:ring-2 focus:ring-[var(--Red)]"
-            >
-              <option value="popular">Popular</option>
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-            </select>
+    <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="mx-auto max-w-5xl space-y-6">
+        <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <h1 className="h1-apple text-[var(--DarkGray)]">Reviews</h1>
+              <p className="text-sm text-[var(--Gray)]">
+                {reviews.length} {reviews.length === 1 ? "review" : "reviews"} •{" "}
+                {post?.title ? post.title : `Post #${postId}`}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="button" variant="secondary" onClick={handleWriteReview}>
+                Write a review
+              </Button>
+              <Button type="button" variant="primary" href={`/posts/${postId}`}>
+                Back to post
+              </Button>
+            </div>
           </div>
-        </div>
+
+          {actionError && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+              <div className="flex items-center gap-2 text-sm text-red-700">
+                <svg
+                  className="h-4 w-4 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {actionError}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         {reviews.length === 0 ? (
-          <div className="rounded-3xl border border-[var(--LightGray)] bg-white p-8 text-center">
-            <p className="text-[var(--Gray)]">No reviews yet for this post.</p>
-          </div>
+          <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-10 text-center shadow-soft-sm">
+            <p className="text-sm text-[var(--Gray)]">No reviews yet for this post.</p>
+            <div className="mt-5 flex justify-center">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleWriteReview}
+              >
+                Be the first to review
+              </Button>
+            </div>
+          </section>
         ) : (
           <div className="space-y-4">
             {sortedReviews.map((review) => (
-              <div
+              <article
                 key={review.id}
-                className="rounded-3xl border border-[var(--LightGray)] bg-white p-6 shadow-sm"
+                className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm transition-colors hover:border-[var(--DarkGray)]"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="mb-3 flex items-center gap-3">
-                      <p className="text-sm font-medium text-[var(--DarkGray)]">
-                        @{review.reviewer_username}
-                      </p>
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-3 flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--LightGray)] text-sm font-semibold text-[var(--DarkGray)]">
+                          {(review.reviewer_username || "U")[0].toUpperCase()}
+                        </div>
+                        <Link
+                          href={`/${encodeURIComponent(review.reviewer_username)}`}
+                          className="text-sm font-medium text-[var(--DarkGray)] hover:text-[var(--Red)]"
+                        >
+                          @{review.reviewer_username}
+                        </Link>
+                      </div>
+
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                           review.is_positive
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
@@ -124,6 +208,7 @@ export default function ReviewsFeedPage() {
                       >
                         {review.is_positive ? "Positive" : "Negative"}
                       </span>
+
                       <span className="text-xs text-[var(--Gray)]">
                         {new Date(review.created_at).toLocaleDateString(undefined, {
                           year: "numeric",
@@ -132,23 +217,58 @@ export default function ReviewsFeedPage() {
                         })}
                       </span>
                     </div>
-                    <p className="mb-4 text-sm text-[var(--DarkGray)] line-clamp-3">
+
+                    <p className="text-sm text-[var(--DarkGray)] line-clamp-3">
                       {review.body}
                     </p>
-                    <Link
-                      href={`/posts/${postId}/reviews/${review.id}`}
-                      className="inline-flex items-center text-sm font-medium text-[var(--DarkGray)] hover:text-[var(--Black)] transition-colors"
-                    >
-                      Read full review →
-                    </Link>
+
+                    {(review.strengths || review.weaknesses) && (
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        {review.strengths && (
+                          <div className="rounded-2xl border border-[var(--LightGray)] bg-[#FAFAFA] p-4">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                              Strengths
+                            </p>
+                            <p className="mt-1 text-sm text-[var(--DarkGray)] line-clamp-3">
+                              {review.strengths}
+                            </p>
+                          </div>
+                        )}
+                        {review.weaknesses && (
+                          <div className="rounded-2xl border border-[var(--LightGray)] bg-[#FAFAFA] p-4">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+                              Weaknesses
+                            </p>
+                            <p className="mt-1 text-sm text-[var(--DarkGray)] line-clamp-3">
+                              {review.weaknesses}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--LightGray)] pt-4">
+                      <Link
+                        href={`/posts/${postId}/reviews/${review.id}`}
+                        className="inline-flex items-center text-sm font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
+                      >
+                        Read full review →
+                      </Link>
+                      <span className="text-xs text-[var(--Gray)]">
+                        Score: {(review.upvotes ?? 0) - (review.downvotes ?? 0)}
+                      </span>
+                    </div>
                   </div>
-                  <ReviewVoteActions
-                    reviewId={review.id}
-                    initialUpvotes={review.upvotes}
-                    initialDownvotes={review.downvotes}
-                  />
+
+                  <div className="shrink-0">
+                    <ReviewVoteActions
+                      reviewId={review.id}
+                      initialUpvotes={review.upvotes}
+                      initialDownvotes={review.downvotes}
+                    />
+                  </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}

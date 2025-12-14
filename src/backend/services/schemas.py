@@ -50,6 +50,22 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return v
+
+
 class PostBase(BaseModel):
     title: str
     body: str
@@ -61,7 +77,7 @@ class PostBase(BaseModel):
 class PostCreate(PostBase):
     tags: Optional[list[str]] = None
     attachments: Optional[list[str]] = None
-    phase: PostPhase = PostPhase.DRAFT
+    model_config = {"extra": "ignore"}
 
 
 class PostRead(PostBase):
@@ -156,6 +172,19 @@ class ProfileUpdate(BaseModel):
     is_arxiv_public: Optional[bool] = None
 
 
+class CommentActivityRead(BaseModel):
+    id: int
+    post_id: int
+    post_title: str
+    body: str
+    created_at: datetime.datetime
+    upvotes: int = 0
+    downvotes: int = 0
+
+    class Config:
+        from_attributes = True
+
+
 class ReviewCreate(BaseModel):
     """
     Schema for creating a review.
@@ -204,5 +233,3 @@ class ReviewRead(BaseModel):
 
     class Config:
         from_attributes = True
-
-

@@ -194,6 +194,7 @@ def find_research_posts(
                 joinedload(models.Post.attachments),
                 joinedload(models.Post.post_votes)
             )
+            .filter(models.Post.phase == models.PostPhase.PUBLISHED)
             .all()
         )
     else:
@@ -207,6 +208,7 @@ def find_research_posts(
                     joinedload(models.Post.attachments),
                     joinedload(models.Post.post_votes)
                 )
+                .filter(models.Post.phase == models.PostPhase.PUBLISHED)
                 .all()
             )
         else:
@@ -230,6 +232,7 @@ def find_research_posts(
                         models.Post.abstract.ilike(pattern, escape="\\"),
                     )
                 )
+                .filter(models.Post.phase == models.PostPhase.PUBLISHED)
                 .all()
             )
 
@@ -243,6 +246,7 @@ def find_research_posts(
                 )
                 .join(models.Post.tags)
                 .filter(models.Tag.name.ilike(pattern, escape="\\"))
+                .filter(models.Post.phase == models.PostPhase.PUBLISHED)
                 .all()
             )
 
@@ -251,6 +255,7 @@ def find_research_posts(
                 .filter(
                     models.Post.authors_text.ilike(pattern, escape="\\")
                 )
+                .filter(models.Post.phase == models.PostPhase.PUBLISHED)
                 .all()
             )
 
@@ -325,25 +330,6 @@ async def create_research_post(
         logging.error(
             "Unsupported payload type %s for post creation", type(payload))
         raise HTTPException(status_code=422, detail="Invalid post payload")
-    requested_phase = post.phase or models.PostPhase.DRAFT
-    if requested_phase == models.PostPhase.DRAFT:
-        existing_draft = (
-            db.query(models.Post)
-            .filter(
-                models.Post.poster_id == current_user.id,
-                models.Post.phase == models.PostPhase.DRAFT,
-            )
-            .first()
-        )
-        if existing_draft:
-            logging.error(
-                "User %s attempted to create a second draft post", current_user.id
-            )
-            raise HTTPException(
-                status_code=400,
-                detail="You already have an active draft post. Publish or delete it before creating a new draft.",
-            )
-
     db_post = models.Post(
         title=post.title,
         body=post.body,
@@ -352,7 +338,7 @@ async def create_research_post(
         bibtex=post.bibtex,
         poster_id=current_user.id,
         created_at=datetime.now(timezone.utc),
-        phase=requested_phase,
+        phase=models.PostPhase.PUBLISHED,
     )
     db.add(db_post)
     db.commit()
@@ -637,8 +623,14 @@ def get_my_research_posts(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[models.User, Depends(get_current_user)],
 ) -> list[PostRead]:
-    db_posts = db.query(models.Post).filter(
-        models.Post.poster_id == current_user.id).all()
+    db_posts = (
+        db.query(models.Post)
+        .filter(
+            models.Post.poster_id == current_user.id,
+            models.Post.phase == models.PostPhase.PUBLISHED,
+        )
+        .all()
+    )
 
     logging.info(
         f"Retrieved {len(db_posts)} posts for user ID {current_user.id}")

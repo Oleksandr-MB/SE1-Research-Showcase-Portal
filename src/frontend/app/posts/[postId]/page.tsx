@@ -187,7 +187,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
                 </div>
               ) : null}
               <Button href="/" variant="primary" size="md" className="ml-auto">
-                Return to the main page
+                Back to browse
               </Button>
             </div>
           </div>

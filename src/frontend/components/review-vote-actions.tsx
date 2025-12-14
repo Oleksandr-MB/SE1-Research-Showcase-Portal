@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { voteOnReview } from "@/lib/api";
 
 interface ReviewVoteActionsProps {
   reviewId: number;
@@ -16,37 +17,20 @@ export default function ReviewVoteActions({
   const [upvotes, setUpvotes] = useState(initialUpvotes);
   const [downvotes, setDownvotes] = useState(initialDownvotes);
   const [userVote, setUserVote] = useState<1 | -1 | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("rsp_token");
-    setIsLoggedIn(!!token);
-  }, []);
+  const [isVoting, setIsVoting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleVote = async (value: 1 | -1) => {
-    if (!isLoggedIn) {
-      alert("Please log in to vote on reviews");
+    setError(null);
+    const token = localStorage.getItem("rsp_token");
+    if (!token) {
+      setError("You need to be signed in to vote.");
       return;
     }
 
-    const token = localStorage.getItem("rsp_token");
-    if (!token) return;
-
     try {
-      const response = await fetch(`http://localhost:8000/reviews/${reviewId}/vote`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ value }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to vote");
-      }
-
-      const updatedReview = await response.json();
+      setIsVoting(true);
+      const updatedReview = await voteOnReview(token, reviewId, value);
       setUpvotes(updatedReview.upvotes);
       setDownvotes(updatedReview.downvotes);
 
@@ -58,58 +42,46 @@ export default function ReviewVoteActions({
       }
     } catch (error) {
       console.error("Error voting:", error);
-      alert("Failed to vote on review");
+      setError(error instanceof Error ? error.message : "Failed to vote on review.");
+    } finally {
+      setIsVoting(false);
     }
   };
 
+  const buttonClasses = (active: boolean, variant: "up" | "down") =>
+    `rounded-full px-4 py-2 text-sm font-semibold transition ${
+      active
+        ? variant === "up"
+          ? "bg-[var(--Green)] text-[var(--White)]"
+          : "bg-[var(--Red)] text-[var(--White)]"
+        : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
+    } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex items-center gap-3">
       <button
         onClick={() => handleVote(1)}
-        disabled={!isLoggedIn}
-        className={`flex items-center gap-1 rounded px-3 py-1.5 font-medium transition-colors ${
-          userVote === 1
-            ? "bg-green-600 text-white"
-            : isLoggedIn
-              ? "bg-gray-100 text-gray-700 hover:bg-green-100"
-              : "bg-gray-100 text-gray-400 cursor-not-allowed"
-        }`}
+        disabled={isVoting}
+        className={buttonClasses(userVote === 1, "up")}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="h-5 w-5"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+        <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
         </svg>
-        <span>{upvotes}</span>
+        {upvotes}
       </button>
       <button
         onClick={() => handleVote(-1)}
-        disabled={!isLoggedIn}
-        className={`flex items-center gap-1 rounded px-3 py-1.5 font-medium transition-colors ${
-          userVote === -1
-            ? "bg-red-600 text-white"
-            : isLoggedIn
-              ? "bg-gray-100 text-gray-700 hover:bg-red-100"
-              : "bg-gray-100 text-gray-400 cursor-not-allowed"
-        }`}
+        disabled={isVoting}
+        className={buttonClasses(userVote === -1, "down")}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="h-5 w-5"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
-        <span>{downvotes}</span>
+        {downvotes}
       </button>
+      </div>
+      {error && <span className="text-xs text-[var(--Red)]">{error}</span>}
     </div>
   );
 }

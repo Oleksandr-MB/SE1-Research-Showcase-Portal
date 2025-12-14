@@ -374,8 +374,6 @@ export default async function Home({
   };
 
   const feedTitle = hasAnyFilter ? "Search Results" : "Feed";
-  const feedSubtitle = sortedPosts.length
-    ? hasAnyFilter ? null : null : "No posts were found.";
 
   const pageList: Array<number | "ellipsis"> = (() => {
     if (totalPages <= 4) {
@@ -519,7 +517,6 @@ export default async function Home({
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="h3-apple text-[var(--DarkGray)]">{feedTitle}</h2>
-                <p className="text-sm text-[var(--Gray)]">{feedSubtitle}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs uppercase tracking-wide text-[var(--Gray)]">
@@ -552,7 +549,7 @@ export default async function Home({
                 <div className="rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] p-8 text-center text-sm text-[var(--Gray)]">
                   {sortedPosts.length
                     ? "No posts match your filters on this page. Try a different page."
-                    : "No posts found yet."}
+                    : "No posts were found."}
                 </div>
               )}
             </div>

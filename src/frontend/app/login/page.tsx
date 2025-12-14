@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { loginUser } from "@/lib/api";
+import { loginUser, requestPasswordReset } from "@/lib/api";
 import { Button } from "@/components/Button";
 
 export default function LoginPage() {
@@ -14,6 +14,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [isResetSubmitting, setIsResetSubmitting] = useState(false);
   const verified = searchParams.get("verified");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -32,6 +37,26 @@ export default function LoginPage() {
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResetSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setResetError(null);
+    setResetMessage(null);
+    setIsResetSubmitting(true);
+
+    try {
+      const response = await requestPasswordReset(resetEmail.trim());
+      setResetMessage(response.message || "Check your email for a reset link.");
+    } catch (err) {
+      setResetError(
+        err instanceof Error
+          ? err.message
+          : "Unable to request a password reset right now",
+      );
+    } finally {
+      setIsResetSubmitting(false);
     }
   };
 
@@ -143,6 +168,65 @@ export default function LoginPage() {
               {isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <button
+              type="button"
+              className="text-[var(--Gray)] hover:text-[var(--DarkGray)] transition-colors duration-200"
+              onClick={() => {
+                setShowReset((prev) => !prev);
+                setResetMessage(null);
+                setResetError(null);
+              }}
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          {showReset && (
+            <form onSubmit={handleResetSubmit} className="mt-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
+                  Email
+                </label>
+                <input
+                  id="resetEmail"
+                  name="resetEmail"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(event) => setResetEmail(event.target.value)}
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              {resetError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                  <div className="text-sm text-red-700">{resetError}</div>
+                </div>
+              )}
+
+              {resetMessage && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <div className="text-sm text-emerald-700">{resetMessage}</div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                loading={isResetSubmitting}
+                disabled={isResetSubmitting}
+                className="w-full"
+                variant="outline"
+              >
+                {isResetSubmitting ? "Sending..." : "Send reset link"}
+              </Button>
+            </form>
+          )}
 
           {/* Register Link */}
           <div className="mt-8 text-center">

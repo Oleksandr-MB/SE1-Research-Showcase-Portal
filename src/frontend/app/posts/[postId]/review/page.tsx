@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, FormEvent } from "react";
 import { Button } from "@/components/Button";
@@ -144,44 +143,59 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F5F5F5] to-[#F3F3F3] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="h1-apple text-[var(--DarkGray)]">Review Post #{postId}</h1>
-              <p className="body-apple text-[var(--Gray)] mt-2">
-                Logged in as <span className="font-medium">{user?.username}</span>
+    <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="mx-auto max-w-4xl space-y-6">
+        <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <h1 className="h1-apple text-[var(--DarkGray)]">Write a review</h1>
+              <p className="text-sm text-[var(--Gray)]">
+                Reviewing post #{postId} as{" "}
+                <span className="font-medium text-[var(--DarkGray)]">
+                  @{user?.username}
+                </span>
               </p>
             </div>
-            <button
-              onClick={() => window.close()}
-              className="text-sm font-medium text-[var(--DarkGray)] hover:text-[var(--Gray)] transition"
-            >
-              Close
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button href={`/posts/${postId}`} variant="outline">
+                Back to post
+              </Button>
+              <button
+                type="button"
+                onClick={() => window.close()}
+                className="text-sm font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
+              >
+                Close window
+              </button>
+            </div>
           </div>
-          <div className="divider-subtle"></div>
-        </div>
+        </section>
 
         {/* Post Preview */}
         {post && (
-          <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-6 shadow-soft-sm mb-8">
-            <h2 className="h3-apple text-[var(--DarkGray)] mb-3">{post.title}</h2>
-            <p className="text-sm text-[var(--Gray)] mb-4">
-              By <span className="font-medium">@{post.poster_username}</span>
+          <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--Gray)]">
+              Post preview
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-[var(--DarkGray)]">
+              {post.title}
+            </h2>
+            <p className="mt-2 text-sm text-[var(--Gray)]">
+              By{" "}
+              <span className="font-medium text-[var(--DarkGray)]">
+                @{post.poster_username}
+              </span>
             </p>
             {post.abstract && (
-              <p className="text-sm text-[var(--DarkGray)] leading-relaxed">
+              <p className="mt-4 text-sm text-[var(--DarkGray)] leading-relaxed">
                 {post.abstract}
               </p>
             )}
-          </div>
+          </section>
         )}
 
         {/* Review Form */}
-        <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-6 sm:p-8 shadow-soft-sm">
+        <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 p-4">
@@ -310,26 +324,22 @@ export default function ReviewPage() {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 rounded-2xl bg-[var(--DarkGray)] px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#4a4a4a] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? "Submitting..." : "Submit Review"}
-              </button>
-              <button
-                type="button"
-                onClick={() => window.close()}
-                className="flex-1 rounded-2xl border border-[#E5E5E5] px-6 py-3 text-sm font-semibold text-[var(--DarkGray)] transition hover:bg-[#F3F3F3]"
-              >
-                Cancel
-              </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-[var(--LightGray)] pt-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button type="submit" loading={isSubmitting} disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit review"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => window.close()}>
+                  Cancel
+                </Button>
+              </div>
+              <p className="text-xs text-[var(--Gray)]">
+                Please be constructive and specific.
+              </p>
             </div>
           </form>
-        </div>
+        </section>
       </div>
     </div>
   );
 }
-

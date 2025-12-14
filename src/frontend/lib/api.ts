@@ -1,6 +1,7 @@
-export const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
-export type PostPhase = "draft" | "published";
+export type PostPhase = "published";
 
 export type PostSummary = {
   id: number;
@@ -46,7 +47,6 @@ export type CreatePostPayload = {
   body: string;
   bibtex?: string;
   tags?: string[];
-  phase?: PostPhase;
   attachments?: string[];
 };
 
@@ -56,6 +56,16 @@ export type CommentThread = {
   commenter_id: number;
   commenter_username: string;
   parent_comment_id: number | null;
+  body: string;
+  created_at: string;
+  upvotes: number;
+  downvotes: number;
+};
+
+export type CommentActivity = {
+  id: number;
+  post_id: number;
+  post_title: string;
   body: string;
   created_at: string;
   upvotes: number;
@@ -116,8 +126,14 @@ export type UserRead = {
   is_orcid_public?: boolean;
   is_socials_public?: boolean;
   is_arxiv_public?: boolean;
+  is_email_public?: boolean;
 
   is_institution_verified?: boolean;
+};
+
+export type PublicUserRead = Omit<UserRead, "email"> & {
+  email?: string | null;
+  is_email_public?: boolean;
 };
 
 export type ProfileUpdatePayload = {
@@ -134,6 +150,7 @@ export type ProfileUpdatePayload = {
   is_orcid_public?: boolean;
   is_socials_public?: boolean;
   is_arxiv_public?: boolean;
+  is_email_public?: boolean;
 };
 
 export type TokenResponse = {
@@ -150,19 +167,52 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
     ? path
     : `${API_BASE_URL}/${path.replace(/^\//, "")}`;
 
-  const response = await fetch(sanitizedPath, {
-    cache: "no-store",
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(sanitizedPath, {
+      cache: "no-store",
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers || {}),
+      },
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Network request failed";
+    throw new Error(
+      `Network error while contacting API (${sanitizedPath}): ${message}`,
+    );
+  }
 
   if (!response.ok) {
-    const errorBody = await response.text();
+    const contentType = response.headers.get("content-type") || "";
+    const rawBody = await response.text();
+    if (contentType.includes("application/json")) {
+      try {
+        const parsed = JSON.parse(rawBody) as unknown;
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          "detail" in parsed &&
+          typeof (parsed as { detail?: unknown }).detail === "string"
+        ) {
+          throw new Error((parsed as { detail: string }).detail);
+        }
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          "message" in parsed &&
+          typeof (parsed as { message?: unknown }).message === "string"
+        ) {
+          throw new Error((parsed as { message: string }).message);
+        }
+      } catch {
+        // Fall through to raw body below.
+      }
+    }
     throw new Error(
-      `API request failed (${response.status}): ${errorBody || response.statusText}`,
+      rawBody || `API request failed (${response.status}): ${response.statusText}`,
     );
   }
 
@@ -213,11 +263,25 @@ export async function getCurrentUser(token: string): Promise<UserRead> {
   });
 }
 
+export async function getMyRecentComments(
+  token: string,
+  n = 5,
+): Promise<CommentActivity[]> {
+  return fetchFromApi<CommentActivity[]>(
+    `/users/me/comments?n=${encodeURIComponent(String(n))}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+}
+
 export async function getUserByUsername(
   token: string,
   username: string,
-): Promise<UserRead> {
-  return fetchFromApi<UserRead>(`/users/${username}`, {
+): Promise<PublicUserRead> {
+  return fetchFromApi<PublicUserRead>(`/users/${username}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -261,6 +325,23 @@ export async function verifyEmailToken(token: string): Promise<ApiMessage> {
   return fetchFromApi<ApiMessage>(`/users/verify-email?token=${encodeURIComponent(token)}`);
 }
 
+export async function requestPasswordReset(email: string): Promise<ApiMessage> {
+  return fetchFromApi<ApiMessage>("/users/request-password-reset", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<ApiMessage> {
+  return fetchFromApi<ApiMessage>("/users/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, new_password: newPassword }),
+  });
+}
+
 export async function getTopPosts(n = 5): Promise<PostSummary[]> {
   try {
     const posts = await fetchFromApi<PostSummary[]>(`/posts/top?n=${n}`);
@@ -285,9 +366,9 @@ export async function createPost(
   });
 }
 
-export async function getLatestUsers(n = 5): Promise<UserRead[]> {
+export async function getLatestUsers(n = 5): Promise<PublicUserRead[]> {
   try {
-    const users = await fetchFromApi<UserRead[]>(`/users/latest?n=${n}`);
+    const users = await fetchFromApi<PublicUserRead[]>(`/users/latest?n=${n}`);
     return users;
   } catch (error) {
     console.warn("Failed to fetch latest users:", error);
@@ -317,8 +398,8 @@ export async function getPublishedPostCount(): Promise<number> {
 
 export async function getPublicUserProfile(
   username: string,
-): Promise<UserRead> {
-  return fetchFromApi<UserRead>(`/users/${encodeURIComponent(username)}`);
+): Promise<PublicUserRead> {
+  return fetchFromApi<PublicUserRead>(`/users/${encodeURIComponent(username)}`);
 }
 
 export async function getPublishedPostsByUsername(
@@ -448,4 +529,3 @@ export async function voteOnReview(
     body: JSON.stringify({ value }),
   });
 }
-

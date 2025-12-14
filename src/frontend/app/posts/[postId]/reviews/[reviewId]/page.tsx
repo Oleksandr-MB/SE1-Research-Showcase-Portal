@@ -1,101 +1,143 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ReviewRead, getReviewById } from "@/lib/api";
+import type { PublicUserRead, ReviewRead } from "@/lib/api";
+import { getPublicUserProfile, getReviewById } from "@/lib/api";
 import ReviewVoteActions from "@/components/review-vote-actions";
 import VerifiedResearcherBadge from "@/components/verified-researcher-badge";
-import Link from "next/link";
+import { Button } from "@/components/Button";
 
 export default function ReviewDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [review, setReview] = useState<ReviewRead | null>(null);
-  const [reviewerRole, setReviewerRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const reviewId = parseInt(params.reviewId as string);
-  const postId = parseInt(params.postId as string);
+  const reviewId = Number(params.reviewId as string);
+  const postId = Number(params.postId as string);
+
+  const [review, setReview] = useState<ReviewRead | null>(null);
+  const [reviewer, setReviewer] = useState<PublicUserRead | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("rsp_token");
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("rsp_token") : null;
     if (!token) {
-      alert("Please log in to view review details");
-      router.push(`/posts/${postId}`);
-      return;
+      router.replace(`/login?next=/posts/${postId}/reviews/${reviewId}`);
     }
+  }, [postId, reviewId, router]);
+
+  useEffect(() => {
+    let isMounted = true;
 
     const fetchReview = async () => {
       try {
+        setError(null);
         const data = await getReviewById(reviewId);
+        if (!isMounted) return;
         setReview(data);
 
-        // Fetch reviewer details to check if they're a researcher
-        const userResponse = await fetch(
-          `http://localhost:8000/users/${encodeURIComponent(data.reviewer_username)}`
-        );
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          setReviewerRole(userData.role);
+        try {
+          const userData = await getPublicUserProfile(data.reviewer_username);
+          if (!isMounted) return;
+          setReviewer(userData);
+        } catch {
+          if (!isMounted) return;
+          setReviewer(null);
         }
-      } catch (error) {
-        console.error("Error fetching review:", error);
-        alert("Failed to load review");
-        router.push(`/posts/${postId}/reviews`);
+      } catch (e) {
+        if (!isMounted) return;
+        setError(e instanceof Error ? e.message : "Failed to load review.");
+        setReview(null);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchReview();
-  }, [reviewId, postId, router]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [reviewId]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--LightGray)] flex items-center justify-center">
-        <p className="text-lg text-[var(--Gray)]">Loading review...</p>
+      <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--DarkGray)] mx-auto mb-4"></div>
+          <p className="text-sm text-[var(--Gray)]">Loading review...</p>
+        </div>
       </div>
     );
   }
 
   if (!review) {
     return (
-      <div className="min-h-screen bg-[var(--LightGray)] flex items-center justify-center">
-        <p className="text-lg text-[var(--Gray)]">Review not found</p>
+      <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="max-w-md rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-8 text-center shadow-soft-md">
+          <h1 className="text-xl font-semibold text-[var(--DarkGray)]">
+            Review not found
+          </h1>
+          <p className="mt-2 text-sm text-[var(--Gray)]">
+            {error || "This review may have been deleted or you may not have access."}
+          </p>
+          <div className="mt-6 flex justify-center">
+            <Button href={`/posts/${postId}/reviews`} variant="outline">
+              Back to reviews
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-6">
-          <Link
-            href={`/posts/${postId}/reviews`}
-            className="inline-flex items-center justify-center font-medium transition-all duration-300 ease-apple rounded-full px-5 py-2.5 text-sm bg-transparent text-[var(--DarkGray)] border border-[#E5E5E5] hover:border-[var(--DarkGray)] focus:outline-none focus:ring-2 focus:ring-offset-2"
-          >
-            ← Back to Reviews
-          </Link>
-        </div>
+  const reviewerIsResearcher = reviewer?.role === "researcher";
 
-        <div className="rounded-3xl border border-[var(--LightGray)] bg-white p-8 shadow-md">
-          <div className="mb-6 flex items-center justify-between">
+  return (
+    <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="mx-auto max-w-5xl space-y-6">
+        <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button href={`/posts/${postId}/reviews`} variant="outline">
+                Back to reviews
+              </Button>
+              <Button href={`/posts/${postId}`} variant="ghost">
+                View post
+              </Button>
+            </div>
+
+            <span
+              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${
+                review.is_positive
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {review.is_positive ? "Positive review" : "Negative review"}
+            </span>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-lg font-semibold text-[var(--DarkGray)]">
-                {review.reviewer_username[0].toUpperCase()}
+                {(review.reviewer_username || "U")[0].toUpperCase()}
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={`/${encodeURIComponent(review.reviewer_username)}`}
-                    className="text-base font-medium text-[var(--DarkGray)] hover:text-[var(--Red)]"
+                    className="text-base font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
                   >
                     @{review.reviewer_username}
                   </Link>
-                  {reviewerRole === "researcher" && <VerifiedResearcherBadge />}
+                  {reviewerIsResearcher && <VerifiedResearcherBadge />}
                 </div>
                 <p className="text-sm text-[var(--Gray)]">
-                  Reviewed on{" "}
+                  Reviewed{" "}
                   {new Date(review.created_at).toLocaleDateString(undefined, {
                     year: "numeric",
                     month: "long",
@@ -104,62 +146,53 @@ export default function ReviewDetailPage() {
                 </p>
               </div>
             </div>
-            <span
-              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${
-                review.is_positive
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}
-            >
-              {review.is_positive ? "✓ Positive Review" : "✗ Negative Review"}
-            </span>
-          </div>
 
-          <div className="mb-6">
             <ReviewVoteActions
               reviewId={review.id}
               initialUpvotes={review.upvotes}
               initialDownvotes={review.downvotes}
             />
           </div>
+        </section>
 
-          <div className="space-y-6">
-            <div>
-              <h2 className="mb-2 text-lg font-semibold text-[var(--DarkGray)]">Review</h2>
-              <p className="text-[var(--DarkGray)] whitespace-pre-wrap leading-relaxed">
-                {review.body}
-              </p>
-            </div>
+        <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
+          <h2 className="h3-apple text-[var(--DarkGray)]">Review</h2>
+          <p className="mt-4 whitespace-pre-wrap text-[var(--DarkGray)] leading-relaxed">
+            {review.body}
+          </p>
+        </section>
 
-            {review.strengths && (
-              <div>
-                <h2 className="mb-2 text-lg font-semibold text-green-700">Strengths</h2>
-                <p className="text-[var(--DarkGray)] whitespace-pre-wrap leading-relaxed">
-                  {review.strengths}
-                </p>
-              </div>
-            )}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
+            <h2 className="h3-apple text-green-700">Strengths</h2>
+            <p className="mt-4 whitespace-pre-wrap text-[var(--DarkGray)] leading-relaxed">
+              {review.strengths || "No strengths provided."}
+            </p>
+          </section>
+          <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
+            <h2 className="h3-apple text-red-700">Weaknesses</h2>
+            <p className="mt-4 whitespace-pre-wrap text-[var(--DarkGray)] leading-relaxed">
+              {review.weaknesses || "No weaknesses provided."}
+            </p>
+          </section>
+        </div>
 
-            {review.weaknesses && (
-              <div>
-                <h2 className="mb-2 text-lg font-semibold text-red-700">Weaknesses</h2>
-                <p className="text-[var(--DarkGray)] whitespace-pre-wrap leading-relaxed">
-                  {review.weaknesses}
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-[var(--LightGray)]">
-            <Link
-              href={`/posts/${postId}`}
-              className="inline-flex items-center text-sm font-medium text-[var(--DarkGray)] hover:text-[var(--Black)] transition-colors"
-            >
-              View original post →
-            </Link>
-          </div>
+        <div className="flex items-center justify-between">
+          <Link
+            href={`/posts/${postId}`}
+            className="text-sm font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
+          >
+            View original post →
+          </Link>
+          <Link
+            href={`/posts/${postId}/reviews`}
+            className="text-sm font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
+          >
+            Back to all reviews →
+          </Link>
         </div>
       </div>
     </div>
   );
 }
+

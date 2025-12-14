@@ -18,10 +18,10 @@ type ProfileFormState = {
   twitter: string;
   github: string;
   linkedin: string;
-  isProfilePublic: boolean;
   isOrcidPublic: boolean;
   isSocialsPublic: boolean;
   isArxivPublic: boolean;
+  isEmailPublic: boolean;
 };
 
 const emptyForm: ProfileFormState = {
@@ -34,10 +34,10 @@ const emptyForm: ProfileFormState = {
   twitter: "",
   github: "",
   linkedin: "",
-  isProfilePublic: true,
   isOrcidPublic: true,
   isSocialsPublic: true,
   isArxivPublic: true,
+  isEmailPublic: false,
 };
 
 function formatJoinedDate(createdAt: string | undefined) {
@@ -171,10 +171,10 @@ export default function PersonalLab() {
           twitter: currentUser.twitter || "",
           github: currentUser.github || "",
           linkedin: currentUser.linkedin || "",
-          isProfilePublic: currentUser.is_profile_public ?? true,
           isOrcidPublic: currentUser.is_orcid_public ?? true,
           isSocialsPublic: currentUser.is_socials_public ?? true,
           isArxivPublic: currentUser.is_arxiv_public ?? true,
+          isEmailPublic: currentUser.is_email_public ?? false,
         });
       } catch (error) {
         console.error("Unable to load current user", error);
@@ -220,10 +220,10 @@ export default function PersonalLab() {
       twitter: form.twitter.trim() || undefined,
       github: form.github.trim() || undefined,
       linkedin: form.linkedin.trim() || undefined,
-      is_profile_public: form.isProfilePublic,
       is_orcid_public: form.isOrcidPublic,
       is_socials_public: form.isSocialsPublic,
       is_arxiv_public: form.isArxivPublic,
+      is_email_public: form.isEmailPublic,
     };
 
     try {
@@ -365,16 +365,12 @@ export default function PersonalLab() {
                 <h2 className="h3-apple mb-6 text-[var(--DarkGray)]">Privacy Settings</h2>
                 <div className="rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] p-2">
                   <PrivacyCheckbox
-                    name="isProfilePublic"
-                    checked={form.isProfilePublic}
-                    onChange={handleCheckboxChange}
-                    label="Make my profile public"
-                    description="When disabled, only your username may appear publicly"
-                  />
-                  <PrivacyCheckbox
                     name="isOrcidPublic"
                     checked={form.isOrcidPublic}
-                    onChange={handleCheckboxChange}
+                    onChange={(e) => {
+                      handleCheckboxChange(e);
+                      setForm((prev) => ({ ...prev, isArxivPublic: e.target.checked }));
+                    }}
                     label="Show ORCID and arXiv profiles"
                     description="Display your academic identifiers on your public profile"
                   />
@@ -384,6 +380,13 @@ export default function PersonalLab() {
                     onChange={handleCheckboxChange}
                     label="Show social links"
                     description="Display website and social media links"
+                  />
+                  <PrivacyCheckbox
+                    name="isEmailPublic"
+                    checked={form.isEmailPublic}
+                    onChange={handleCheckboxChange}
+                    label="Show my email on my public profile"
+                    description="Email is hidden by default"
                   />
                 </div>
               </section>

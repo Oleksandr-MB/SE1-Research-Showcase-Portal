@@ -141,7 +141,6 @@ class Tag(TimestampMixin, Base):
 
 
 class PostPhase(str, enum.Enum):
-    DRAFT = "draft"
     PUBLISHED = "published"
 
 
@@ -160,7 +159,7 @@ class Post(TimestampMixin, VotableMixin, Base):
     body: Mapped[str] = mapped_column(nullable=False)
     phase: Mapped[PostPhase] = mapped_column(
         Enum(PostPhase, name="post_phase", native_enum=False),
-        default=PostPhase.DRAFT,
+        default=PostPhase.PUBLISHED,
         nullable=False,
         index=True,
     )

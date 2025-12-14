@@ -1,5 +1,6 @@
 email_cfg:
   link_base: http://localhost:3000/verify-email?token=
+  reset_link_base: http://localhost:3000/reset-password?token=
 
 db_cfg:
   base: postgresql+psycopg2
@@ -19,27 +20,3 @@ token_cfg:
 
 scheduler_cfg:
   delete_expired_users_interval_minutes: 60
-
-tags_cfg:
-  max_tags_per_post: 3
-  tags_list:
-    - Artificial Intelligence
-    - Machine Learning
-    - Deep Learning
-    - Computer Vision
-    - Natural Language Processing
-    - Robotics
-    - Internet of Things
-    - Cybersecurity
-    - Cloud Computing
-    - Big Data
-    - Data Mining
-    - Wireless Networks
-    - Signal Processing
-    - Image Processing
-    - Software Engineering
-    - Computer Networks
-    - Distributed Systems
-    - Human-Computer Interaction
-    - Embedded Systems
-    - Quantum Computing

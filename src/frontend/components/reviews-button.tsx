@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface ReviewsButtonProps {
@@ -9,13 +9,11 @@ interface ReviewsButtonProps {
 
 export default function ReviewsButton({ postId }: ReviewsButtonProps) {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn] = useState(
+    () =>
+      typeof window !== "undefined" && Boolean(localStorage.getItem("rsp_token")),
+  );
   const [showTooltip, setShowTooltip] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("rsp_token");
-    setIsLoggedIn(!!token);
-  }, []);
 
   const handleClick = () => {
     if (!isLoggedIn) {

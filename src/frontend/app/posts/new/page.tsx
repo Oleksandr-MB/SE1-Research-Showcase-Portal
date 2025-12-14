@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   createPost,
   type CreatePostPayload,
-  type PostPhase,
   uploadPostAttachment,
   type AttachmentUploadResponse,
   searchPosts,
@@ -29,7 +28,6 @@ type FormState = {
   body: string;
   bibtex: string;
   tags: string;
-  phase: PostPhase;
 };
 
 const initialState: FormState = {
@@ -39,7 +37,6 @@ const initialState: FormState = {
   body: "",
   bibtex: "",
   tags: "",
-  phase: "draft",
 };
 
 const splitTags = (raw: string): string[] =>
@@ -63,7 +60,6 @@ export default function NewPostPage() {
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [submitPhase, setSubmitPhase] = useState<PostPhase>("draft");
   const redirectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -258,8 +254,6 @@ export default function NewPostPage() {
     const attachmentPayload =
       sanitizedAttachments.length > 0 ? sanitizedAttachments : undefined;
 
-    const phaseToUse: PostPhase = submitPhase ?? "draft";
-
     const payload: CreatePostPayload = {
       title: trimmedTitle,
       abstract: trimmedAbstract,
@@ -267,7 +261,6 @@ export default function NewPostPage() {
       body: trimmedBody,
       bibtex: form.bibtex.trim() || undefined,
       tags: tags.length ? tags : undefined,
-      phase: phaseToUse,
       attachments: attachmentPayload,
     };
 
@@ -275,12 +268,10 @@ export default function NewPostPage() {
 
     try {
       await createPost(token, payload);
-      setSuccess(phaseToUse === "published"
-        ? "Post published. Redirecting you to your lab..."
-        : "Draft saved. Redirecting you to your lab...");
+      setSuccess("Post published. Redirecting to the main page...");
       setForm(initialState);
       setAttachments([]);
-      redirectTimeout.current = setTimeout(() => router.push("/me"), 1400);
+      redirectTimeout.current = setTimeout(() => router.push("/"), 1400);
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : "Something went wrong while creating the post.");
     } finally {
@@ -306,9 +297,9 @@ export default function NewPostPage() {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="h1-apple text-[var(--DarkGray)]">Draft New Post</h1>
+              <h1 className="h1-apple text-[var(--DarkGray)]">Create New Post</h1>
               <p className="body-apple text-[var(--Gray)] mt-2 max-w-2xl">
-                Share your research with the community. You can save as draft or publish immediately.
+                Share your research with the community.
               </p>
             </div>
             <Link href="/me">
@@ -577,21 +568,10 @@ export default function NewPostPage() {
                 <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-[#E5E5E5]">
                   <Button
                     type="submit"
-                    onClick={() => setSubmitPhase("published")}
                     loading={isSubmitting}
                     disabled={isSubmitting || isUploadingAttachments}
                   >
                     Publish Post
-                  </Button>
-                  
-                  <Button
-                    type="submit"
-                    onClick={() => setSubmitPhase("draft")}
-                    variant="outline"
-                    loading={isSubmitting}
-                    disabled={isSubmitting || isUploadingAttachments}
-                  >
-                    Save as Draft
                   </Button>
                   
                   <Link href="/me">
