@@ -5,13 +5,14 @@
 
   --White: #FFFFFF;
   --Red: #D40000;
+  --Green: #7DC23B;
+  --Blue: #035096;
   --Gray: #5B5B5B;
   --LightGray: #DFDFDF;
   --DarkGray: #373737;
   --Black: #000000;
   --GrayTransparent: #5B5B5B40;
   --DarkGrayTransparent: #37373740;
-
   --ease-apple: cubic-bezier(0.4, 0, 0.6, 1);
   --ease-smooth: cubic-bezier(0.2, 0, 0, 1);
 }

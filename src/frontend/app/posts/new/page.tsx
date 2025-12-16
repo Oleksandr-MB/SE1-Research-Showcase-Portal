@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   createPost,
   type CreatePostPayload,
-  type PostPhase,
   uploadPostAttachment,
   type AttachmentUploadResponse,
   searchPosts,
@@ -21,6 +20,13 @@ import {
 } from "react";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import {
+  CheckCircleSolidIcon,
+  DocumentTextIcon,
+  TagIcon,
+  XCircleSolidIcon,
+  XMarkIcon,
+} from "@/components/icons";
 
 type FormState = {
   title: string;
@@ -29,7 +35,6 @@ type FormState = {
   body: string;
   bibtex: string;
   tags: string;
-  phase: PostPhase;
 };
 
 const initialState: FormState = {
@@ -39,7 +44,6 @@ const initialState: FormState = {
   body: "",
   bibtex: "",
   tags: "",
-  phase: "draft",
 };
 
 const splitTags = (raw: string): string[] =>
@@ -63,7 +67,6 @@ export default function NewPostPage() {
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [submitPhase, setSubmitPhase] = useState<PostPhase>("draft");
   const redirectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -82,12 +85,10 @@ export default function NewPostPage() {
         
         if (user) {
           const authorName = user.display_name || user.username;
-          const affiliation = user.affiliation ? `, ${user.affiliation}` : '';
-          const defaultAuthorsText = `${authorName}${affiliation}`;
           
           setForm(prev => ({
             ...prev,
-            authorsText: defaultAuthorsText
+            authorsText: authorName
           }));
         }
       } catch (error) {
@@ -260,8 +261,6 @@ export default function NewPostPage() {
     const attachmentPayload =
       sanitizedAttachments.length > 0 ? sanitizedAttachments : undefined;
 
-    const phaseToUse: PostPhase = submitPhase ?? "draft";
-
     const payload: CreatePostPayload = {
       title: trimmedTitle,
       abstract: trimmedAbstract,
@@ -269,7 +268,6 @@ export default function NewPostPage() {
       body: trimmedBody,
       bibtex: form.bibtex.trim() || undefined,
       tags: tags.length ? tags : undefined,
-      phase: phaseToUse,
       attachments: attachmentPayload,
     };
 
@@ -277,12 +275,10 @@ export default function NewPostPage() {
 
     try {
       await createPost(token, payload);
-      setSuccess(phaseToUse === "published"
-        ? "Post published. Redirecting you to your lab..."
-        : "Draft saved. Redirecting you to your lab...");
+      setSuccess("Post published. Redirecting to the main page...");
       setForm(initialState);
       setAttachments([]);
-      redirectTimeout.current = setTimeout(() => router.push("/me"), 1400);
+      redirectTimeout.current = setTimeout(() => router.push("/"), 1400);
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : "Something went wrong while creating the post.");
     } finally {
@@ -305,34 +301,32 @@ export default function NewPostPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#F5F5F5] to-[#F3F3F3] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <section className="mb-8 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="h1-apple text-[var(--DarkGray)]">Draft New Post</h1>
-              <p className="body-apple text-[var(--Gray)] mt-2 max-w-2xl">
-                Share your research with the community. You can save as draft or publish immediately.
+              <h1 className="h1-apple text-[var(--DarkGray)]">Create New Post</h1>
+              <p className="body-apple mt-2 max-w-2xl text-[var(--Gray)]">
+                Share your research with the community.
               </p>
             </div>
             <Link href="/me">
-              <Button variant="outline" size="md">
-                Back to My Space
+              <Button variant="primary" size="md">
+                Back to your lab
               </Button>
             </Link>
           </div>
           <div className="divider-subtle"></div>
-        </div>
+        </section>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-2">
-            <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-6 sm:p-8 shadow-soft-sm">
+            <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-6 sm:p-8 shadow-soft-sm">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {error && (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                     <div className="flex items-center gap-2 text-sm text-red-700">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
+                      <XCircleSolidIcon className="w-4 h-4" />
                       {error}
                     </div>
                   </div>
@@ -341,9 +335,7 @@ export default function NewPostPage() {
                 {success && (
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 animate-scale-in">
                     <div className="flex items-center gap-2 text-sm text-emerald-700">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
+                      <CheckCircleSolidIcon className="w-4 h-4" />
                       {success}
                     </div>
                   </div>
@@ -364,9 +356,9 @@ export default function NewPostPage() {
                       Author
                     </label>
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[var(--DarkGray)] to-[var(--DarkRedLight)] flex items-center justify-center">
-                        <span className="text-sm font-medium text-white">
-                          {currentUser?.display_name?.[0] || currentUser?.username?.[0] || "U"}
+                      <div className="h-10 w-10 rounded-full bg-[var(--LightGray)] flex items-center justify-center">
+                        <span className="text-sm font-medium text-[var(--DarkGray)]">
+                          {currentUser?.username?.[0].toUpperCase() || "A"}
                         </span>
                       </div>
                       <div className="flex-1">
@@ -478,9 +470,7 @@ export default function NewPostPage() {
                                   className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-[var(--DarkGray)] hover:bg-[#F3F3F3] transition-colors"
                                 >
                                   <span className="flex items-center gap-2">
-                                    <svg className="w-3 h-3 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                    </svg>
+                                    <TagIcon className="w-3 h-3 text-[#8A8A8A]" />
                                     {tag}
                                   </span>
                                   <span className="text-xs text-[#8A8A8A]">
@@ -546,9 +536,7 @@ export default function NewPostPage() {
                           >
                             <div className="flex items-center gap-3">
                               <div className="p-2 rounded-lg bg-gradient-to-br from-[#F7F7F7] to-transparent">
-                                <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
+                                <DocumentTextIcon className="w-4 h-4 text-[var(--DarkGray)]" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-[var(--DarkGray)] truncate max-w-[200px]">
@@ -564,9 +552,7 @@ export default function NewPostPage() {
                               onClick={() => handleRemoveAttachment(attachment.file_path)}
                               className="p-1.5 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors"
                             >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
+                              <XMarkIcon className="w-4 h-4" />
                             </button>
                           </div>
                         ))}
@@ -579,21 +565,10 @@ export default function NewPostPage() {
                 <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-[#E5E5E5]">
                   <Button
                     type="submit"
-                    onClick={() => setSubmitPhase("published")}
                     loading={isSubmitting}
                     disabled={isSubmitting || isUploadingAttachments}
                   >
                     Publish Post
-                  </Button>
-                  
-                  <Button
-                    type="submit"
-                    onClick={() => setSubmitPhase("draft")}
-                    variant="outline"
-                    loading={isSubmitting}
-                    disabled={isSubmitting || isUploadingAttachments}
-                  >
-                    Save as Draft
                   </Button>
                   
                   <Link href="/me">
@@ -616,9 +591,7 @@ export default function NewPostPage() {
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                    <CheckCircleSolidIcon className="w-4 h-4 text-[var(--DarkGray)]" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--DarkGray)]">Clear Title</p>
@@ -627,9 +600,7 @@ export default function NewPostPage() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                    <CheckCircleSolidIcon className="w-4 h-4 text-[var(--DarkGray)]" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--DarkGray)]">Tags</p>
@@ -638,9 +609,7 @@ export default function NewPostPage() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                    <CheckCircleSolidIcon className="w-4 h-4 text-[var(--DarkGray)]" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--DarkGray)]">Attachments</p>
@@ -649,9 +618,7 @@ export default function NewPostPage() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <svg className="w-4 h-4 text-[var(--DarkGray)]" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                    <CheckCircleSolidIcon className="w-4 h-4 text-[var(--DarkGray)]" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--DarkGray)]">Authors</p>

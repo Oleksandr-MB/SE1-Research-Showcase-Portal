@@ -3,8 +3,16 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { loginUser } from "@/lib/api";
+import { loginUser, requestPasswordReset } from "@/lib/api";
 import { Button } from "@/components/Button";
+import {
+  CheckCircleSolidIcon,
+  EyeIcon,
+  EyeOffIcon,
+  LoginIcon,
+  UserIcon,
+  XCircleSolidIcon,
+} from "@/components/icons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +22,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [isResetSubmitting, setIsResetSubmitting] = useState(false);
   const verified = searchParams.get("verified");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -35,32 +48,42 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F5F5F5] via-[#F3F3F3] to-[var(--White)] px-4 py-8 animate-fade-in">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--DarkGray)] to-[var(--DarkRedLight)] mb-6">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-          </div>
-          <h1 className="h1-apple text-[var(--DarkGray)] mb-2">
-            Welcome Back
-          </h1>
-          <p className="body-apple text-[var(--Gray)]">
-            Sign in to your research lab
-          </p>
-        </div>
+  const handleResetSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setResetError(null);
+    setResetMessage(null);
+    setIsResetSubmitting(true);
 
-        {/* Form Card */}
-        <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-8 shadow-soft-md hover-lift">
+    try {
+      const response = await requestPasswordReset(resetEmail.trim());
+      setResetMessage(response.message || "Check your email for a reset link.");
+    } catch (err) {
+      setResetError(
+        err instanceof Error
+          ? err.message
+          : "Unable to request a password reset right now",
+      );
+    } finally {
+      setIsResetSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[var(--LightGray)] px-4 py-8">
+      <div className="w-full max-w-lg">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-8 shadow-soft-md">
+            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--DarkGray)] mb-6 mx-auto">
+            <LoginIcon className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="h1-apple text-[var(--DarkGray)] text-center mb-4">
+            Welcome Back!
+          </h1>
+          <br/>
+
           {verified && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-6 animate-scale-in">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-6">
               <div className="flex items-center gap-2 text-sm text-emerald-700">
-                <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
+                <CheckCircleSolidIcon className="w-4 h-4 flex-shrink-0" />
                 Your email is verified. You can sign in now.
               </div>
             </div>
@@ -85,9 +108,7 @@ export default function LoginPage() {
                   required
                 />
                 <div className="absolute right-3 top-3.5">
-                  <svg className="w-4 h-4 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                  <UserIcon className="w-4 h-4 text-[#8A8A8A]" />
                 </div>
               </div>
             </div>
@@ -117,25 +138,19 @@ export default function LoginPage() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.596-3.856a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c-1.657 4.905-6.075 8.236-11.25 8.236A11.011 11.011 0 013.749 15M2.25 9h19.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <EyeOffIcon className="w-4 h-4" />
                   ) : (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                    <EyeIcon className="w-4 h-4" />
                   )}
                 </button>
               </div>
             </div>
 
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 animate-scale-in">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                 <div className="flex items-center gap-2 text-sm text-red-700">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  {error}
+                  <XCircleSolidIcon className="w-4 h-4 flex-shrink-0" />
+                  {"Wrong username or password."}
                 </div>
               </div>
             )}
@@ -150,6 +165,65 @@ export default function LoginPage() {
             </Button>
           </form>
 
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <button
+              type="button"
+              className="text-[var(--Gray)] hover:text-[var(--DarkGray)] transition-colors duration-200"
+              onClick={() => {
+                setShowReset((prev) => !prev);
+                setResetMessage(null);
+                setResetError(null);
+              }}
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          {showReset && (
+            <form onSubmit={handleResetSubmit} className="mt-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
+                  Email
+                </label>
+                <input
+                  id="resetEmail"
+                  name="resetEmail"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(event) => setResetEmail(event.target.value)}
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              {resetError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                  <div className="text-sm text-red-700">{resetError}</div>
+                </div>
+              )}
+
+              {resetMessage && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <div className="text-sm text-emerald-700">{resetMessage}</div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                loading={isResetSubmitting}
+                disabled={isResetSubmitting}
+                className="w-full"
+                variant="outline"
+              >
+                {isResetSubmitting ? "Sending..." : "Send reset link"}
+              </Button>
+            </form>
+          )}
+
           {/* Register Link */}
           <div className="mt-8 text-center">
             <p className="text-sm text-[var(--Gray)]">
@@ -159,6 +233,18 @@ export default function LoginPage() {
                 className="link-apple font-medium"
               >
                 Create an account
+              </Link>
+            </p>
+          </div>
+          {/* Back */}
+          <div className="mt-4 text-center">
+            <p className="text-sm text-[var(--Gray)]">
+              Changed your mind?{" "}
+              <Link
+                href="/"
+                className="link-apple font-medium"
+              >
+                Go back to the search page
               </Link>
             </p>
           </div>

@@ -1,11 +1,21 @@
 import Link from "next/link";
+import type { ComponentType, SVGProps } from "react";
 import {
   type PostSummary,
   getLatestUsers,
+  getPublishedPostCount,
   getUserCount,
   searchPosts,
 } from "@/lib/api";
 import ProfileButton from "@/components/profile-button";
+import {
+  ChevronRightIcon,
+  DownvoteIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  UpvoteIcon,
+  UserIcon,
+} from "@/components/icons";
 
 type LatestUser = {
   id: number;
@@ -30,27 +40,33 @@ const sortOptions = [
   { label: "Oldest", value: "oldest" },
 ] as const;
 
-const quickActions = [
+type QuickAction = {
+  label: string;
+  description: string;
+  href: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+};
+
+const quickActions: QuickAction[] = [
   {
     label: "Create Post",
     description: "Share a new study with the portal.",
     href: "/posts/new",
-    iconPath: "M12 4v16m8-8H4",
+    Icon: PlusIcon,
   },
   {
     label: "Browse Research",
     description: "Jump directly to the search filters.",
     href: "/",
-    iconPath: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
+    Icon: MagnifyingGlassIcon,
   },
   {
     label: "My Profile",
     description: "Review your contributions and stats.",
     href: "/me",
-    iconPath:
-      "M5.121 17.804A6 6 0 0112 14a6 6 0 016.879 3.804M12 14a4 4 0 10-4-4 4 4 0 004 4z",
+    Icon: UserIcon,
   },
-] as const;
+];
 
 const formatLatestUsers = (
   users: Awaited<ReturnType<typeof getLatestUsers>>,
@@ -103,14 +119,7 @@ const PostCard = ({
 
           <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--Gray)]">
             <div className="flex items-center gap-1">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
+              <UserIcon className="h-4 w-4" />
               {post.poster_username ? (
                 <Link
                   href={`/${encodeURIComponent(post.poster_username)}`}
@@ -166,25 +175,11 @@ const PostCard = ({
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--LightGray)] pt-4 text-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1 text-[var(--DarkGray)]">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 15l7-7 7 7"
-                />
-              </svg>
+              <UpvoteIcon />
               <span>{post.upvotes ?? 0}</span>
             </div>
             <div className="flex items-center gap-1 text-[var(--DarkGray)]">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <DownvoteIcon />
               <span>{post.downvotes ?? 0}</span>
             </div>
           </div>
@@ -195,9 +190,7 @@ const PostCard = ({
               className="inline-flex items-center gap-1 text-[var(--DarkGray)] transition-colors duration-200 hover:text-[var(--Red)]"
             >
               Read full post
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRightIcon className="h-4 w-4" />
             </Link>
             <span className="text-xs text-[var(--Gray)]">
               {new Date(post.created_at).toLocaleDateString("en-GB", {
@@ -238,10 +231,11 @@ export default async function Home({
   const requestedPage = Number.parseInt(resolved.page ?? "1", 10);
   let currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
-  const [searchResults, latestUsersRaw, totalUsers] = await Promise.all([
+  const [searchResults, latestUsersRaw, totalUsers, totalPublishedPosts] = await Promise.all([
     searchPosts(query),
     getLatestUsers(),
     getUserCount(),
+    getPublishedPostCount(),
   ]);
 
   const latestUsers = formatLatestUsers(latestUsersRaw);
@@ -311,7 +305,10 @@ export default async function Home({
 
   const communitySummary = [
     { label: "Registered Users", value: totalUsers.toLocaleString() },
-    { label: "Published Posts", value: sortedPosts.length.toString() },
+    {
+      label: "Published Posts",
+      value: totalPublishedPosts.toLocaleString(),
+    },
   ];
 
   const buildHref = (overrides?: Partial<Record<keyof HomeSearchParams, string | undefined>>) => {
@@ -369,8 +366,6 @@ export default async function Home({
   };
 
   const feedTitle = hasAnyFilter ? "Search Results" : "Feed";
-  const feedSubtitle = sortedPosts.length
-    ? hasAnyFilter ? null : null : "No posts were found.";
 
   const pageList: Array<number | "ellipsis"> = (() => {
     if (totalPages <= 4) {
@@ -420,9 +415,7 @@ export default async function Home({
                 className="w-full rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] py-3.5 pl-12 pr-4 text-sm text-[var(--DarkGray)] outline-none placeholder:text-[var(--Gray)] transition-colors duration-200 focus:border-[var(--DarkGray)]"
               />
               <div className="pointer-events-none absolute left-4 top-3.5 text-[var(--Gray)]">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <MagnifyingGlassIcon className="h-5 w-5" />
               </div>
             </div>
 
@@ -514,7 +507,6 @@ export default async function Home({
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="h3-apple text-[var(--DarkGray)]">{feedTitle}</h2>
-                <p className="text-sm text-[var(--Gray)]">{feedSubtitle}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs uppercase tracking-wide text-[var(--Gray)]">
@@ -547,7 +539,7 @@ export default async function Home({
                 <div className="rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] p-8 text-center text-sm text-[var(--Gray)]">
                   {sortedPosts.length
                     ? "No posts match your filters on this page. Try a different page."
-                    : "No posts found yet."}
+                    : "No posts were found."}
                 </div>
               )}
             </div>
@@ -672,9 +664,7 @@ export default async function Home({
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)] transition-colors duration-200 group-hover:bg-[var(--DarkGray)] group-hover:text-[var(--White)]">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={action.iconPath} />
-                        </svg>
+                        <action.Icon className="h-5 w-5" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[var(--DarkGray)]">
@@ -683,9 +673,7 @@ export default async function Home({
                         <p className="text-xs text-[var(--Gray)]">{action.description}</p>
                       </div>
                     </div>
-                    <svg className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ChevronRightIcon className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" />
                   </Link>
                 ))}
               </div>

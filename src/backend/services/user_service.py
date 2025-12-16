@@ -4,19 +4,27 @@ from email.message import EmailMessage
 from typing import Annotated
 from threading import Lock
 
-from fastapi import Depends, HTTPException, status, APIRouter, Query
+from fastapi import Depends, HTTPException, status, APIRouter, Query, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from src.database.db import get_db
 from src.database import models
-from src.backend.services.schemas import UserCreate, UserRead, Token, TokenData
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from src.backend.services.schemas import UserCreate, UserRead, Token, TokenData, ProfileUpdate
+from src.backend.services.schemas import (
+    UserCreate,
+    UserRead,
+    Token,
+    TokenData,
+    ProfileUpdate,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+    CommentActivityRead,
+)
 
 from src.backend.config.config_utils import read_config
 
@@ -42,6 +50,10 @@ EMAIL_SMTP_SERVER = private_config["smtp_cfg"]["smtp_server"]
 EMAIL_SMTP_PORT = private_config["smtp_cfg"]["smtp_port"]
 
 EMAIL_LINK_BASE = public_config["email_cfg"]["link_base"]
+RESET_PASSWORD_LINK_BASE = public_config["email_cfg"].get(
+    "reset_link_base",
+    "http://localhost:3000/reset-password?token=",
+)
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
@@ -136,7 +148,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
+def register_user(
+    user_in: UserCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     logging.info(
         f"📝 Registration attempt: username={user_in.username}, email={user_in.email}")
 
@@ -179,7 +195,7 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
 
-    send_verification_email(user_in.email, verification_link)
+    background_tasks.add_task(send_verification_email, user_in.email, verification_link)
     logging.info("✅ User created successfully.")
 
     return UserRead(
@@ -213,8 +229,95 @@ def send_verification_email(recipient_email: str, verification_link: str):
             server.send_message(msg)
             logging.info(f"✅ Verification email sent to {recipient_email}")
     except Exception as e:
-        logging.error(f"❌ Failed to send email: {e}")
-        raise RuntimeError(f"❌ Failed to send email: {e}")
+        logging.error("❌ Failed to send verification email: %s", e)
+        return
+
+
+def send_password_reset_email(recipient_email: str, reset_link: str) -> None:
+    msg = EmailMessage()
+    msg["Subject"] = "Reset your Research Showcase Portal password"
+    msg["From"] = EMAIL_SENDER
+    msg["To"] = recipient_email
+    msg.set_content(
+        f"Hello!\n\n"
+        f"We received a request to reset your password.\n\n"
+        f"Reset your password using the link below:\n\n"
+        f"{reset_link}\n\n"
+        f"This link will expire in {int(EMAIL_TOKEN_EXPIRE_MINUTES)} minutes.\n\n"
+        f"If you did not request a password reset, you can ignore this email.\n\n"
+        f"Best regards,\n"
+        f"Research Showcase Portal Team"
+    )
+
+    with smtplib.SMTP(EMAIL_SMTP_SERVER, EMAIL_SMTP_PORT) as server:
+        server.starttls()
+        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+        server.send_message(msg)
+
+
+@router.post("/request-password-reset")
+def request_password_reset(
+    payload: PasswordResetRequest,
+    db: Session = Depends(get_db),
+):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+    if user:
+        reset_token = create_token(
+            data={"sub": user.email, "purpose": "password_reset"},
+            expires_delta=timedelta(minutes=EMAIL_TOKEN_EXPIRE_MINUTES),
+        )
+        reset_link = RESET_PASSWORD_LINK_BASE + reset_token
+        try:
+            send_password_reset_email(user.email, reset_link)
+            logging.info("Password reset email sent to %s", user.email)
+        except Exception:
+            logging.exception("Failed to send password reset email")
+
+    return {
+        "message": "If an account exists for that email, a reset link has been sent."
+    }
+
+
+@router.post("/reset-password")
+def reset_password(
+    payload: PasswordResetConfirm,
+    db: Session = Depends(get_db),
+):
+    try:
+        decoded = jwt.decode(payload.token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired token",
+        )
+
+    if decoded.get("purpose") != "password_reset":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token",
+        )
+
+    email = decoded.get("sub")
+    if not isinstance(email, str) or not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token",
+        )
+
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    password_hash, password_salt = get_password_hash(payload.new_password)
+    user.password_hash = password_hash
+    user.password_salt = password_salt
+    db.add(user)
+    db.commit()
+
+    return {"message": "Password updated successfully"}
 
 
 @router.get("/verify-email")
@@ -337,6 +440,40 @@ async def logout(
 @router.get("/me", response_model=UserRead)
 async def read_current_user(current_user: models.User = Depends(get_current_user)):
     return current_user
+
+
+@router.get("/me/comments", response_model=list[CommentActivityRead])
+async def get_my_recent_comments(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+    n: Annotated[int, Query(gt=0, le=50)] = 5,
+) -> list[CommentActivityRead]:
+    comments = (
+        db.query(models.Comment)
+        .options(joinedload(models.Comment.comment_votes))
+        .options(joinedload(models.Comment.post))
+        .join(models.Comment.post)
+        .filter(
+            models.Comment.commenter_id == current_user.id,
+            models.Post.phase == models.PostPhase.PUBLISHED,
+        )
+        .order_by(models.Comment.created_at.desc())
+        .limit(n)
+        .all()
+    )
+
+    return [
+        CommentActivityRead(
+            id=comment.id,
+            post_id=comment.post_id,
+            post_title=comment.post.title if comment.post and comment.post.title else "",
+            body=comment.body,
+            created_at=comment.created_at,
+            upvotes=sum(1 for vote in (comment.comment_votes or []) if vote.value == 1),
+            downvotes=sum(1 for vote in (comment.comment_votes or []) if vote.value == -1),
+        )
+        for comment in comments
+    ]
 
 
 @router.get("/count", response_model=int)

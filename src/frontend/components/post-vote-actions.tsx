@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { voteOnPost } from "@/lib/api";
+import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 
 type Props = {
   postId: number;
@@ -53,7 +54,7 @@ export default function PostVoteActions({
 const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
   `rounded-full px-4 py-2 text-sm font-semibold transition ${
     active
-      ? (variant === "up" ? "bg-green-500 text-[var(--White)]" : "bg-[var(--Red)] text-[var(--White)]")
+      ? (variant === "up" ? "bg-[var(--Green)] text-[var(--White)]" : "bg-[var(--Red)] text-[var(--White)]")
       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
   } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
 
@@ -65,13 +66,7 @@ const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
         disabled={isVoting}
         className={buttonClasses(currentVote === 1, "up")}
       >
-      <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M5 15l7-7 7 7"/>
-      </svg> {counts.upvotes}
+        <UpvoteIcon size="l" /> {counts.upvotes}
       </button>
       <button
         type="button"
@@ -79,13 +74,7 @@ const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
         disabled={isVoting}
         className={buttonClasses(currentVote === -1, "down")}
       >
-      <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 9l-7 7-7-7"/>
-      </svg> {counts.downvotes}
+        <DownvoteIcon size="l" /> {counts.downvotes}
       </button>
       {error && <span className="text-sm text-red-600">{error}</span>}
     </div>

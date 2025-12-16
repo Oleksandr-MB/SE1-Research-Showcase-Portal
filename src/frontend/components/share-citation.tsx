@@ -38,7 +38,7 @@ export default function ShareCitation({
       setCopied(variant);
       window.setTimeout(() => setCopied(null), 2000);
     } catch {
-      // ignore – we just don't show "copied" message if clipboard fails
+
     }
   };
 

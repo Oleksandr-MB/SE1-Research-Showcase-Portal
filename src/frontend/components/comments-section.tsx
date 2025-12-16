@@ -8,6 +8,7 @@ import {
   type CreateCommentPayload,
   voteOnComment,
 } from "@/lib/api";
+import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 
 type Props = {
   postId: number;
@@ -96,31 +97,12 @@ const buildThreads = (comments: CommentThread[]): ThreadNode[] => {
   return threads;
 };
 
-const commentVoteButtonClasses = (active: boolean) =>
+const commentVoteButtonClasses = (active: boolean, variant: "up" | "down" = "up") =>
   `flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
     active
-      ? "bg-[var(--Red)] border-[var(--Red)] text-[var(--White)]"
-      : "border-[var(--LightGray)] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
-  }`;
-
-const ArrowIcon = ({ direction }: { direction: "up" | "down" }) => (
-  <svg
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    {direction === "up" ? (
-      <path d="M5 15l7-7 7 7" />
-    ) : (
-      <path d="M19 9l-7 7-7-7" />
-    )}
-  </svg>
-);
+      ? (variant === "up" ? "bg-[var(--Green)] text-[var(--White)]" : "bg-[var(--Red)] text-[var(--White)]")
+      : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
+  } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
 
 export default function CommentsSection({ postId, initialComments }: Props) {
   const [comments, setComments] = useState<CommentThread[]>(initialComments);
@@ -274,7 +256,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             type="button"
             onClick={() => handleReplySubmit(targetId)}
             disabled={replyLoading[targetId]}
-            className="rounded-full border border-[var(--DarkGray)] px-4 py-1.5 text-xs font-semibold text-[var(--DarkGray)] transition hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full border bg-[var(--DarkGray)] border-[var(--DarkGray)] px-4 py-1.5 text-xs font-semibold text-[var(--White)] transition hover:border-[var(--Black)] hover:bg-[var(--Black)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {replyLoading[targetId] ? "Replying..." : "Reply"}
           </button>
@@ -283,25 +265,80 @@ export default function CommentsSection({ postId, initialComments }: Props) {
     );
   };
 
-  return (
-    <section className="space-y-6">
-      <div className="flex flex-wrap items-baseline gap-3">
-        <h2 className="text-2xl font-semibold text-[var(--DarkGray)]">
-          Comments
-        </h2>
-        <span className="text-sm text-[var(--Gray)]">
-          {comments.length} {comments.length === 1 ? "comment" : "comments"}
-        </span>
-      </div>
+  const toggleReplyTarget = (commentId: number) => {
+    setActiveReplyTarget((prev) =>
+      prev === commentId ? null : commentId,
+    );
+  };
 
-      <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-sm">
+  const renderCommentActions = (
+    comment: CommentThread,
+    replyButtonSize: "text-sm" | "text-xs" = "text-sm",
+  ) => {
+    const replyButtonClass =
+      replyButtonSize === "text-xs"
+        ? "text-xs font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
+        : "text-sm font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]";
+
+    const voteRowClass =
+      replyButtonSize === "text-xs"
+        ? "mt-2 flex items-center gap-3"
+        : "flex items-center gap-3";
+
+    return (
+      <>
+        <div className={voteRowClass}>
+          <button
+            type="button"
+            onClick={() =>
+              handleCommentVote(comment.id, comment.post_id, 1)
+            }
+            className={commentVoteButtonClasses(
+              commentVoteState[comment.id] === 1,
+              "up",
+            )}
+            aria-label="Upvote comment"
+          >
+            <UpvoteIcon />
+            <span>{comment.upvotes}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              handleCommentVote(comment.id, comment.post_id, -1)
+            }
+            className={commentVoteButtonClasses(
+              commentVoteState[comment.id] === -1,
+              "down",
+            )}
+            aria-label="Downvote comment"
+          >
+            <DownvoteIcon />
+            <span>{comment.downvotes}</span>
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={() => toggleReplyTarget(comment.id)}
+          className={replyButtonClass}
+        >
+          Reply
+        </button>
+      </>
+    );
+  };
+
+  return (
+    <section>
+      <div className="space-y-6 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5">
+        <h2 className="ml-3 h3-apple text-[var(--DarkGray)]">Comments</h2>
         <div className="space-y-3">
           <textarea
             value={newComment}
             onChange={(event) => setNewComment(event.target.value)}
             rows={3}
             placeholder="Add a comment..."
-            className="ml-1 mt-1 w-[calc(100%-0.25rem)] rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] outline-none transition-colors focus:border-[var(--DarkGray)]"
+            className="ml-3 mt-1 w-[calc(100%-0.75rem)] rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] outline-none transition-colors focus:border-[var(--DarkGray)]"
           />
           <div className="flex items-center justify-end gap-3">
             <button
@@ -315,14 +352,13 @@ export default function CommentsSection({ postId, initialComments }: Props) {
               type="button"
               onClick={handleNewComment}
               disabled={isSubmitting}
-              className="rounded-full bg-[var(--DarkGray)] px-5 py-2 text-sm font-semibold text-[var(--White)] transition disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-full bg-[var(--DarkGray)] hover:bg-[var(--Black)] px-5 py-2 text-sm font-semibold text-[var(--White)] transition disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isSubmitting ? "Posting..." : "Comment"}
             </button>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
-      </div>
 
       <ul className="space-y-6">
         {threads.length === 0 ? (
@@ -333,7 +369,9 @@ export default function CommentsSection({ postId, initialComments }: Props) {
           threads.map(({ comment, replies }, index) => (
             <li
               key={comment.id}
-              className={`space-y-4 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-xs ${index === threads.length - 1 ? "" : "mb-4"}`}
+              className={`space-y-4 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-xs ${
+                index === threads.length - 1 ? "" : "mb-4"
+              }`}
             >
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs text-[var(--Gray)]">
@@ -346,45 +384,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                   <span>{formatDateTime(comment.created_at)}</span>
                 </div>
                 <p className="text-[var(--DarkGray)]">{comment.body}</p>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleCommentVote(comment.id, comment.post_id, 1)
-                    }
-                    className={commentVoteButtonClasses(
-                      commentVoteState[comment.id] === 1,
-                    )}
-                    aria-label="Upvote comment"
-                  >
-                    <ArrowIcon direction="up" />
-                    <span>{comment.upvotes}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleCommentVote(comment.id, comment.post_id, -1)
-                    }
-                    className={commentVoteButtonClasses(
-                      commentVoteState[comment.id] === -1,
-                    )}
-                    aria-label="Downvote comment"
-                  >
-                    <ArrowIcon direction="down" />
-                    <span>{comment.downvotes}</span>
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setActiveReplyTarget((prev) =>
-                      prev === comment.id ? null : comment.id,
-                    )
-                  }
-                  className="text-sm font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
-                >
-                  Reply
-                </button>
+                {renderCommentActions(comment, "text-sm")}
 
                 {renderReplyComposer(comment.id, comment.commenter_username)}
               </div>
@@ -408,53 +408,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                         </span>{" "}
                         {replyComment.body}
                       </p>
-                      <div className="mt-2 flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCommentVote(
-                              replyComment.id,
-                              replyComment.post_id,
-                              1,
-                            )
-                          }
-                          className={commentVoteButtonClasses(
-                            commentVoteState[replyComment.id] === 1,
-                          )}
-                          aria-label="Upvote comment"
-                        >
-                          <ArrowIcon direction="up" />
-                          <span>{replyComment.upvotes}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCommentVote(
-                              replyComment.id,
-                              replyComment.post_id,
-                              -1,
-                            )
-                          }
-                          className={commentVoteButtonClasses(
-                            commentVoteState[replyComment.id] === -1,
-                          )}
-                          aria-label="Downvote comment"
-                        >
-                          <ArrowIcon direction="down" />
-                          <span>{replyComment.downvotes}</span>
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveReplyTarget((prev) =>
-                            prev === replyComment.id ? null : replyComment.id,
-                          )
-                        }
-                        className="text-xs font-semibold text-[var(--Gray)] transition hover:text-[var(--DarkGray)]"
-                      >
-                        Reply
-                      </button>
+                      {renderCommentActions(replyComment, "text-xs")}
                       <div className="mt-2">
                         {renderReplyComposer(
                           replyComment.id,
@@ -469,6 +423,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
           ))
         )}
       </ul>
+      </div>
     </section>
   );
 }

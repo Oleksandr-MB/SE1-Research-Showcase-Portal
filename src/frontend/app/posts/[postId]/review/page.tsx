@@ -1,11 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, FormEvent } from "react";
 import { Button } from "@/components/Button";
 import type { UserRead } from "@/lib/api";
 import { getCurrentUser, createReview, getPostById, type PostRead } from "@/lib/api";
+import {
+  CheckCircleSolidIcon,
+  DownvoteIcon,
+  UpvoteIcon,
+  XCircleSolidIcon,
+} from "@/components/icons";
 
 export default function ReviewPage() {
   const params = useParams();
@@ -20,6 +25,8 @@ export default function ReviewPage() {
   
   const [reviewBody, setReviewBody] = useState("");
   const [isPositive, setIsPositive] = useState(true);
+  const [strengths, setStrengths] = useState("");
+  const [weaknesses, setWeaknesses] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -40,22 +47,27 @@ export default function ReviewPage() {
         const currentUser = await getCurrentUser(storedToken);
         if (!isMounted) return;
 
-        const isResearcherOrModerator =
-          currentUser.role === "researcher" || currentUser.role === "moderator";
+        // Only researchers can access the review page
+        const isResearcher = currentUser.role === "researcher";
 
-        if (!isResearcherOrModerator) {
+        if (!isResearcher) {
           router.replace(`/posts/${postId}`);
           return;
         }
 
-        setUser(currentUser);
-
         // Fetch the post
         try {
           const postData = await getPostById(numericPostId);
-          if (isMounted) {
-            setPost(postData);
+          if (!isMounted) return;
+
+          // If researcher is the author, redirect back to post
+          if (currentUser.id === postData.poster_id) {
+            router.replace(`/posts/${postId}`);
+            return;
           }
+
+          setUser(currentUser);
+          setPost(postData);
         } catch (err) {
           console.error("Failed to fetch post:", err);
           if (isMounted) {
@@ -91,17 +103,26 @@ export default function ReviewPage() {
       return;
     }
 
+    if (!strengths.trim() || !weaknesses.trim()) {
+      setError("Please fill in both strengths and weaknesses.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       await createReview(token, numericPostId, {
         body: reviewBody,
         is_positive: isPositive,
+        strengths,
+        weaknesses,
       });
 
       setSuccess("Review submitted successfully!");
       setReviewBody("");
       setIsPositive(true);
+      setStrengths("");
+      setWeaknesses("");
 
       // Redirect back to post after 1.5 seconds
       setTimeout(() => {
@@ -128,51 +149,64 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F5F5F5] to-[#F3F3F3] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="h1-apple text-[var(--DarkGray)]">Review Post #{postId}</h1>
-              <p className="body-apple text-[var(--Gray)] mt-2">
-                Logged in as <span className="font-medium">{user?.username}</span>
+    <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="mx-auto max-w-4xl space-y-6">
+        <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-md sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <h1 className="h1-apple text-[var(--DarkGray)]">Write a review</h1>
+              <p className="text-sm text-[var(--Gray)]">
+                Reviewing post #{postId} as{" "}
+                <span className="font-medium text-[var(--DarkGray)]">
+                  @{user?.username}
+                </span>
               </p>
             </div>
-            <button
-              onClick={() => window.close()}
-              className="text-sm font-medium text-[var(--DarkGray)] hover:text-[var(--Gray)] transition"
-            >
-              Close
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button href={`/posts/${postId}`} variant="outline">
+                Back to post
+              </Button>
+              <button
+                type="button"
+                onClick={() => window.close()}
+                className="text-sm font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
+              >
+                Close window
+              </button>
+            </div>
           </div>
-          <div className="divider-subtle"></div>
-        </div>
+        </section>
 
         {/* Post Preview */}
         {post && (
-          <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-6 shadow-soft-sm mb-8">
-            <h2 className="h3-apple text-[var(--DarkGray)] mb-3">{post.title}</h2>
-            <p className="text-sm text-[var(--Gray)] mb-4">
-              By <span className="font-medium">@{post.poster_username}</span>
+          <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--Gray)]">
+              Post preview
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-[var(--DarkGray)]">
+              {post.title}
+            </h2>
+            <p className="mt-2 text-sm text-[var(--Gray)]">
+              By{" "}
+              <span className="font-medium text-[var(--DarkGray)]">
+                @{post.poster_username}
+              </span>
             </p>
             {post.abstract && (
-              <p className="text-sm text-[var(--DarkGray)] leading-relaxed">
+              <p className="mt-4 text-sm text-[var(--DarkGray)] leading-relaxed">
                 {post.abstract}
               </p>
             )}
-          </div>
+          </section>
         )}
 
         {/* Review Form */}
-        <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-br from-[var(--White)] to-transparent p-6 sm:p-8 shadow-soft-sm">
+        <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                 <div className="flex items-center gap-2 text-sm text-red-700">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
+                  <XCircleSolidIcon className="w-4 h-4" />
                   {error}
                 </div>
               </div>
@@ -181,9 +215,7 @@ export default function ReviewPage() {
             {success && (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 animate-scale-in">
                 <div className="flex items-center gap-2 text-sm text-emerald-700">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <CheckCircleSolidIcon className="w-4 h-4" />
                   {success}
                 </div>
               </div>
@@ -200,18 +232,11 @@ export default function ReviewPage() {
                   onClick={() => setIsPositive(true)}
                   className={`flex-1 rounded-2xl px-4 py-3 font-medium transition ${
                     isPositive
-                      ? "bg-green-500 text-white border border-green-600"
+                      ? "bg-[var(--Green)] text-[var(--White)] border border-[var(--Green)]"
                       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)]"
                   }`}
                 >
-                  <svg className="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 15l7-7 7 7"
-                    />
-                  </svg>
+                  <UpvoteIcon size="l" className="mr-2" />
                   Positive Review
                 </button>
                 <button
@@ -219,18 +244,11 @@ export default function ReviewPage() {
                   onClick={() => setIsPositive(false)}
                   className={`flex-1 rounded-2xl px-4 py-3 font-medium transition ${
                     !isPositive
-                      ? "bg-[var(--Red)] text-white border border-red-600"
+                      ? "bg-[var(--Red)] text-[var(--White)] border border-[var(--Red)]"
                       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)]"
                   }`}
                 >
-                  <svg className="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
+                  <DownvoteIcon size="l" className="mr-2" />
                   Negative Review
                 </button>
               </div>
@@ -256,27 +274,60 @@ export default function ReviewPage() {
               </p>
             </div>
 
+            {/* Strengths & Weaknesses */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
+                  Strengths
+                </label>
+                <textarea
+                  required
+                  value={strengths}
+                  onChange={(e) => setStrengths(e.target.value)}
+                  rows={6}
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
+                  placeholder="Highlight the key strengths of this work"
+                />
+                <p className="text-xs text-[#8A8A8A] mt-1">{strengths.length} / 5000 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
+                  Weaknesses
+                </label>
+                <textarea
+                  required
+                  value={weaknesses}
+                  onChange={(e) => setWeaknesses(e.target.value)}
+                  rows={6}
+                  className="w-full rounded-2xl border border-[#E5E5E5] bg-[var(--White)] px-4 py-3 text-sm text-[var(--DarkGray)] 
+                    outline-none placeholder:text-[#9F9F9F] transition-all duration-200
+                    focus:border-[var(--DarkGray)] focus:ring-2 focus:ring-[rgba(55,55,55,0.15)] focus:ring-offset-2"
+                  placeholder="Describe weaknesses or areas to improve"
+                />
+                <p className="text-xs text-[#8A8A8A] mt-1">{weaknesses.length} / 5000 characters</p>
+              </div>
+            </div>
+
             {/* Submit Buttons */}
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 rounded-2xl bg-[var(--DarkGray)] px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#4a4a4a] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? "Submitting..." : "Submit Review"}
-              </button>
-              <button
-                type="button"
-                onClick={() => window.close()}
-                className="flex-1 rounded-2xl border border-[#E5E5E5] px-6 py-3 text-sm font-semibold text-[var(--DarkGray)] transition hover:bg-[#F3F3F3]"
-              >
-                Cancel
-              </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-[var(--LightGray)] pt-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button type="submit" loading={isSubmitting} disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit review"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => window.close()}>
+                  Cancel
+                </Button>
+              </div>
+              <p className="text-xs text-[var(--Gray)]">
+                Please be constructive and specific.
+              </p>
             </div>
           </form>
-        </div>
+        </section>
       </div>
     </div>
   );
 }
-

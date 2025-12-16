@@ -92,17 +92,18 @@ def _normalize_attachment_value(raw_value: str | None) -> str | None:
 
 
 def _to_post_read(post: models.Post) -> PostRead:
-    upvotes = sum(1 for vote in post.post_votes if vote.value == 1)
-    downvotes = sum(1 for vote in post.post_votes if vote.value == -1)
+    upvotes = sum(1 for vote in post.post_votes if vote.value == 1) if post.post_votes else 0
+    downvotes = sum(1 for vote in post.post_votes if vote.value == -1) if post.post_votes else 0
+    
     return PostRead(
         id=post.id,
         abstract=post.abstract,
         authors_text=post.authors_text,
         bibtex=post.bibtex,
-        tags=[tag.name for tag in post.tags],
+        tags=[tag.name for tag in post.tags] if post.tags else [],
         attachments=[
             normalized
-            for attachment in post.attachments
+            for attachment in (post.attachments or [])
             for normalized in [_normalize_attachment_value(attachment.file_path)]
             if normalized
         ],
@@ -110,6 +111,7 @@ def _to_post_read(post: models.Post) -> PostRead:
         body=post.body,
         poster_id=post.poster_id,
         poster_username=post.poster.username if post.poster else "",
+        poster_role=post.poster.role.value if post.poster and post.poster.role else "user",
         created_at=post.created_at,
         phase=post.phase,
         upvotes=upvotes,
@@ -184,11 +186,31 @@ def find_research_posts(
     query: str | None = None,
 ) -> list[PostRead]:
     if not query:
-        db_posts = db.query(models.Post).all()
+        db_posts = (
+            db.query(models.Post)
+            .options(
+                joinedload(models.Post.poster),
+                joinedload(models.Post.tags),
+                joinedload(models.Post.attachments),
+                joinedload(models.Post.post_votes)
+            )
+            .filter(models.Post.phase == models.PostPhase.PUBLISHED)
+            .all()
+        )
     else:
         raw_query = query.strip()
         if not raw_query:
-            db_posts = db.query(models.Post).all()
+            db_posts = (
+                db.query(models.Post)
+                .options(
+                    joinedload(models.Post.poster),
+                    joinedload(models.Post.tags),
+                    joinedload(models.Post.attachments),
+                    joinedload(models.Post.post_votes)
+                )
+                .filter(models.Post.phase == models.PostPhase.PUBLISHED)
+                .all()
+            )
         else:
             query_lower = raw_query.lower()
 
@@ -197,26 +219,49 @@ def find_research_posts(
 
             posts_by_text = (
                 db.query(models.Post)
+                .options(
+                    joinedload(models.Post.poster),
+                    joinedload(models.Post.tags),
+                    joinedload(models.Post.attachments),
+                    joinedload(models.Post.post_votes)
+                )
                 .filter(
                     or_(
                         models.Post.title.ilike(pattern, escape="\\"),
                         models.Post.body.ilike(pattern, escape="\\"),
                         models.Post.abstract.ilike(pattern, escape="\\"),
-                        models.Post.authors_text.ilike(pattern, escape="\\"),
                     )
                 )
+                .filter(models.Post.phase == models.PostPhase.PUBLISHED)
                 .all()
             )
 
             posts_by_tags = (
                 db.query(models.Post)
+                .options(
+                    joinedload(models.Post.poster),
+                    joinedload(models.Post.tags),
+                    joinedload(models.Post.attachments),
+                    joinedload(models.Post.post_votes)
+                )
                 .join(models.Post.tags)
                 .filter(models.Tag.name.ilike(pattern, escape="\\"))
+                .filter(models.Post.phase == models.PostPhase.PUBLISHED)
+                .all()
+            )
+
+            posts_by_authors = (
+                db.query(models.Post)
+                .filter(
+                    models.Post.authors_text.ilike(pattern, escape="\\")
+                )
+                .filter(models.Post.phase == models.PostPhase.PUBLISHED)
                 .all()
             )
 
             combined = {
-                post.id: post for post in posts_by_text + posts_by_tags}
+                post.id: post for post in posts_by_text + posts_by_tags + posts_by_authors
+            }
             db_posts = list(combined.values())
 
             db_posts = [
@@ -224,14 +269,24 @@ def find_research_posts(
                 if (query_lower in (post.title or "").lower())
                 or (query_lower in (post.body or "").lower())
                 or (query_lower in (post.abstract or "").lower())
-                or (query_lower in (post.authors_text or "").lower())
                 or any(
                     query_lower in (tag.name or "").lower()
                     for tag in post.tags
                 )
+                or (query_lower in (post.authors_text or "").lower())
             ]
 
     return [_to_post_read(post) for post in db_posts]
+
+
+@router.get("/count", response_model=int)
+def get_published_post_count(
+    db: Annotated[Session, Depends(get_db)],
+) -> int:
+    """Return the total number of published research posts."""
+    return int(
+        db.query(models.Post).filter(models.Post.phase == models.PostPhase.PUBLISHED).count()
+    )
 
 
 @router.post("/create")
@@ -275,25 +330,6 @@ async def create_research_post(
         logging.error(
             "Unsupported payload type %s for post creation", type(payload))
         raise HTTPException(status_code=422, detail="Invalid post payload")
-    requested_phase = post.phase or models.PostPhase.DRAFT
-    if requested_phase == models.PostPhase.DRAFT:
-        existing_draft = (
-            db.query(models.Post)
-            .filter(
-                models.Post.poster_id == current_user.id,
-                models.Post.phase == models.PostPhase.DRAFT,
-            )
-            .first()
-        )
-        if existing_draft:
-            logging.error(
-                "User %s attempted to create a second draft post", current_user.id
-            )
-            raise HTTPException(
-                status_code=400,
-                detail="You already have an active draft post. Publish or delete it before creating a new draft.",
-            )
-
     db_post = models.Post(
         title=post.title,
         body=post.body,
@@ -302,7 +338,7 @@ async def create_research_post(
         bibtex=post.bibtex,
         poster_id=current_user.id,
         created_at=datetime.now(timezone.utc),
-        phase=requested_phase,
+        phase=models.PostPhase.PUBLISHED,
     )
     db.add(db_post)
     db.commit()
@@ -587,8 +623,14 @@ def get_my_research_posts(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[models.User, Depends(get_current_user)],
 ) -> list[PostRead]:
-    db_posts = db.query(models.Post).filter(
-        models.Post.poster_id == current_user.id).all()
+    db_posts = (
+        db.query(models.Post)
+        .filter(
+            models.Post.poster_id == current_user.id,
+            models.Post.phase == models.PostPhase.PUBLISHED,
+        )
+        .all()
+    )
 
     logging.info(
         f"Retrieved {len(db_posts)} posts for user ID {current_user.id}")

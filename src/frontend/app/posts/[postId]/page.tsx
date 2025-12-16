@@ -4,10 +4,12 @@ import { getPostById, getPostComments } from "@/lib/api";
 import CommentsSection from "@/components/comments-section";
 import PostVoteActions from "@/components/post-vote-actions";
 import PostReviewAction from "@/components/post-review-action";
+import ReviewsButton from "@/components/reviews-button";
 import ShareCitation from "@/components/share-citation";
 import Katex from "@/components/katex";
 import AttachmentDownloadButton from "@/components/attachment-download-button";
 import { Button } from "@/components/Button";
+import VerifiedResearcherBadge from "@/components/verified-researcher-badge";
 
 const ATTACHMENT_PREFIX = "/attachments/";
 
@@ -44,7 +46,7 @@ const normalizeAttachmentPath = (value: string | undefined): string | null => {
     const parsed = new URL(trimmed);
     candidatePath = parsed.pathname || trimmed;
   } catch {
-    // Not a full URL, continue with the original value
+
   }
 
   const normalizedCandidate = candidatePath.replace(/\\/g, "/");
@@ -133,18 +135,21 @@ export default async function PostDetailsPage({ params }: PageProps) {
                     {(post.poster_username || "A")[0].toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[var(--DarkGray)]">
-                      {post.poster_username ? (
-                        <Link
-                          href={`/${encodeURIComponent(post.poster_username)}`}
-                          className="hover:text-[var(--Red)]"
-                        >
-                          @{post.poster_username}
-                        </Link>
-                      ) : (
-                        <>Researcher #{post.poster_id}</>
-                      )}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-[var(--DarkGray)]">
+                        {post.poster_username ? (
+                          <Link
+                            href={`/${encodeURIComponent(post.poster_username)}`}
+                            className="hover:text-[var(--Red)]"
+                          >
+                            @{post.poster_username}
+                          </Link>
+                        ) : (
+                          <>Researcher #{post.poster_id}</>
+                        )}
+                      </p>
+                      {post.poster_role === "researcher" && <VerifiedResearcherBadge />}
+                    </div>
                     <p className="text-xs text-[var(--Gray)]">
                       Published{" "}
                       {new Date(post.created_at).toLocaleDateString(undefined, {
@@ -156,12 +161,13 @@ export default async function PostDetailsPage({ params }: PageProps) {
                   </div>
                 </div>
                 <div className="ml-auto flex items-center gap-4">
-                  <PostReviewAction postId={numericPostId} />
+                  <PostReviewAction postId={numericPostId} posterId={post.poster_id} />
                   <PostVoteActions
                     postId={numericPostId}
                     initialUpvotes={post.upvotes ?? 0}
                     initialDownvotes={post.downvotes ?? 0}
                   />
+                  <ReviewsButton postId={numericPostId} />
                 </div>
               </div>
             </div>
@@ -181,7 +187,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
                 </div>
               ) : null}
               <Button href="/" variant="primary" size="md" className="ml-auto">
-                Return to the main page
+                Back to browse
               </Button>
             </div>
           </div>
@@ -220,8 +226,8 @@ export default async function PostDetailsPage({ params }: PageProps) {
             {post.body ? (
               <Katex
                 content={post.body}
+                paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
                 className="space-y-3"
-                paragraphClassName="body-apple leading-relaxed text-[var(--DarkGray)]"
               />
             ) : null}
           </div>
@@ -260,9 +266,9 @@ export default async function PostDetailsPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        <ShareCitation postId={numericPostId} title={post.title} bibtex={post.bibtex} />
-
         <CommentsSection postId={numericPostId} initialComments={comments} />
+
+        <ShareCitation postId={numericPostId} title={post.title} bibtex={post.bibtex} />
 
       </div>
     </div>
