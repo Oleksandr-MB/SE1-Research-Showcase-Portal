@@ -233,3 +233,16 @@ class ReviewRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PromotionRequest(BaseModel):
+    role: UserRole
+
+
+class ReportsRead(BaseModel):
+    target_id: int
+
+class ReportCreate(BaseModel):
+    target_type: str
+    target_id: int
+    description: str

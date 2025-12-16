@@ -22,6 +22,7 @@ from src.backend.services.schemas import (
     CommentWrite,
     VoteRequest,
     VoteResponse,
+    ReportCreate
 )
 from src.backend.services import vote_service
 from src.backend.services.user_service import get_current_user
@@ -641,3 +642,35 @@ def get_my_research_posts(
 
     return sorted([_to_post_read(post) for post in db_posts],
                   key=lambda x: x.created_at, reverse=True)
+
+
+@router.get("/{post_id}/reports")
+def reports_read(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    return (
+        db.query(models.Report)
+        .filter(models.Report.target_id == post_id)
+        .all()
+    )
+
+
+@router.post("/{post_id}/reports", response_model=PostRead)
+def create_report(
+    payload: ReportCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    report = models.Report(
+        reported_by_id=current_user.id,
+        target_type=payload.target_type,   # ensure your model uses same enum/strings
+        target_id=payload.target_id,
+        status=models.ReportStatus.OPEN if hasattr(models, "ReportStatus") else "OPEN",
+        description=payload.description.strip(),
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+    return report

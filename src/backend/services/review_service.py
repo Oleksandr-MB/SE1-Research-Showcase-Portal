@@ -123,8 +123,8 @@ async def get_post_reviews(
                 is_positive=review.is_positive,
                 strengths=review.strengths,
                 weaknesses=review.weaknesses,
-                upvotes=upvotes,
-                downvotes=downvotes,
+                # upvotes=upvotes,
+                # downvotes=downvotes,
                 created_at=review.created_at,
             )
         )
