@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { voteOnPost } from "@/lib/api";
-import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 
 type Props = {
   postId: number;
@@ -66,7 +65,13 @@ const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
         disabled={isVoting}
         className={buttonClasses(currentVote === 1, "up")}
       >
-        <UpvoteIcon size="l" /> {counts.upvotes}
+      <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 15l7-7 7 7"/>
+      </svg> {counts.upvotes}
       </button>
       <button
         type="button"
@@ -74,7 +79,13 @@ const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
         disabled={isVoting}
         className={buttonClasses(currentVote === -1, "down")}
       >
-        <DownvoteIcon size="l" /> {counts.downvotes}
+      <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"/>
+      </svg> {counts.downvotes}
       </button>
       {error && <span className="text-sm text-red-600">{error}</span>}
     </div>

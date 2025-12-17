@@ -153,6 +153,11 @@ export type ProfileUpdatePayload = {
   is_email_public?: boolean;
 };
 
+
+export type ReportRead = {
+  reports: Report[]
+};
+
 export type TokenResponse = {
   access_token: string;
   token_type: string;
@@ -527,5 +532,46 @@ export async function voteOnReview(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ value }),
+  });
+}
+
+
+export async function promoteUser(
+    token: string,
+    username: string,
+    role: string,
+
+): Promise<UserRole> {
+
+  return fetchFromApi<UserRole>(`/users/${username}/promote_user`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ role }),
+  });
+}
+
+
+
+export async function getPostReports(
+  // post_id: number,
+): Promise<ReportRead> {
+  return fetchFromApi<ReportRead>( `/posts/{post_id}/reports`);
+}
+
+export type ReportStatus = "OPEN" | "PENDING" | "CLOSED";
+
+export async function updateReportStatus(
+  token: string,
+  reportId: number,
+  status: ReportStatus
+): Promise<ReportRead> {
+  return fetchFromApi<ReportRead>(`/reports/${reportId}/status`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
   });
 }

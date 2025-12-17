@@ -11,7 +11,6 @@ import {
 } from "@/lib/api";
 import { Button } from "@/components/Button";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
-import { LogoutIcon, DownvoteIcon, UpvoteIcon } from "@/components/icons";
 
 function formatJoinedDate(createdAt: string | undefined) {
   if (!createdAt) return "Unknown member since";
@@ -250,12 +249,17 @@ export default function MePage() {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
-                                })}
+                                })}{" "}
+                                • Published
                               </p>
                             </div>
                             <div className="flex shrink-0 items-center gap-2 text-[var(--Gray)]">
-                              <span className="px-2.5 py-1 text-xs"><UpvoteIcon size="s" /> {post.upvotes ?? 0}</span>
-                              <span className="px-2.5 py-1 text-xs"><DownvoteIcon size="s" /> {post.downvotes ?? 0}</span>
+                              <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
+                                ▲ {post.upvotes ?? 0}
+                              </span>
+                              <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
+                                ▼ {post.downvotes ?? 0}
+                              </span>
                             </div>
                           </Link>
                         </li>
@@ -282,9 +286,13 @@ export default function MePage() {
                               On: {truncate(comment.post_title || `Post #${comment.post_id}`, 128)}
                             </p>
                           </div>
-                          <div className="flex shrink-0 items-center gap-2 text-[var(--DarkGray)]">
-                            <span className="px-2.5 py-1"><UpvoteIcon size="s" /> {comment.upvotes ?? 0}</span>
-                            <span className="px-2.5 py-1"><DownvoteIcon size="s" /> {comment.downvotes ?? 0}</span>
+                          <div className="flex shrink-0 items-center gap-2 text-[var(--Gray)]">
+                            <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
+                              ▲ {comment.upvotes ?? 0}
+                            </span>
+                            <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
+                              ▼ {comment.downvotes ?? 0}
+                            </span>
                           </div>
                         </Link>
                       </li>
@@ -324,17 +332,11 @@ export default function MePage() {
                     {formatJoinedDate(user.created_at)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between border-b border-[var(--LightGray)] py-2">
+                <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-[var(--Gray)]">Email</span>
                   <span className="max-w-[160px] truncate text-sm font-medium text-[var(--DarkGray)]">
                     {user.email}
                   </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                    <span className="text-sm text-[var(--Gray)]">Bio</span>
-                    <span className="max-w-[160px] truncate text-sm font-medium text-[var(--DarkGray)]">
-                      {user.bio || "No bio"}
-                    </span>
                 </div>
               </div>
             </div>
@@ -344,7 +346,14 @@ export default function MePage() {
                 href="/logout"
                 className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--Red)] px-4 py-3 text-sm font-semibold text-[var(--White)] transition-colors duration-200"
               >
-                <LogoutIcon className="h-4 w-4" />
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
                 Log Out
               </Link>
               <p className="mt-3 text-center text-xs text-[var(--Gray)]">
@@ -360,3 +369,4 @@ export default function MePage() {
     </div>
   );
 }
+

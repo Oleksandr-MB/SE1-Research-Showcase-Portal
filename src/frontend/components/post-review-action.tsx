@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import type { UserRead } from "@/lib/api";
 import { getCurrentUser } from "@/lib/api";
-import { CheckInCircleIcon } from "@/components/icons";
 
 type Props = {
   postId: number;
@@ -66,7 +65,14 @@ export default function PostReviewAction({ postId, posterId }: Props) {
       onClick={() => window.open(`/posts/${postId}/review`, '_blank')}
       className="rounded-full px-4 py-2 text-sm font-semibold transition border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)] hover:bg-[var(--LightGray)]"
     >
-      <CheckInCircleIcon className="mr-1.5 inline-block text-current" />
+      <svg className="h-4 w-4 inline-block text-current mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12l2 2 4-4M7 12a5 5 0 1110 0A5 5 0 017 12z"
+        />
+      </svg>
       Review
     </button>
   );

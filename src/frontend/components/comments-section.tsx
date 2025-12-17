@@ -8,7 +8,6 @@ import {
   type CreateCommentPayload,
   voteOnComment,
 } from "@/lib/api";
-import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 
 type Props = {
   postId: number;
@@ -103,6 +102,25 @@ const commentVoteButtonClasses = (active: boolean, variant: "up" | "down" = "up"
       ? (variant === "up" ? "bg-[var(--Green)] text-[var(--White)]" : "bg-[var(--Red)] text-[var(--White)]")
       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
   } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
+
+const ArrowIcon = ({ direction }: { direction: "up" | "down" }) => (
+  <svg
+    className="h-4 w-4"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {direction === "up" ? (
+      <path d="M5 15l7-7 7 7" />
+    ) : (
+      <path d="M19 9l-7 7-7-7" />
+    )}
+  </svg>
+);
 
 export default function CommentsSection({ postId, initialComments }: Props) {
   const [comments, setComments] = useState<CommentThread[]>(initialComments);
@@ -299,7 +317,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             )}
             aria-label="Upvote comment"
           >
-            <UpvoteIcon />
+            <ArrowIcon direction="up" />
             <span>{comment.upvotes}</span>
           </button>
           <button
@@ -313,7 +331,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             )}
             aria-label="Downvote comment"
           >
-            <DownvoteIcon />
+            <ArrowIcon direction="down" />
             <span>{comment.downvotes}</span>
           </button>
         </div>

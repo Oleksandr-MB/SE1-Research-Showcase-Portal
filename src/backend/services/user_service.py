@@ -24,11 +24,14 @@ from src.backend.services.schemas import (
     PasswordResetRequest,
     PasswordResetConfirm,
     CommentActivityRead,
+    PromotionRequest,
 )
 
 from src.backend.config.config_utils import read_config
 
 import logging
+
+from src.database.models import User
 
 logging.basicConfig(level=logging.INFO)
 
@@ -102,7 +105,6 @@ def create_token(data: dict, expires_delta: timedelta | None = None) -> str:
 
 def get_user_by_username(db: Session, username: str) -> models.User | None:
     return db.query(models.User).filter(models.User.username == username).first()
-
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> models.User:
     credentials_exception = HTTPException(
@@ -516,34 +518,35 @@ async def get_user_profile(
     )
 
 
-def promote_user(username: str, db: Session):
+@router.post("/{username}/promote", response_model=UserRead)
+def promote_user(
+        username: str,
+        payload: PromotionRequest,
+        db: Session = Depends(get_db),
+        requester: models.User = Depends(get_current_user)
+):
     user = get_user_by_username(db, username)
+    # print(f"{User.role}")
+    if requester.role != "moderator":
+        if not (payload.role == "researcher" and requester.role == "researcher"):
+            raise HTTPException(
+                status_code=403,
+                detail="Access deny"
+            )
+
     if not user:
         logging.error(
-            f"User '{username}' not found for promotion to RESEARCHER")
+            f"User '{username}' not found for promotion to {payload.role}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
 
-    user.role = models.UserRole.RESEARCHER
-    logging.info(f"User '{username}' promoted to RESEARCHER")
+    user.role = payload.role
+    logging.info(f"User '{username}' promoted to {payload.role}")
     db.commit()
+    return user
 
-
-def make_moderator(username: str, db: Session):
-    user = get_user_by_username(db, username)
-    if not user:
-        logging.error(
-            f"User '{username}' not found for promotion to MODERATOR")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    user.role = models.UserRole.MODERATOR
-    logging.info(f"User '{username}' promoted to MODERATOR")
-    db.commit()
 
 
 @router.get("/{username}/post_count", response_model=int)
