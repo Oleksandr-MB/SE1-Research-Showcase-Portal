@@ -7,16 +7,6 @@ import type { UserRead, ProfileUpdatePayload } from "@/lib/api";
 import { getCurrentUser, updateProfile } from "@/lib/api";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
-import {
-  ChevronRightIcon,
-  CheckSolidIcon,
-  LogoutIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  UserIcon,
-  XCircleSolidIcon,
-  XMarkIcon,
-} from "@/components/icons";
 
 type ProfileFormState = {
   displayName: string;
@@ -102,7 +92,14 @@ function PrivacyCheckbox({
           className="flex h-4 w-4 items-center justify-center rounded-[4px] border border-[var(--LightGray)] bg-[var(--White)] transition-colors duration-200"
         >
           {!checked && (
-            <XMarkIcon className="h-3 w-3 text-[var(--DarkGray)]" strokeWidth={3} />
+            <svg
+              className="h-3 w-3 text-[var(--DarkGray)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 5l14 14M5 19L19 5" />
+            </svg>
           )}
         </div>
       </div>
@@ -401,14 +398,18 @@ export default function PersonalLab() {
                   </Button>
                   {saveSuccess && (
                     <div className="flex items-center gap-2 text-sm text-[var(--DarkGray)] animate-scale-in">
-                      <CheckSolidIcon className="h-4 w-4" />
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                       Profile updated
                     </div>
                   )}
                 </div>
                 {saveError && (
                   <p className="flex items-center gap-2 text-sm text-[var(--Red)]">
-                    <XCircleSolidIcon className="h-4 w-4" />
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
                     {saveError}
                   </p>
                 )}
@@ -450,7 +451,9 @@ export default function PersonalLab() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)] transition-colors duration-200 group-hover:bg-[var(--DarkGray)] group-hover:text-[var(--White)]">
-                      <PlusIcon className="h-5 w-5" />
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-[var(--DarkGray)]">
@@ -459,7 +462,9 @@ export default function PersonalLab() {
                       <p className="text-xs text-[var(--Gray)]">Share a new study with the portal.</p>
                     </div>
                   </div>
-                  <ChevronRightIcon className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" />
+                  <svg className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
                 <Link
                   href="/"
@@ -467,7 +472,9 @@ export default function PersonalLab() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)] transition-colors duration-200 group-hover:bg-[var(--DarkGray)] group-hover:text-[var(--White)]">
-                      <MagnifyingGlassIcon className="h-5 w-5" />
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-[var(--DarkGray)]">
@@ -476,7 +483,9 @@ export default function PersonalLab() {
                       <p className="text-xs text-[var(--Gray)]">Jump directly to the search filters.</p>
                     </div>
                   </div>
-                  <ChevronRightIcon className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" />
+                  <svg className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
                 <Link
                   href="/me"
@@ -484,7 +493,9 @@ export default function PersonalLab() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)] transition-colors duration-200 group-hover:bg-[var(--DarkGray)] group-hover:text-[var(--White)]">
-                      <UserIcon className="h-5 w-5" />
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A6 6 0 0112 14a6 6 0 016.879 3.804M12 14a4 4 0 10-4-4 4 4 0 004 4z" />
+                      </svg>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-[var(--DarkGray)]">
@@ -493,7 +504,9 @@ export default function PersonalLab() {
                       <p className="text-xs text-[var(--Gray)]">Review your contributions and stats.</p>
                     </div>
                   </div>
-                  <ChevronRightIcon className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" />
+                  <svg className="h-4 w-4 text-[var(--Gray)] transition-colors duration-200 group-hover:text-[var(--DarkGray)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
               </div>
             </div>
@@ -503,7 +516,9 @@ export default function PersonalLab() {
                 href="/logout"
                 className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--Red)] px-4 py-3 text-sm font-semibold text-[var(--White)] transition-colors duration-200"
               >
-                <LogoutIcon className="h-4 w-4" />
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
                 Log Out
               </Link>
               <p className="mt-3 text-center text-xs text-[var(--Gray)]">

@@ -147,11 +147,11 @@ export default function ReviewDetailPage() {
               </div>
             </div>
 
-            <ReviewVoteActions
-              reviewId={review.id}
-              initialUpvotes={review.upvotes}
-              initialDownvotes={review.downvotes}
-            />
+            {/*<ReviewVoteActions*/}
+            {/*  reviewId={review.id}*/}
+            {/*  initialUpvotes={review.upvotes}*/}
+            {/*  initialDownvotes={review.downvotes}*/}
+            {/*/>*/}
           </div>
         </section>
 

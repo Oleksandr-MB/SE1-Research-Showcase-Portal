@@ -22,6 +22,9 @@ from src.backend.services.schemas import (
     CommentWrite,
     VoteRequest,
     VoteResponse,
+    ReportCreate,
+    ReportRead,
+    ReportStatusUpdate
 )
 from src.backend.services import vote_service
 from src.backend.services.user_service import get_current_user
@@ -641,3 +644,69 @@ def get_my_research_posts(
 
     return sorted([_to_post_read(post) for post in db_posts],
                   key=lambda x: x.created_at, reverse=True)
+
+
+@router.get("/{post_id}/reports", response_model=list[ReportRead])
+def get_post_reports(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    return (
+        db.query(models.Report)
+        .filter(models.Report.target_type == "POST", models.Report.target_id == post_id)
+        .order_by(models.Report.created_at.desc())
+        .all()
+    )
+
+
+
+
+@router.post("/{post_id}/reports", response_model=ReportRead)
+def create_report_for_post(
+    post_id: int,
+    payload: ReportCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    report = models.Report(
+        reported_by_id=current_user.id,
+        target_type="POST",
+        target_id=post_id,
+        status="OPEN",  # or models.ReportStatus.OPEN if you have the enum
+        description=payload.description.strip(),
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+ALLOWED_STATUSES = {"PENDING", "OPEN", "CLOSED"}
+
+@router.patch("/{report_id}/status", response_model=ReportRead)
+def update_report_status(
+    report_id: int,
+    payload: ReportStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    # Optional: only moderators can change report status
+    if current_user.role != models.UserRole.MODERATOR:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    new_status = payload.status.strip().upper()
+    if new_status not in ALLOWED_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Allowed: {sorted(ALLOWED_STATUSES)}",
+        )
+
+    report = db.query(models.Report).filter(models.Report.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    report.status = new_status
+    db.commit()
+    db.refresh(report)
+    return report
