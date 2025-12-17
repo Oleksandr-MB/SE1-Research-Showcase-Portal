@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { API_BASE_URL } from "@/lib/api";
 
 type RenderKatexOptions = {
   delimiters: Array<{
@@ -16,6 +17,7 @@ type KatexProps = {
   content: string;
   className?: string;
   paragraphClassName?: string;
+  attachments?: string[];
 };
 
 declare global {
@@ -80,6 +82,28 @@ const buildParagraphs = (text: string) =>
     .map((block) => block.trim())
     .filter(Boolean);
 
+function InlineImage({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <span className="my-3 block max-w-full rounded-2xl border border-[var(--LightGray)] bg-[var(--LightGray)]/20 px-4 py-3 text-sm italic text-[var(--Gray)]">
+        {alt.trim() || "Image failed to load"}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="my-3 block max-w-full rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] shadow-soft-xs"
+    />
+  );
+}
+
 const sanitizeHref = (href: string) => {
   const normalized = href.trim();
   if (!normalized) return "#";
@@ -101,7 +125,48 @@ const isExternalHref = (href: string) => {
   return lower.startsWith("http://") || lower.startsWith("https://");
 };
 
-const renderInlineMarkdown = (text: string): ReactNode[] => {
+type InlineRenderOptions = {
+  resolveImageSrc?: (raw: string) => string | null;
+};
+
+const buildAttachmentImageResolver = (attachments: string[]) => {
+  const byName = new Map<string, string>();
+
+  attachments.forEach((path) => {
+    const normalized = path.replace(/\\/g, "/").trim();
+    if (!normalized) return;
+    const fileName = normalized.split("/").filter(Boolean).pop();
+    if (!fileName) return;
+    byName.set(fileName.toLowerCase(), normalized);
+    byName.set(normalized.toLowerCase(), normalized);
+  });
+
+  return (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+
+    const withoutQuery = trimmed.split(/[?#]/)[0] ?? trimmed;
+    const normalized = withoutQuery.replace(/\\/g, "/");
+
+    const attachmentMarker = "/attachments/";
+    const markerIndex = normalized.toLowerCase().lastIndexOf(attachmentMarker);
+    const candidate = markerIndex !== -1
+      ? normalized.slice(markerIndex)
+      : normalized;
+
+    const fileName = candidate.split("/").filter(Boolean).pop() ?? "";
+    const directMatch =
+      byName.get(candidate.toLowerCase()) ?? byName.get(fileName.toLowerCase());
+    if (!directMatch) return null;
+
+    return `${API_BASE_URL}${directMatch.startsWith("/") ? "" : "/"}${directMatch}`;
+  };
+};
+
+const renderInlineMarkdown = (
+  text: string,
+  options: InlineRenderOptions = {},
+): ReactNode[] => {
   const nodes: ReactNode[] = [];
   let buffer = "";
   let cursor = 0;
@@ -132,13 +197,43 @@ const renderInlineMarkdown = (text: string): ReactNode[] => {
       }
     }
 
+    if (text.startsWith("![", cursor)) {
+      const labelEnd = text.indexOf("]", cursor + 2);
+      if (labelEnd !== -1 && text[labelEnd + 1] === "(") {
+        const srcEnd = text.indexOf(")", labelEnd + 2);
+        if (srcEnd !== -1) {
+          flush();
+          const alt = text.slice(cursor + 2, labelEnd);
+          const srcRaw = text.slice(labelEnd + 2, srcEnd);
+          const resolved = options.resolveImageSrc?.(srcRaw);
+
+          if (resolved) {
+            nodes.push(
+              <InlineImage
+                key={`img-${key++}`}
+                src={resolved}
+                alt={alt}
+              />,
+            );
+          } else {
+            nodes.push(`![${alt}](${srcRaw})`);
+          }
+
+          cursor = srcEnd + 1;
+          continue;
+        }
+      }
+    }
+
     if (text.startsWith("**", cursor)) {
       const end = text.indexOf("**", cursor + 2);
       if (end !== -1) {
         flush();
         const inner = text.slice(cursor + 2, end);
         nodes.push(
-          <strong key={`strong-${key++}`}>{renderInlineMarkdown(inner)}</strong>,
+          <strong key={`strong-${key++}`}>
+            {renderInlineMarkdown(inner, options)}
+          </strong>,
         );
         cursor = end + 2;
         continue;
@@ -150,7 +245,7 @@ const renderInlineMarkdown = (text: string): ReactNode[] => {
       if (end !== -1) {
         flush();
         const inner = text.slice(cursor + 1, end);
-        nodes.push(<em key={`em-${key++}`}>{renderInlineMarkdown(inner)}</em>);
+        nodes.push(<em key={`em-${key++}`}>{renderInlineMarkdown(inner, options)}</em>);
         cursor = end + 1;
         continue;
       }
@@ -175,7 +270,7 @@ const renderInlineMarkdown = (text: string): ReactNode[] => {
               target={external ? "_blank" : undefined}
               rel={external ? "noreferrer noopener" : undefined}
             >
-              {renderInlineMarkdown(label)}
+              {renderInlineMarkdown(label, options)}
             </a>,
           );
           cursor = hrefEnd + 1;
@@ -192,9 +287,17 @@ const renderInlineMarkdown = (text: string): ReactNode[] => {
   return nodes;
 };
 
-export default function Katex({ content, className, paragraphClassName }: KatexProps) {
+export default function Katex({
+  content,
+  className,
+  paragraphClassName,
+  attachments,
+}: KatexProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const paragraphs = buildParagraphs(content);
+  const resolveImageSrc = attachments?.length
+    ? buildAttachmentImageResolver(attachments)
+    : undefined;
 
   useEffect(() => {
     const element = containerRef.current;
@@ -215,7 +318,7 @@ export default function Katex({ content, className, paragraphClassName }: KatexP
         });
       })
       .catch(() => {
-        /* Swallow failures and keep plain text */
+ 
       });
 
     return () => {
@@ -226,7 +329,9 @@ export default function Katex({ content, className, paragraphClassName }: KatexP
   return (
     <div ref={containerRef} className={className}>
       {paragraphs.length === 0 ? (
-        <p className={paragraphClassName}>{renderInlineMarkdown(content)}</p>
+        <p className={paragraphClassName}>
+          {renderInlineMarkdown(content, { resolveImageSrc })}
+        </p>
       ) : (
         paragraphs.map((paragraph, idx) => {
           const lines = paragraph.split("\n");
@@ -234,7 +339,7 @@ export default function Katex({ content, className, paragraphClassName }: KatexP
             <p key={`${paragraph.slice(0, 20)}-${idx}`} className={paragraphClassName}>
               {lines.map((line, lineIndex) => (
                 <span key={`${lineIndex}-${line.slice(0, 10)}`}>
-                  {renderInlineMarkdown(line)}
+                  {renderInlineMarkdown(line, { resolveImageSrc })}
                   {lineIndex < lines.length - 1 ? <br /> : null}
                 </span>
               ))}

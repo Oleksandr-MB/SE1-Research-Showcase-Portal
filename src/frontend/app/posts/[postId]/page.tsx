@@ -209,28 +209,25 @@ export default async function PostDetailsPage({ params }: PageProps) {
         ) : null}
 
         <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--LightGray)] pb-4">
-            <div>
-              <h2 className="h3-apple text-[var(--DarkGray)]">Abstract & Body</h2>
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--LightGray)] pb-4">
+          <div>
+            <h2 className="h3-apple text-[var(--DarkGray)]">Body</h2>
           </div>
-          <div className="mt-4 space-y-4">
+        </div>
+        <div className="mt-4 space-y-4">
             {post.abstract ? (
-              <Katex
-                content={post.abstract}
-                paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
-                className="space-y-3"
-              />
+            <p className="body-apple leading-relaxed text-[var(--DarkGray)]">{post.abstract}</p>
             ) : null}
-            <hr className="border-t border-[var(--LightGray)]" />
-            {post.body ? (
-              <Katex
-                content={post.body}
-                paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
-                className="space-y-3"
-              />
-            ) : null}
-          </div>
+          <hr className="border-t border-[var(--LightGray)]" />
+          {post.body ? (
+            <Katex
+              content={post.body}
+              attachments={attachments}
+              paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
+              className="space-y-3"
+            />
+          ) : null}
+        </div>
         </section>
 
         {attachments.length > 0 ? (

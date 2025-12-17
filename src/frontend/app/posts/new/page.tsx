@@ -52,6 +52,67 @@ const splitTags = (raw: string): string[] =>
     .map((t) => t.trim())
     .filter(Boolean);
 
+const buildAttachmentPathByOriginalName = (
+  uploaded: AttachmentUploadResponse[],
+) => {
+  const mapping = new Map<string, string>();
+
+  uploaded.forEach((attachment) => {
+    const filePath = attachment.file_path?.trim();
+    const original = attachment.original_filename?.trim();
+    if (!filePath || !original) return;
+
+    const baseName = original.replace(/\\/g, "/").split("/").pop() || original;
+    mapping.set(original.toLowerCase(), filePath);
+    mapping.set(baseName.toLowerCase(), filePath);
+  });
+
+  return mapping;
+};
+
+const rewriteMarkdownImageSources = (
+  text: string,
+  uploaded: AttachmentUploadResponse[],
+) => {
+  if (!uploaded.length) return text;
+  const mapping = buildAttachmentPathByOriginalName(uploaded);
+  if (mapping.size === 0) return text;
+
+  const isExternal = (value: string) =>
+    /^(https?:|mailto:|data:)/i.test(value.trim());
+
+  return text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (full, alt, rawSrc) => {
+    const cleaned = String(rawSrc)
+      .trim()
+      .replace(/^<|>$/g, "")
+      .replace(/^['"]|['"]$/g, "");
+    if (!cleaned || isExternal(cleaned)) {
+      return full;
+    }
+
+    const withoutQuery = cleaned.split(/[?#]/)[0] ?? cleaned;
+    const normalized = withoutQuery.replace(/\\/g, "/");
+    const baseName = normalized.split("/").filter(Boolean).pop() || normalized;
+
+    const candidates = [normalized, baseName];
+    try {
+      candidates.push(decodeURIComponent(normalized));
+      candidates.push(decodeURIComponent(baseName));
+    } catch {
+      // ignore decode errors
+    }
+
+    for (const candidate of candidates) {
+      const resolved = mapping.get(candidate.toLowerCase());
+      if (resolved) {
+        return `![${alt}](${resolved})`;
+      }
+    }
+
+    return full;
+  });
+};
+
 export default function NewPostPage() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialState);
@@ -252,6 +313,8 @@ export default function NewPostPage() {
     }
 
     const tags = splitTags(form.tags);
+    const finalAbstract = rewriteMarkdownImageSources(trimmedAbstract, attachments);
+    const finalBody = rewriteMarkdownImageSources(trimmedBody, attachments);
     const sanitizedAttachments =
       attachments.length > 0
         ? attachments
@@ -263,9 +326,9 @@ export default function NewPostPage() {
 
     const payload: CreatePostPayload = {
       title: trimmedTitle,
-      abstract: trimmedAbstract,
+      abstract: finalAbstract,
       authors_text: finalAuthorsText,
-      body: trimmedBody,
+      body: finalBody,
       bibtex: form.bibtex.trim() || undefined,
       tags: tags.length ? tags : undefined,
       attachments: attachmentPayload,
@@ -398,10 +461,10 @@ export default function NewPostPage() {
                   />
                 </div>
 
-                {/* Full Body */}
+                {/* Body */}
                 <div>
                   <label className="block text-sm font-medium text-[var(--DarkGray)] mb-2">
-                    Full Body
+                    Body
                   </label>
                   <textarea
                     required
@@ -584,7 +647,7 @@ export default function NewPostPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Tips */}
-            <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-b from-[var(--White)] to-transparent p-6 shadow-soft-sm">
+            <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-b from-[var(--White)] to-transparent p-7 shadow-soft-sm">
               <div className="flex items-center gap-3 mb-4 text-center justify-center">
                 <h3 className="h3-apple text-[var(--DarkGray)]">Tips</h3>
               </div>
@@ -623,6 +686,15 @@ export default function NewPostPage() {
                   <div>
                     <p className="text-sm font-medium text-[var(--DarkGray)]">Authors</p>
                     <p className="text-xs text-[var(--Gray)]">Your name is automatically added. Add co-authors separated by commas</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <CheckCircleSolidIcon className="w-4 h-4 text-[var(--DarkGray)]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--DarkGray)]">Body</p>
+                    <p className="text-xs text-[var(--Gray)]">You can use Markdown to format your post content, include LaTeX expressions and even figures (you need to add them to the attachments first)</p>
                   </div>
                 </div>
               </div>
