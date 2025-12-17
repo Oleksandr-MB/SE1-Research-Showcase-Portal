@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type CommentThread,
   createComment,
   type CreateCommentPayload,
   voteOnComment,
 } from "@/lib/api";
+import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 
 type Props = {
   postId: number;
@@ -103,24 +104,36 @@ const commentVoteButtonClasses = (active: boolean, variant: "up" | "down" = "up"
       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
   } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
 
-const ArrowIcon = ({ direction }: { direction: "up" | "down" }) => (
-  <svg
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    {direction === "up" ? (
-      <path d="M5 15l7-7 7 7" />
-    ) : (
-      <path d="M19 9l-7 7-7-7" />
-    )}
-  </svg>
-);
+const getVoteStorageUserKey = () => {
+  const token = window.localStorage.getItem("rsp_token");
+  if (!token) {
+    return null;
+  }
+
+  const parts = token.split(".");
+  if (parts.length >= 2) {
+    try {
+      const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+      const payload = JSON.parse(payloadJson) as Record<string, unknown>;
+      const sub = payload.sub ?? payload.username ?? payload.user;
+      if (typeof sub === "string" && sub.trim()) {
+        return sub;
+      }
+      if (typeof sub === "number") {
+        return String(sub);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return token.slice(0, 12);
+};
+
+const commentVoteStorageKey = (postId: number, commentId: number) => {
+  const userKey = getVoteStorageUserKey();
+  return userKey ? `rsp_vote:comment:${postId}:${commentId}:${userKey}` : null;
+};
 
 export default function CommentsSection({ postId, initialComments }: Props) {
   const [comments, setComments] = useState<CommentThread[]>(initialComments);
@@ -131,6 +144,24 @@ export default function CommentsSection({ postId, initialComments }: Props) {
   const [replyLoading, setReplyLoading] = useState<Record<number, boolean>>({});
   const [activeReplyTarget, setActiveReplyTarget] = useState<number | null>(null);
   const [commentVoteState, setCommentVoteState] = useState<Record<number, -1 | 0 | 1>>({});
+
+  useEffect(() => {
+    const token = window.localStorage.getItem("rsp_token");
+    if (!token) {
+      return;
+    }
+
+    const next: Record<number, -1 | 0 | 1> = {};
+    for (const comment of initialComments) {
+      const key = commentVoteStorageKey(postId, comment.id);
+      if (!key) continue;
+      const parsed = Number(window.localStorage.getItem(key));
+      if (parsed === 1 || parsed === -1) {
+        next[comment.id] = parsed as 1 | -1;
+      }
+    }
+    setCommentVoteState(next);
+  }, [initialComments, postId]);
 
   const threads = useMemo(() => buildThreads(comments), [comments]);
 
@@ -229,6 +260,10 @@ export default function CommentsSection({ postId, initialComments }: Props) {
         ),
       );
       setCommentVoteState((prev) => ({ ...prev, [targetCommentId]: nextValue }));
+      const key = commentVoteStorageKey(postIdForComment, targetCommentId);
+      if (key) {
+        window.localStorage.setItem(key, String(nextValue));
+      }
     } catch (voteError) {
       if (voteError instanceof Error) {
         setError(voteError.message);
@@ -317,7 +352,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             )}
             aria-label="Upvote comment"
           >
-            <ArrowIcon direction="up" />
+            <UpvoteIcon />
             <span>{comment.upvotes}</span>
           </button>
           <button
@@ -331,7 +366,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             )}
             aria-label="Downvote comment"
           >
-            <ArrowIcon direction="down" />
+            <DownvoteIcon />
             <span>{comment.downvotes}</span>
           </button>
         </div>

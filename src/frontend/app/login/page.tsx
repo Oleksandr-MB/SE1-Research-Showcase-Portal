@@ -5,6 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { loginUser, requestPasswordReset } from "@/lib/api";
 import { Button } from "@/components/Button";
+import {
+  CheckCircleSolidIcon,
+  EyeIcon,
+  EyeOffIcon,
+  LoginIcon,
+  UserIcon,
+  XCircleSolidIcon,
+} from "@/components/icons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,9 +73,7 @@ export default function LoginPage() {
       <div className="w-full max-w-lg">
         <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-8 shadow-soft-md">
             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--DarkGray)] mb-6 mx-auto">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
+            <LoginIcon className="w-8 h-8 text-white" />
           </div>
           <h1 className="h1-apple text-[var(--DarkGray)] text-center mb-4">
             Welcome Back!
@@ -77,9 +83,7 @@ export default function LoginPage() {
           {verified && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-6">
               <div className="flex items-center gap-2 text-sm text-emerald-700">
-                <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
+                <CheckCircleSolidIcon className="w-4 h-4 flex-shrink-0" />
                 Your email is verified. You can sign in now.
               </div>
             </div>
@@ -104,9 +108,7 @@ export default function LoginPage() {
                   required
                 />
                 <div className="absolute right-3 top-3.5">
-                  <svg className="w-4 h-4 text-[#8A8A8A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                  <UserIcon className="w-4 h-4 text-[#8A8A8A]" />
                 </div>
               </div>
             </div>
@@ -136,13 +138,9 @@ export default function LoginPage() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.596-3.856a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c-1.657 4.905-6.075 8.236-11.25 8.236A11.011 11.011 0 013.749 15M2.25 9h19.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <EyeOffIcon className="w-4 h-4" />
                   ) : (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                    <EyeIcon className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -151,9 +149,7 @@ export default function LoginPage() {
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                 <div className="flex items-center gap-2 text-sm text-red-700">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
+                  <XCircleSolidIcon className="w-4 h-4 flex-shrink-0" />
                   {"Wrong username or password."}
                 </div>
               </div>

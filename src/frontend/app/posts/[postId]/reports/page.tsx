@@ -139,7 +139,7 @@ export default function ReportsPage() {
             disabled={loading}
             className="rounded-2xl border bg-white px-4 py-2 text-sm shadow-sm hover:bg-zinc-50 disabled:opacity-60"
           >
-            {loading ? "Refreshing…" : "Refresh"}
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
           <button
             type="button"

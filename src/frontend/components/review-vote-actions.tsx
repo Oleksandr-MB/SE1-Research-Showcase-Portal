@@ -1,13 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { voteOnReview } from "@/lib/api";
+import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 
 interface ReviewVoteActionsProps {
   reviewId: number;
   initialUpvotes: number;
   initialDownvotes: number;
 }
+
+const getVoteStorageUserKey = () => {
+  const token = window.localStorage.getItem("rsp_token");
+  if (!token) {
+    return null;
+  }
+
+  const parts = token.split(".");
+  if (parts.length >= 2) {
+    try {
+      const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+      const payload = JSON.parse(payloadJson) as Record<string, unknown>;
+      const sub = payload.sub ?? payload.username ?? payload.user;
+      if (typeof sub === "string" && sub.trim()) {
+        return sub;
+      }
+      if (typeof sub === "number") {
+        return String(sub);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return token.slice(0, 12);
+};
+
+const reviewVoteStorageKey = (reviewId: number) => {
+  const userKey = getVoteStorageUserKey();
+  return userKey ? `rsp_vote:review:${reviewId}:${userKey}` : null;
+};
 
 export default function ReviewVoteActions({
   reviewId,
@@ -20,6 +52,24 @@ export default function ReviewVoteActions({
   const [isVoting, setIsVoting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const token = window.localStorage.getItem("rsp_token");
+    if (!token) {
+      return;
+    }
+
+    const key = reviewVoteStorageKey(reviewId);
+    if (!key) {
+      return;
+    }
+
+    const raw = window.localStorage.getItem(key);
+    const parsed = Number(raw);
+    if (parsed === 1 || parsed === -1) {
+      setUserVote(parsed as 1 | -1);
+    }
+  }, [reviewId]);
+
   const handleVote = async (value: 1 | -1) => {
     setError(null);
     const token = localStorage.getItem("rsp_token");
@@ -30,15 +80,15 @@ export default function ReviewVoteActions({
 
     try {
       setIsVoting(true);
+      const nextVote = userVote === value ? null : value;
       const updatedReview = await voteOnReview(token, reviewId, value);
       setUpvotes(updatedReview.upvotes);
       setDownvotes(updatedReview.downvotes);
 
-      // Toggle vote if same, otherwise set new vote
-      if (userVote === value) {
-        setUserVote(null);
-      } else {
-        setUserVote(value);
+      setUserVote(nextVote);
+      const key = reviewVoteStorageKey(reviewId);
+      if (key) {
+        window.localStorage.setItem(key, String(nextVote ?? 0));
       }
     } catch (error) {
       console.error("Error voting:", error);
@@ -65,9 +115,7 @@ export default function ReviewVoteActions({
         disabled={isVoting}
         className={buttonClasses(userVote === 1, "up")}
       >
-        <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-        </svg>
+        <UpvoteIcon />
         {upvotes}
       </button>
       <button
@@ -75,9 +123,7 @@ export default function ReviewVoteActions({
         disabled={isVoting}
         className={buttonClasses(userVote === -1, "down")}
       >
-        <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <DownvoteIcon />
         {downvotes}
       </button>
       </div>

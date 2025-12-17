@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import type { PublicUserRead, ReviewRead } from "@/lib/api";
 import { getPublicUserProfile, getReviewById } from "@/lib/api";
 import ReviewVoteActions from "@/components/review-vote-actions";
@@ -11,7 +11,6 @@ import { Button } from "@/components/Button";
 
 export default function ReviewDetailPage() {
   const params = useParams();
-  const router = useRouter();
 
   const reviewId = Number(params.reviewId as string);
   const postId = Number(params.postId as string);
@@ -20,14 +19,6 @@ export default function ReviewDetailPage() {
   const [reviewer, setReviewer] = useState<PublicUserRead | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("rsp_token") : null;
-    if (!token) {
-      router.replace(`/login?next=/posts/${postId}/reviews/${reviewId}`);
-    }
-  }, [postId, reviewId, router]);
 
   useEffect(() => {
     let isMounted = true;
@@ -195,4 +186,3 @@ export default function ReviewDetailPage() {
     </div>
   );
 }
-

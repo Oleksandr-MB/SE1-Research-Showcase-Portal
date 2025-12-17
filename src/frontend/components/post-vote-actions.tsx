@@ -1,12 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { voteOnPost } from "@/lib/api";
+import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 
 type Props = {
   postId: number;
   initialUpvotes: number;
   initialDownvotes: number;
+};
+
+const getVoteStorageUserKey = () => {
+  const token = window.localStorage.getItem("rsp_token");
+  if (!token) {
+    return null;
+  }
+
+  const parts = token.split(".");
+  if (parts.length >= 2) {
+    try {
+      const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+      const payload = JSON.parse(payloadJson) as Record<string, unknown>;
+      const sub = payload.sub ?? payload.username ?? payload.user;
+      if (typeof sub === "string" && sub.trim()) {
+        return sub;
+      }
+      if (typeof sub === "number") {
+        return String(sub);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return token.slice(0, 12);
+};
+
+const postVoteStorageKey = (postId: number) => {
+  const userKey = getVoteStorageUserKey();
+  return userKey ? `rsp_vote:post:${postId}:${userKey}` : null;
 };
 
 export default function PostVoteActions({
@@ -21,6 +53,24 @@ export default function PostVoteActions({
   const [currentVote, setCurrentVote] = useState<0 | 1 | -1>(0);
   const [isVoting, setIsVoting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = window.localStorage.getItem("rsp_token");
+    if (!token) {
+      return;
+    }
+
+    const key = postVoteStorageKey(postId);
+    if (!key) {
+      return;
+    }
+
+    const raw = window.localStorage.getItem(key);
+    const parsed = Number(raw);
+    if (parsed === 1 || parsed === -1 || parsed === 0) {
+      setCurrentVote(parsed as 0 | 1 | -1);
+    }
+  }, [postId]);
 
   const handleVote = async (value: 1 | -1) => {
     setError(null);
@@ -39,6 +89,10 @@ export default function PostVoteActions({
       const response = await voteOnPost(token, postId, nextValue);
       setCounts(response);
       setCurrentVote(nextValue);
+      const key = postVoteStorageKey(postId);
+      if (key) {
+        window.localStorage.setItem(key, String(nextValue));
+      }
     } catch (voteError) {
       if (voteError instanceof Error) {
         setError(voteError.message);
@@ -65,13 +119,7 @@ const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
         disabled={isVoting}
         className={buttonClasses(currentVote === 1, "up")}
       >
-      <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M5 15l7-7 7 7"/>
-      </svg> {counts.upvotes}
+        <UpvoteIcon size="l" /> {counts.upvotes}
       </button>
       <button
         type="button"
@@ -79,13 +127,7 @@ const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
         disabled={isVoting}
         className={buttonClasses(currentVote === -1, "down")}
       >
-      <svg className="h-4 w-4 inline-block text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 9l-7 7-7-7"/>
-      </svg> {counts.downvotes}
+        <DownvoteIcon size="l" /> {counts.downvotes}
       </button>
       {error && <span className="text-sm text-red-600">{error}</span>}
     </div>

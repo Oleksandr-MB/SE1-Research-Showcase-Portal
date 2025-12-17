@@ -7,6 +7,7 @@ import type { PostRead, ReviewRead, UserRead } from "@/lib/api";
 import { getCurrentUser, getPostById, getPostReviews } from "@/lib/api";
 import ReviewVoteActions from "@/components/review-vote-actions";
 import { Button } from "@/components/Button";
+import { XCircleSolidIcon } from "@/components/icons";
 
 export default function ReviewsFeedPage() {
   const params = useParams();
@@ -21,14 +22,6 @@ export default function ReviewsFeedPage() {
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("rsp_token") : null;
-    if (!token) {
-      router.replace(`/login?next=/posts/${postId}/reviews`);
-    }
-  }, [postId, router]);
-
-  useEffect(() => {
     let isMounted = true;
     const fetchReviews = async () => {
       try {
@@ -37,28 +30,33 @@ export default function ReviewsFeedPage() {
 
         const token =
           typeof window !== "undefined" ? localStorage.getItem("rsp_token") : null;
-        if (!token) {
-          router.replace(`/login?next=/posts/${postId}/reviews`);
-          return;
-        }
 
-        const [reviewsData, postData, userData] = await Promise.all([
+        const [reviewsData, postData] = await Promise.all([
           getPostReviews(postId),
           getPostById(postId),
-          getCurrentUser(token),
         ]);
         if (!isMounted) return;
 
         setReviews(reviewsData);
         setPost(postData);
-        setCurrentUser(userData);
+
+        if (token) {
+          try {
+            const userData = await getCurrentUser(token);
+            if (!isMounted) return;
+            setCurrentUser(userData);
+          } catch {
+            if (!isMounted) return;
+            window.localStorage.removeItem("rsp_token");
+            setCurrentUser(null);
+          }
+        } else {
+          setCurrentUser(null);
+        }
       } catch (e) {
         if (!isMounted) return;
         const message = e instanceof Error ? e.message : "Failed to load reviews.";
         setError(message);
-        if (message.includes("(401)") || message.toLowerCase().includes("token")) {
-          router.replace(`/login?next=/posts/${postId}/reviews`);
-        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -79,7 +77,8 @@ export default function ReviewsFeedPage() {
   }, [currentUser, post, reviews]);
 
   const reviewEligibilityMessage = useMemo(() => {
-    if (!post || !currentUser) return "Unable to verify review permissions.";
+    if (!post) return "Unable to verify review permissions.";
+    if (!currentUser) return "Please sign in to write a review.";
     if (currentUser.role !== "researcher") return "Only researchers can write reviews.";
     if (currentUser.id === post.poster_id) return "You cannot review your own post.";
     if (reviews.some((r) => r.reviewer_username === currentUser.username)) {
@@ -90,6 +89,12 @@ export default function ReviewsFeedPage() {
 
   const handleWriteReview = () => {
     setActionError(null);
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("rsp_token") : null;
+    if (!token) {
+      router.push(`/login?next=/posts/${postId}/review`);
+      return;
+    }
     if (!canWriteReview) {
       setActionError(reviewEligibilityMessage || "You cannot write a review.");
       return;
@@ -141,17 +146,7 @@ export default function ReviewsFeedPage() {
           {actionError && (
             <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
               <div className="flex items-center gap-2 text-sm text-red-700">
-                <svg
-                  className="h-4 w-4 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <XCircleSolidIcon className="h-4 w-4 flex-shrink-0" />
                 {actionError}
               </div>
             </div>

@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import { Button } from "@/components/Button";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
+import { LogoutIcon } from "@/components/icons";
 
 function formatJoinedDate(createdAt: string | undefined) {
   if (!createdAt) return "Unknown member since";
@@ -346,14 +347,7 @@ export default function MePage() {
                 href="/logout"
                 className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--Red)] px-4 py-3 text-sm font-semibold text-[var(--White)] transition-colors duration-200"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
+                <LogoutIcon className="h-4 w-4" />
                 Log Out
               </Link>
               <p className="mt-3 text-center text-xs text-[var(--Gray)]">
@@ -369,4 +363,3 @@ export default function MePage() {
     </div>
   );
 }
-

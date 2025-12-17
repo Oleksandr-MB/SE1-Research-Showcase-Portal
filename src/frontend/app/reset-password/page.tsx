@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { resetPassword } from "@/lib/api";
 import { Button } from "@/components/Button";
+import { LockClosedIcon } from "@/components/icons";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -56,9 +57,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-lg">
         <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-8 shadow-soft-md">
           <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--DarkGray)] mb-6 mx-auto">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+            <LockClosedIcon className="w-8 h-8 text-white" />
           </div>
 
           <h1 className="h1-apple text-[var(--DarkGray)] text-center mb-2">
@@ -139,4 +138,3 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
-
