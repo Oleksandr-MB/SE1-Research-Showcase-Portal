@@ -327,12 +327,8 @@ export default function MePage() {
                             </p>
                           </div>
                           <div className="flex shrink-0 items-center gap-2 text-[var(--Gray)]">
-                            <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
-                              ▲ {comment.upvotes ?? 0}
-                            </span>
-                            <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
-                              ▼ {comment.downvotes ?? 0}
-                            </span>
+                            <UpvoteIcon size='s' className="h-4 w-4" /> {comment.upvotes ?? 0}
+                            <DownvoteIcon size='s' className="h-4 w-4" /> {comment.downvotes ?? 0}
                           </div>
                         </Link>
                       </li>

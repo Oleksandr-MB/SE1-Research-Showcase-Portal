@@ -8,6 +8,7 @@ import {
 import SelfRedirector from "@/components/self-redirector";
 import VerifiedResearcherBadge from "@/components/verified-researcher-badge";
 import { Button } from "@/components/Button";
+import { DownvoteIcon, UpvoteIcon } from "@/components/icons/vote";
 
 type PageProps = {
   params: Promise<{
@@ -180,13 +181,9 @@ export default async function UserProfilePage({ params }: PageProps) {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 text-[var(--Gray)]">
-                          <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 font-medium">
-                            ▲ {post.upvotes ?? 0}
-                          </span>
-                          <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 font-medium">
-                            ▼ {post.downvotes ?? 0}
-                          </span>
+                        <div className="flex shrink-0 items-center gap-2 text-[var(--Gray)]">
+                          <UpvoteIcon size='s' className="h-4 w-4" /> {post.upvotes ?? 0}
+                          <DownvoteIcon size='s' className="h-4 w-4" /> {post.downvotes ?? 0}
                         </div>
                       </div>
                     </article>
