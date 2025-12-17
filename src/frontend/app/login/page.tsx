@@ -236,8 +236,17 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-        </div>
 
+          <div className="mt-4 text-center">
+            <p className="text-sm text-[var(--Gray)]">
+              Changed your mind?{" "}
+              <Link href="/" className="link-apple font-medium">
+                Go to browse
+              </Link>
+            </p>
+          </div>
+
+        </div>
       </div>
     </div>
   );
