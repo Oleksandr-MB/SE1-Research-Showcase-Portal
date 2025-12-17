@@ -37,8 +37,7 @@ class UserRead(BaseModel):
     is_arxiv_public: Optional[bool] = True
 
     class Config:
-        from_attributes = True  
-
+        from_attributes = True
 
 
 class Token(BaseModel):
@@ -117,7 +116,7 @@ class CommentCreate(BaseModel):
 
 class CommentRead(CommentBase):
     body: str
-    
+
     class Config:
         from_attributes = True
 
@@ -239,10 +238,22 @@ class PromotionRequest(BaseModel):
     role: UserRole
 
 
-class ReportsRead(BaseModel):
-    target_id: int
-
 class ReportCreate(BaseModel):
+    description: str
+
+
+class ReportRead(BaseModel):
+    id: int
+    reported_by_id: int
     target_type: str
     target_id: int
+    status: str
     description: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ReportStatusUpdate(BaseModel):
+    status: str  # e.g. "PENDING" | "ACCEPT" | "REJECT"

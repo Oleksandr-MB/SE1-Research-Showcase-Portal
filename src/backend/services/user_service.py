@@ -25,7 +25,6 @@ from src.backend.services.schemas import (
     PasswordResetConfirm,
     CommentActivityRead,
     PromotionRequest,
-    ReportsRead
 )
 
 from src.backend.config.config_utils import read_config

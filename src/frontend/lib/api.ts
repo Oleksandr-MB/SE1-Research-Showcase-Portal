@@ -559,3 +559,19 @@ export async function getPostReports(
 ): Promise<ReportRead> {
   return fetchFromApi<ReportRead>( `/posts/{post_id}/reports`);
 }
+
+export type ReportStatus = "OPEN" | "PENDING" | "CLOSED";
+
+export async function updateReportStatus(
+  token: string,
+  reportId: number,
+  status: ReportStatus
+): Promise<ReportRead> {
+  return fetchFromApi<ReportRead>(`/reports/${reportId}/status`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+}
