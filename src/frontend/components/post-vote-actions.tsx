@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { voteOnPost } from "@/lib/api";
+import { getPostById, voteOnPost } from "@/lib/api";
 import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
+import { usePolling } from "@/lib/usePolling";
 
 type Props = {
   postId: number;
@@ -71,6 +72,26 @@ export default function PostVoteActions({
       setCurrentVote(parsed as 0 | 1 | -1);
     }
   }, [postId]);
+
+  usePolling(
+    async ({ isActive }) => {
+      if (isVoting) {
+        return;
+      }
+      try {
+        const post = await getPostById(postId);
+        if (!isActive()) return;
+        setCounts({
+          upvotes: post.upvotes ?? 0,
+          downvotes: post.downvotes ?? 0,
+        });
+      } catch {
+        // ignore background refresh failures
+      }
+    },
+    [postId, isVoting],
+    { intervalMs: 2000, immediate: false },
+  );
 
   const handleVote = async (value: 1 | -1) => {
     setError(null);

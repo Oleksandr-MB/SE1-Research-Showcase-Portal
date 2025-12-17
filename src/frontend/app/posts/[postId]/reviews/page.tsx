@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { PostRead, ReviewRead, UserRead } from "@/lib/api";
 import { getCurrentUser, getPostById, getPostReviews } from "@/lib/api";
 import ReviewVoteActions from "@/components/review-vote-actions";
 import { Button } from "@/components/Button";
 import { XCircleSolidIcon } from "@/components/icons";
+import { usePolling } from "@/lib/usePolling";
 
 export default function ReviewsFeedPage() {
   const params = useParams();
@@ -21,12 +22,10 @@ export default function ReviewsFeedPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchReviews = async () => {
+  usePolling(
+    async ({ isActive }) => {
       try {
         setError(null);
-        setActionError(null);
 
         const token =
           typeof window !== "undefined" ? localStorage.getItem("rsp_token") : null;
@@ -35,7 +34,7 @@ export default function ReviewsFeedPage() {
           getPostReviews(postId),
           getPostById(postId),
         ]);
-        if (!isMounted) return;
+        if (!isActive()) return;
 
         setReviews(reviewsData);
         setPost(postData);
@@ -43,10 +42,10 @@ export default function ReviewsFeedPage() {
         if (token) {
           try {
             const userData = await getCurrentUser(token);
-            if (!isMounted) return;
+            if (!isActive()) return;
             setCurrentUser(userData);
           } catch {
-            if (!isMounted) return;
+            if (!isActive()) return;
             window.localStorage.removeItem("rsp_token");
             setCurrentUser(null);
           }
@@ -54,19 +53,17 @@ export default function ReviewsFeedPage() {
           setCurrentUser(null);
         }
       } catch (e) {
-        if (!isMounted) return;
+        if (!isActive()) return;
         const message = e instanceof Error ? e.message : "Failed to load reviews.";
         setError(message);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!isActive()) return;
+        setIsLoading((prev) => (prev ? false : prev));
       }
-    };
-
-    fetchReviews();
-    return () => {
-      isMounted = false;
-    };
-  }, [postId, router]);
+    },
+    [postId],
+    { intervalMs: 2000, immediate: true },
+  );
 
   const canWriteReview = useMemo(() => {
     if (!post || !currentUser) return false;

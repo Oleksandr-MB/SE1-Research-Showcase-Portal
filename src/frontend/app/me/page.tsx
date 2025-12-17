@@ -11,7 +11,8 @@ import {
 } from "@/lib/api";
 import { Button } from "@/components/Button";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
-import { LogoutIcon } from "@/components/icons";
+import { DownvoteIcon, LogoutIcon, UpvoteIcon } from "@/components/icons";
+import { usePolling } from "@/lib/usePolling";
 
 function formatJoinedDate(createdAt: string | undefined) {
   if (!createdAt) return "Unknown member since";
@@ -31,6 +32,26 @@ const truncate = (value: string | undefined, limit = 128) => {
 };
 
 type ActivityTab = "posts" | "comments";
+
+function selectRecentPosts(posts: PostSummary[], limit = 5) {
+  return [...posts]
+    .filter((p) => p.phase === "published")
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
+    .slice(0, limit);
+}
+
+function isAuthError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("Could not validate credentials") ||
+    message.includes("Token has been revoked") ||
+    message.includes("Not authenticated") ||
+    message.includes("API request failed (401")
+  );
+}
 
 export default function MePage() {
   const router = useRouter();
@@ -70,16 +91,7 @@ export default function MePage() {
 
         if (!isMounted) return;
 
-        const sortedPosts = [...posts]
-          .filter((p) => p.phase === "published")
-          .sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime(),
-          )
-          .slice(0, 5);
-
-        setRecentPosts(sortedPosts);
+        setRecentPosts(selectRecentPosts(posts));
         setRecentComments(comments);
       } catch (error) {
         console.error("Unable to load recent activity", error);
@@ -120,6 +132,38 @@ export default function MePage() {
       isMounted = false;
     };
   }, [router]);
+
+  usePolling(
+    async ({ isActive }) => {
+      if (!user) return;
+
+      const token = localStorage.getItem("rsp_token");
+      if (!token) {
+        router.replace("/login?next=/me");
+        return;
+      }
+
+      try {
+        const [posts, comments] = await Promise.all([
+          getPublishedPostsByUsername(user.username),
+          getMyRecentComments(token, 5),
+        ]);
+
+        if (!isActive()) return;
+        setRecentPosts(selectRecentPosts(posts));
+        setRecentComments(comments);
+      } catch (error) {
+        if (isAuthError(error)) {
+          localStorage.removeItem("rsp_token");
+          router.replace("/login?next=/me");
+          return;
+        }
+        console.error("Unable to refresh recent activity", error);
+      }
+    },
+    [router, user?.username],
+    { enabled: !!user && !isLoadingActivity && !isLoading, intervalMs: 2000, immediate: false },
+  );
 
   useEffect(() => {
     if (isLoading) {
@@ -250,17 +294,12 @@ export default function MePage() {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
-                                })}{" "}
-                                • Published
+                                })}
                               </p>
                             </div>
                             <div className="flex shrink-0 items-center gap-2 text-[var(--Gray)]">
-                              <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
-                                ▲ {post.upvotes ?? 0}
-                              </span>
-                              <span className="rounded-full bg-[#FAFAFA] px-2.5 py-1 text-xs">
-                                ▼ {post.downvotes ?? 0}
-                              </span>
+                              <UpvoteIcon size='s' className="h-4 w-4" /> {post.upvotes ?? 0}
+                              <DownvoteIcon size='s' className="h-4 w-4" /> {post.downvotes ?? 0}
                             </div>
                           </Link>
                         </li>

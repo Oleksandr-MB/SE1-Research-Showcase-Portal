@@ -6,9 +6,11 @@ import {
   type CommentThread,
   createComment,
   type CreateCommentPayload,
+  getPostComments,
   voteOnComment,
 } from "@/lib/api";
 import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
+import { usePolling } from "@/lib/usePolling";
 
 type Props = {
   postId: number;
@@ -152,16 +154,30 @@ export default function CommentsSection({ postId, initialComments }: Props) {
     }
 
     const next: Record<number, -1 | 0 | 1> = {};
-    for (const comment of initialComments) {
+    for (const comment of comments) {
       const key = commentVoteStorageKey(postId, comment.id);
       if (!key) continue;
       const parsed = Number(window.localStorage.getItem(key));
-      if (parsed === 1 || parsed === -1) {
-        next[comment.id] = parsed as 1 | -1;
+      if (parsed === 1 || parsed === -1 || parsed === 0) {
+        next[comment.id] = parsed as -1 | 0 | 1;
       }
     }
-    setCommentVoteState(next);
-  }, [initialComments, postId]);
+    setCommentVoteState((prev) => ({ ...prev, ...next }));
+  }, [comments, postId]);
+
+  usePolling(
+    async ({ isActive }) => {
+      try {
+        const latest = await getPostComments(postId);
+        if (!isActive()) return;
+        setComments(latest);
+      } catch {
+        // ignore background refresh failures
+      }
+    },
+    [postId],
+    { intervalMs: 2000, immediate: false },
+  );
 
   const threads = useMemo(() => buildThreads(comments), [comments]);
 

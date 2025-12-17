@@ -8,6 +8,7 @@ import {
   searchPosts,
 } from "@/lib/api";
 import ProfileButton from "@/components/profile-button";
+import RouteRefreshPoller from "@/components/route-refresh-poller";
 import {
   ChevronRightIcon,
   DownvoteIcon,
@@ -385,6 +386,7 @@ export default async function Home({
 
   return (
     <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8">
+      <RouteRefreshPoller intervalMs={2000} />
       <div className="mx-auto max-w-7xl space-y-10">
         <section
           id="search-panel"
