@@ -262,23 +262,3 @@ export function CheckInCircleIcon({ className, ...props }: BaseIconProps) {
     </svg>
   );
 }
-
-export function VerificationBadgeIcon({ className, ...props }: BaseIconProps) {
-  return (
-    <svg
-      className={cx("h-6 w-6", className)}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      {...props}
-    >
-      <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0z" />
-      <path d="M12 14l9 5-9 5-9-5 9-5z" />
-    </svg>
-  );
-}

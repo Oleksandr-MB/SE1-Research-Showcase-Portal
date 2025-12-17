@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { verifyEmailToken } from "@/lib/api";
-import { VerificationBadgeIcon } from "@/components/icons";
+import { UserIcon } from "@/components/icons";
 
 type VerifyState = "checking" | "success" | "error" | "missing";
 
@@ -88,7 +88,7 @@ export default function VerifyEmailPage() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--LightGray)] px-4 text-[var(--DarkGray)]">
         <div className="w-full max-w-md rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-8 text-center shadow-soft-md">
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--LightGray)] text-[var(--DarkGray)]">
-          <VerificationBadgeIcon className="h-6 w-6" />
+          <UserIcon className="h-6 w-6" />
         </div>
         <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--Gray)]">
           Email verification
