@@ -268,7 +268,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
 
         <CommentsSection postId={numericPostId} initialComments={comments} />
 
-        <ShareCitation postId={numericPostId} title={post.title} bibtex={post.bibtex} />
+        <ShareCitation postId={numericPostId} title={post.title} authors={post.authors_text} bibtex={post.bibtex} />
 
       </div>
     </div>

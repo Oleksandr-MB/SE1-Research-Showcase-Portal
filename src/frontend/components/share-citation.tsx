@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type ShareCitationProps = {
   postId: number;
   title: string;
+  authors: string;
   bibtex?: string | null;
 };
 
@@ -12,6 +13,7 @@ type CopiedVariant = "url" | "bibtex" | null;
 
 export default function ShareCitation({
   postId,
+  authors: authors,
   title,
   bibtex,
 }: ShareCitationProps) {
@@ -42,13 +44,16 @@ export default function ShareCitation({
     }
   };
 
+
   const resolvedBibtex =
     (bibtex && bibtex.trim()) ||
     [
-      `@misc{post_${postId},`,
+      `@misc{rsp_post_${postId},`,
       `  title        = {${title}},`,
+      `  author       = {${authors}},`,
       `  howpublished = {\\url{${shareUrl}}},`,
-      `  note         = {Research Showcase Portal},`,
+      `  year         = {${new Date().getFullYear()}},`,
+      `  note         = {Accessed: ${new Date().toISOString().split('T')[0]}}`,
       `}`,
     ].join("\n");
 
@@ -71,7 +76,7 @@ export default function ShareCitation({
       {/* Share link */}
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#8A8A8A]">
-          Permanent Link
+          Share the URL
         </p>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <code className="flex-1 truncate rounded-2xl bg-[var(--White)] px-3 py-2 text-xs text-[var(--DarkGray)]">
@@ -80,7 +85,7 @@ export default function ShareCitation({
           <button
             type="button"
             onClick={() => handleCopy(shareUrl, "url")}
-            className="mt-1 inline-flex items-center justify-center rounded-2xl bg-[var(--DarkGray)] px-4 py-2 text-xs font-semibold text-white shadow-soft-xs transition hover:bg-[var(--Black)] sm:mt-0"
+            className="inline-flex items-center justify-center rounded-2xl bg-[#F7F7F7] px-3 py-2 text-xs font-semibold text-[var(--DarkGray)] ring-1 ring-[rgba(55,55,55,0.08)] hover:bg-[rgba(55,55,55,0.08)]"
           >
             Copy link
           </button>
@@ -90,11 +95,11 @@ export default function ShareCitation({
       {/* BibTeX citation */}
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#8A8A8A]">
-          BibTeX
+          Cite as BibTeX
         </p>
         <div className="rounded-2xl bg-[var(--White)] p-3">
           <pre className="max-h-60 overflow-auto text-xs leading-relaxed text-[var(--DarkGray)]">
-{resolvedBibtex}
+            {resolvedBibtex}
           </pre>
         </div>
         <button
