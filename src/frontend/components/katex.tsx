@@ -11,6 +11,12 @@ type RenderKatexOptions = {
     display: boolean;
   }>;
   ignoredTags?: string[];
+  throwOnError?: boolean;
+  strict?: "warn" | "ignore" | boolean;
+  errorColor?: string;
+  trust?: boolean;
+  macros?: Record<string, string>;
+  preProcess?: (math: string) => string;
 };
 
 type KatexProps = {
@@ -67,7 +73,11 @@ const ensureKatex = (() => {
       );
       if (!window.renderKatex) {
         window.renderKatex = (element, options) => {
-          window.renderMathInElement?.(element, options);
+          try {
+            window.renderMathInElement?.(element, options);
+          } catch (error) {
+            console.warn("KaTeX rendering failed", error);
+          }
         };
       }
     })();
@@ -81,6 +91,23 @@ const buildParagraphs = (text: string) =>
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .filter(Boolean);
+
+const SPACE_SENSITIVE_COMMANDS = [
+  "alpha", "beta", "gamma", "delta", "epsilon", "varepsilon", "zeta", "eta", "theta", "vartheta",
+  "iota", "kappa", "lambda", "mu", "nu", "xi", "pi", "varpi", "rho", "varrho", "sigma", "varsigma",
+  "tau", "upsilon", "phi", "varphi", "chi", "psi", "omega",
+  "Gamma", "Delta", "Theta", "Lambda", "Xi", "Pi", "Sigma", "Upsilon", "Phi", "Psi", "Omega",
+  "sin", "cos", "tan", "cot", "sec", "csc",
+  "ln", "log", "exp",
+] as const;
+
+const SPACE_SENSITIVE_COMMAND_RE = new RegExp(
+  String.raw`\\(${SPACE_SENSITIVE_COMMANDS.join("|")})(?=[A-Za-z0-9])`,
+  "g",
+);
+
+const preprocessMath = (math: string) =>
+  math.replace(SPACE_SENSITIVE_COMMAND_RE, String.raw`\\$1 `);
 
 function InlineImage({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
@@ -315,6 +342,9 @@ export default function Katex({
             { left: "\\(", right: "\\)", display: false },
           ],
           ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+          throwOnError: false,
+          strict: "ignore",
+          preProcess: preprocessMath,
         });
       })
       .catch(() => {

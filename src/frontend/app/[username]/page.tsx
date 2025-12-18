@@ -148,7 +148,7 @@ export default async function UserProfilePage({ params }: PageProps) {
                             href={`/posts/${post.id}`}
                             className="shrink-0 text-xs font-medium text-[var(--DarkGray)] hover:text-[var(--Red)]"
                           >
-                            Read →
+                            Read full post
                           </Link>
                         </div>
                       </header>
