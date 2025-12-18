@@ -9,6 +9,7 @@ import SelfRedirector from "@/components/self-redirector";
 import VerifiedResearcherBadge from "@/components/verified-researcher-badge";
 import { Button } from "@/components/Button";
 import { DownvoteIcon, UpvoteIcon } from "@/components/icons/vote";
+import PromoteUserButton from "@/components/promote-user-button";
 
 type PageProps = {
   params: Promise<{
@@ -197,8 +198,12 @@ export default async function UserProfilePage({ params }: PageProps) {
             <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
               <h2 className="h3-apple text-[var(--DarkGray)]">About</h2>
               <p className="mt-3 text-sm leading-relaxed text-[var(--DarkGray)]">
-                {userProfile.bio || "This user hasn’t written a bio yet."}
+                {userProfile.bio || "This user hasn't written a bio yet."}
               </p>
+              <PromoteUserButton
+                targetUsername={userProfile.username}
+                currentRole={userProfile.role}
+              />
 
               <div className="mt-5 space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-4 border-b border-[var(--LightGray)] pb-3">

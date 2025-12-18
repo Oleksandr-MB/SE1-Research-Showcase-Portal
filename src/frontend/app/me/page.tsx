@@ -11,7 +11,7 @@ import {
 } from "@/lib/api";
 import { Button } from "@/components/Button";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
-import { DownvoteIcon, LogoutIcon, UpvoteIcon } from "@/components/icons";
+import { DownvoteIcon, LogoutIcon, UpvoteIcon, FlagIcon } from "@/components/icons";
 import { usePolling } from "@/lib/usePolling";
 
 function formatJoinedDate(createdAt: string | undefined) {
@@ -376,6 +376,21 @@ export default function MePage() {
                 </div>
               </div>
             </div>
+
+            {user.role === "moderator" && (
+              <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
+                <Link
+                  href="/reports"
+                  className="group flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--DarkGray)] bg-[var(--White)] px-4 py-3 text-sm font-semibold text-[var(--DarkGray)] transition-colors duration-200 hover:bg-[var(--DarkGray)] hover:text-[var(--White)]"
+                >
+                  <FlagIcon className="h-4 w-4" />
+                  View Reports
+                </Link>
+                <p className="mt-3 text-center text-xs text-[var(--Gray)]">
+                  Moderator tools
+                </p>
+              </div>
+            )}
 
             <div className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
               <Link

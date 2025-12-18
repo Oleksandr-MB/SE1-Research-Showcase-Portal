@@ -518,7 +518,7 @@ async def get_user_profile(
     )
 
 
-@router.post("/{username}/promote", response_model=UserRead)
+@router.post("/{username}/promote_user", response_model=UserRead)
 def promote_user(
         username: str,
         payload: PromotionRequest,
@@ -526,7 +526,7 @@ def promote_user(
         requester: models.User = Depends(get_current_user)
 ):
     user = get_user_by_username(db, username)
-    # print(f"{User.role}")
+    
     if requester.role != "moderator":
         if not (payload.role == "researcher" and requester.role == "researcher"):
             raise HTTPException(

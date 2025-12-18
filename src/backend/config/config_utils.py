@@ -1,5 +1,9 @@
+from pathlib import Path
 import yaml
-import os
+
 def read_config(name: str):
-    with open(f"/Users/yaroslav/Documents/Work/For Git Project /SE1-Research-Showcase-Portal/src/backend/config/{name}.yaml", "r") as f:
+    config_dir = Path(__file__).resolve().parent
+    cfg_path = config_dir / f"{name}.yaml"
+
+    with open(cfg_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)

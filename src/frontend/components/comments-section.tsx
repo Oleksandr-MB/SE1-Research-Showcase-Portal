@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 import { usePolling } from "@/lib/usePolling";
+import ReportButton from "@/components/report-button";
 
 type Props = {
   postId: number;
@@ -172,7 +173,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
         if (!isActive()) return;
         setComments(latest);
       } catch {
-        // ignore background refresh failures
+        
       }
     },
     [postId],
@@ -386,13 +387,16 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             <span>{comment.downvotes}</span>
           </button>
         </div>
-        <button
-          type="button"
-          onClick={() => toggleReplyTarget(comment.id)}
-          className={replyButtonClass}
-        >
-          Reply
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => toggleReplyTarget(comment.id)}
+            className={replyButtonClass}
+          >
+            Reply
+          </button>
+          <ReportButton postId={comment.post_id} commentId={comment.id} />
+        </div>
       </>
     );
   };

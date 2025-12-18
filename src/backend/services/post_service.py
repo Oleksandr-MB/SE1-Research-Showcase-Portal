@@ -616,9 +616,17 @@ def delete_research_post(
         raise HTTPException(
             status_code=403, detail="Not authorized to delete this post")
 
+    
+    related_reports = db.query(models.Report).filter(
+        models.Report.target_type == "POST",
+        models.Report.target_id == post_id
+    ).all()
+    for report in related_reports:
+        report.status = models.ReportStatus.CLOSED
+    
     db.delete(db_post)
     db.commit()
-    logging.info(f"Post with ID {post_id} deleted successfully")
+    logging.info(f"Post with ID {post_id} deleted successfully, closed {len(related_reports)} related reports")
 
 
 @router.get("/my", response_model=list[PostRead])
@@ -672,7 +680,7 @@ def create_report_for_post(
         reported_by_id=current_user.id,
         target_type="POST",
         target_id=post_id,
-        status="OPEN",  # or models.ReportStatus.OPEN if you have the enum
+        status=models.ReportStatus.OPEN,
         description=payload.description.strip(),
         created_at=datetime.now(timezone.utc),
     )
@@ -682,31 +690,68 @@ def create_report_for_post(
     return report
 
 
-ALLOWED_STATUSES = {"PENDING", "OPEN", "CLOSED"}
-
-@router.patch("/{report_id}/status", response_model=ReportRead)
-def update_report_status(
-    report_id: int,
-    payload: ReportStatusUpdate,
+@router.post("/{post_id}/comments/{comment_id}/reports", response_model=ReportRead)
+def create_report_for_comment(
+    post_id: int,
+    comment_id: int,
+    payload: ReportCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    # Optional: only moderators can change report status
-    if current_user.role != models.UserRole.MODERATOR:
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    new_status = payload.status.strip().upper()
-    if new_status not in ALLOWED_STATUSES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid status. Allowed: {sorted(ALLOWED_STATUSES)}",
-        )
-
-    report = db.query(models.Report).filter(models.Report.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="Report not found")
-
-    report.status = new_status
+    
+    db_comment = (
+        db.query(models.Comment)
+        .filter(models.Comment.id == comment_id, models.Comment.post_id == post_id)
+        .first()
+    )
+    if not db_comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    report = models.Report(
+        reported_by_id=current_user.id,
+        target_type="COMMENT",
+        target_id=comment_id,
+        status=models.ReportStatus.OPEN,
+        description=payload.description.strip(),
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(report)
     db.commit()
     db.refresh(report)
     return report
+
+
+@router.delete("/{post_id}/comments/{comment_id}", status_code=204)
+def delete_comment(
+    post_id: int,
+    comment_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[models.User, Depends(get_current_user)],
+):
+    """Delete a comment. Only the comment owner or a moderator can delete."""
+    db_comment = (
+        db.query(models.Comment)
+        .filter(models.Comment.id == comment_id, models.Comment.post_id == post_id)
+        .first()
+    )
+    if not db_comment:
+        logging.error(f"Comment with ID {comment_id} not found for deletion")
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    if db_comment.commenter_id != current_user.id and current_user.role != models.UserRole.MODERATOR:
+        logging.error(
+            f"User {current_user.id} not authorized to delete comment ID {comment_id}")
+        raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
+    
+    t
+    related_reports = db.query(models.Report).filter(
+        models.Report.target_type == "COMMENT",
+        models.Report.target_id == comment_id
+    ).all()
+    for report in related_reports:
+        report.status = models.ReportStatus.CLOSED
+    
+    db.delete(db_comment)
+    db.commit()
+    logging.info(f"Comment with ID {comment_id} deleted successfully, closed {len(related_reports)} related reports")
+

@@ -253,7 +253,10 @@ class ReportRead(BaseModel):
 
     class Config:
         from_attributes = True
+        json_encoders = {
+            
+        }
 
 
 class ReportStatusUpdate(BaseModel):
-    status: str  # e.g. "PENDING" | "ACCEPT" | "REJECT"
+    status: str 

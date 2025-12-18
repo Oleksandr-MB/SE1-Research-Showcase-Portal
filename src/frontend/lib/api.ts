@@ -154,9 +154,17 @@ export type ProfileUpdatePayload = {
 };
 
 
-export type ReportRead = {
-  reports: Report[]
+export type Report = {
+  id: number;
+  reported_by_id: number;
+  target_type: string;
+  target_id: number;
+  status: ReportStatus;
+  description: string;
+  created_at: string;
 };
+
+export type ReportRead = Report;
 
 export type TokenResponse = {
   access_token: string;
@@ -213,7 +221,7 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
           throw new Error((parsed as { message: string }).message);
         }
       } catch {
-        // Fall through to raw body below.
+        
       }
     }
     throw new Error(
@@ -221,7 +229,23 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
     );
   }
 
-  return response.json() as Promise<T>;
+  
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+
+    return undefined as T;
+  }
 }
 
 export type RegisterPayload = {
@@ -554,18 +578,57 @@ export async function promoteUser(
 
 
 
-export async function getPostReports(
-  // post_id: number,
+export type ReportStatus = "open" | "pending" | "closed";
+
+export type ReportCreatePayload = {
+  description: string;
+};
+
+export async function createPostReport(
+  token: string,
+  postId: number,
+  payload: ReportCreatePayload,
 ): Promise<ReportRead> {
-  return fetchFromApi<ReportRead>( `/posts/{post_id}/reports`);
+  return fetchFromApi<ReportRead>(`/posts/${postId}/reports`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
-export type ReportStatus = "OPEN" | "PENDING" | "CLOSED";
+export async function createCommentReport(
+  token: string,
+  postId: number,
+  commentId: number,
+  payload: ReportCreatePayload,
+): Promise<ReportRead> {
+  return fetchFromApi<ReportRead>(`/posts/${postId}/comments/${commentId}/reports`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getAllReports(
+  token: string,
+  targetType?: "POST" | "COMMENT",
+): Promise<ReportRead[]> {
+  const query = targetType ? `?target_type=${targetType}` : "";
+  return fetchFromApi<ReportRead[]>(`/reports${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
 
 export async function updateReportStatus(
   token: string,
   reportId: number,
-  status: ReportStatus
+  status: ReportStatus,
 ): Promise<ReportRead> {
   return fetchFromApi<ReportRead>(`/reports/${reportId}/status`, {
     method: "PATCH",
@@ -573,5 +636,34 @@ export async function updateReportStatus(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ status }),
+  });
+}
+
+export async function deletePost(
+  token: string,
+  postId: number,
+): Promise<void> {
+  return fetchFromApi<void>(`/posts/${postId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function getCommentById(commentId: number): Promise<CommentThread> {
+  return fetchFromApi<CommentThread>(`/posts/comments/${commentId}`);
+}
+
+export async function deleteComment(
+  token: string,
+  postId: number,
+  commentId: number,
+): Promise<void> {
+  return fetchFromApi<void>(`/posts/${postId}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 }

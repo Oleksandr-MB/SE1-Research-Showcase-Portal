@@ -10,6 +10,7 @@ import Katex from "@/components/katex";
 import AttachmentDownloadButton from "@/components/attachment-download-button";
 import { Button } from "@/components/Button";
 import VerifiedResearcherBadge from "@/components/verified-researcher-badge";
+import ReportButton from "@/components/report-button";
 
 const ATTACHMENT_PREFIX = "/attachments/";
 
@@ -168,6 +169,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
                     initialDownvotes={post.downvotes ?? 0}
                   />
                   <ReviewsButton postId={numericPostId} />
+                  <ReportButton postId={numericPostId} />
                 </div>
               </div>
             </div>

@@ -18,26 +18,26 @@ async def create_review(
     db: Session = Depends(get_db),
 ):
     """Create a review for a post"""
-    # Check if post exists
+    
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
-    # Only researchers may create reviews
+    
     if current_user.role != "researcher":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only researchers can create reviews",
         )
 
-    # Researchers cannot review their own posts
+    
     if post.poster_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You cannot review your own post",
         )
 
-    # Check if user already reviewed this post
+    
     existing_review = db.query(models.Review).filter(
         models.Review.post_id == post_id,
         models.Review.reviewer_id == current_user.id,
@@ -48,7 +48,7 @@ async def create_review(
             detail="You have already reviewed this post",
         )
 
-    # Create review
+   
     review = models.Review(
         post_id=post_id,
         reviewer_id=current_user.id,
@@ -62,14 +62,13 @@ async def create_review(
     db.commit()
     db.refresh(review)
 
-    # Check if post author should be promoted to researcher
-    # Count positive reviews for this specific post
+    
     positive_review_count = db.query(models.Review).filter(
         models.Review.post_id == post_id,
         models.Review.is_positive == True,
     ).count()
 
-    # If 3+ positive reviews, promote the post author to researcher
+    
     if positive_review_count >= 3:
         post_author = db.query(models.User).filter(models.User.id == post.poster_id).first()
         if post_author and post_author.role == models.UserRole.USER:
@@ -123,8 +122,7 @@ async def get_post_reviews(
                 is_positive=review.is_positive,
                 strengths=review.strengths,
                 weaknesses=review.weaknesses,
-                # upvotes=upvotes,
-                # downvotes=downvotes,
+                
                 created_at=review.created_at,
             )
         )
@@ -175,12 +173,11 @@ async def vote_on_review(
     current_user: models.User = Depends(get_current_user)
 ):
     """Vote on a review"""
-    # Check if review exists
+    
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
     
-    # Check if vote already exists
     existing_vote = db.query(models.ReviewVote).filter(
         models.ReviewVote.user_id == current_user.id,
         models.ReviewVote.review_id == review_id
@@ -188,13 +185,13 @@ async def vote_on_review(
     
     if existing_vote:
         if existing_vote.value == vote.value:
-            # Remove vote if same value
+            
             db.delete(existing_vote)
         else:
-            # Update vote if different value
+            
             existing_vote.value = vote.value
     else:
-        # Create new vote
+        
         new_vote = models.ReviewVote(
             user_id=current_user.id,
             review_id=review_id,
@@ -205,7 +202,7 @@ async def vote_on_review(
     db.commit()
     db.refresh(review)
     
-    # Return updated review with vote counts
+    
     reviewer = db.query(models.User).filter(models.User.id == review.reviewer_id).first()
     upvotes = sum(1 for vote in review.review_votes if vote.value == 1)
     downvotes = sum(1 for vote in review.review_votes if vote.value == -1)

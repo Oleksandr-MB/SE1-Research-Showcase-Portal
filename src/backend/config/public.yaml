@@ -7,7 +7,7 @@ db_cfg:
   user: postgres
   host: localhost
   password: admin
-  port: 5433
+  port: 5432
   database: research_showcase
 
 crypto_cfg:
