@@ -58,6 +58,16 @@ RESET_PASSWORD_LINK_BASE = public_config["email_cfg"].get(
     "http://localhost:3000/reset-password?token=",
 )
 
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
+MODERATOR_EMAILS: set[str] = {
+    _normalize_email(email)
+    for email in (private_config.get("moderator_emails") or [])
+    if isinstance(email, str) and email.strip()
+}
+
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
@@ -185,11 +195,16 @@ def register_user(
     verification_link = EMAIL_LINK_BASE + email_token
 
     password_hash, password_salt = get_password_hash(user_in.password)
+    role = (
+        models.UserRole.MODERATOR
+        if _normalize_email(user_in.email) in MODERATOR_EMAILS
+        else models.UserRole.USER
+    )
     db_user = models.User(
         username=user_in.username,
         password_hash=password_hash,
         password_salt=password_salt,
-        role=models.UserRole.USER,
+        role=role,
         email=user_in.email,
         is_email_verified=False,
         created_at=datetime.now(timezone.utc),

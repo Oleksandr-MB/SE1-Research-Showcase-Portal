@@ -676,6 +676,12 @@ def create_report_for_post(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if db_post.poster_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot report your own post")
+
     report = models.Report(
         reported_by_id=current_user.id,
         target_type="POST",
@@ -706,6 +712,8 @@ def create_report_for_comment(
     )
     if not db_comment:
         raise HTTPException(status_code=404, detail="Comment not found")
+    if db_comment.commenter_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot report your own comment")
     
     report = models.Report(
         reported_by_id=current_user.id,
@@ -743,7 +751,6 @@ def delete_comment(
             f"User {current_user.id} not authorized to delete comment ID {comment_id}")
         raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
     
-    t
     related_reports = db.query(models.Report).filter(
         models.Report.target_type == "COMMENT",
         models.Report.target_id == comment_id
@@ -754,4 +761,3 @@ def delete_comment(
     db.delete(db_comment)
     db.commit()
     logging.info(f"Comment with ID {comment_id} deleted successfully, closed {len(related_reports)} related reports")
-

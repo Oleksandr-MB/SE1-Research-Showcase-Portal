@@ -162,6 +162,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
                   </div>
                 </div>
                 <div className="ml-auto flex items-center gap-4">
+                  <ReportButton postId={numericPostId} />
                   <PostReviewAction postId={numericPostId} posterId={post.poster_id} />
                   <PostVoteActions
                     postId={numericPostId}
@@ -169,7 +170,6 @@ export default async function PostDetailsPage({ params }: PageProps) {
                     initialDownvotes={post.downvotes ?? 0}
                   />
                   <ReviewsButton postId={numericPostId} />
-                  <ReportButton postId={numericPostId} />
                 </div>
               </div>
             </div>
