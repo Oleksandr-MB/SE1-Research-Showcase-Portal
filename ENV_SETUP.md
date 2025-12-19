@@ -1,10 +1,10 @@
-1. Скачайте postgresql и pgadmin4 
-2. В postgersql создайте базу данных research_portal
-3. Поставьте пароль юзеру postgres (стандартный) 'admin'
-4. Зайдите в pgadmin и проверьте, что БД создана
-5. Измените config.json в vscode (файл ниже)
-6. Запустите db_creator.py через python debugger с профилем из config.json
-7. Проверьте в pgadmin, что пустые таблицы создались
-8. Так же само через debugger запустите main.py
-9. Перейдите в src/frontend и запустите фронт (npm run dev)
-10. Откройте localhost:3000
+1. Download postgresql and pgadmin4
+2. In postgresql, create the research_portal database
+3. Set the default password for the postgres user to 'admin'
+4. Log in to pgadmin and verify that the database has been created
+5. Edit config.json in vscode (I've sent you the file earlier)
+6. Run db_creator.py in Python debugger with the profile from config.json
+7. Verify in pgadmin that empty tables have been created
+8. Run main.py in debugger as well
+9. Go to src/frontend and run the frontend (npm run dev)
+10. Open localhost:3000
