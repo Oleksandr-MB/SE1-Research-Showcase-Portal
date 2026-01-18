@@ -86,12 +86,6 @@ const ensureKatex = (() => {
   };
 })();
 
-const buildParagraphs = (text: string) =>
-  text
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
-
 const SPACE_SENSITIVE_COMMANDS = [
   "alpha", "beta", "gamma", "delta", "epsilon", "varepsilon", "zeta", "eta", "theta", "vartheta",
   "iota", "kappa", "lambda", "mu", "nu", "xi", "pi", "varpi", "rho", "varrho", "sigma", "varsigma",
@@ -154,6 +148,10 @@ const isExternalHref = (href: string) => {
 
 type InlineRenderOptions = {
   resolveImageSrc?: (raw: string) => string | null;
+};
+
+type MarkdownRenderOptions = InlineRenderOptions & {
+  paragraphClassName?: string;
 };
 
 const buildAttachmentImageResolver = (attachments: string[]) => {
@@ -267,6 +265,21 @@ const renderInlineMarkdown = (
       }
     }
 
+    if (text.startsWith("__", cursor)) {
+      const end = text.indexOf("__", cursor + 2);
+      if (end !== -1) {
+        flush();
+        const inner = text.slice(cursor + 2, end);
+        nodes.push(
+          <strong key={`strong-${key++}`}>
+            {renderInlineMarkdown(inner, options)}
+          </strong>,
+        );
+        cursor = end + 2;
+        continue;
+      }
+    }
+
     if (text[cursor] === "*") {
       const end = text.indexOf("*", cursor + 1);
       if (end !== -1) {
@@ -274,6 +287,32 @@ const renderInlineMarkdown = (
         const inner = text.slice(cursor + 1, end);
         nodes.push(<em key={`em-${key++}`}>{renderInlineMarkdown(inner, options)}</em>);
         cursor = end + 1;
+        continue;
+      }
+    }
+
+    if (text[cursor] === "_") {
+      const end = text.indexOf("_", cursor + 1);
+      if (end !== -1) {
+        flush();
+        const inner = text.slice(cursor + 1, end);
+        nodes.push(<em key={`em-${key++}`}>{renderInlineMarkdown(inner, options)}</em>);
+        cursor = end + 1;
+        continue;
+      }
+    }
+
+    if (text.startsWith("~~", cursor)) {
+      const end = text.indexOf("~~", cursor + 2);
+      if (end !== -1) {
+        flush();
+        const inner = text.slice(cursor + 2, end);
+        nodes.push(
+          <del key={`del-${key++}`} className="opacity-80">
+            {renderInlineMarkdown(inner, options)}
+          </del>,
+        );
+        cursor = end + 2;
         continue;
       }
     }
@@ -314,6 +353,300 @@ const renderInlineMarkdown = (
   return nodes;
 };
 
+const normalizeNewlines = (value: string) => value.replace(/\r\n?/g, "\n");
+
+const isHorizontalRule = (line: string) =>
+  /^\s{0,3}((\* ?){3,}|(- ?){3,}|(_ ?){3,})\s*$/.test(line);
+
+const splitTableRow = (row: string) =>
+  row
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+
+const isTableSeparatorRow = (line: string) => {
+  const trimmed = line.trim();
+  if (!trimmed.includes("|")) return false;
+  const cells = splitTableRow(trimmed);
+  return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+};
+
+const renderMarkdownBlocks = (
+  text: string,
+  options: MarkdownRenderOptions = {},
+): ReactNode[] => {
+  const normalized = normalizeNewlines(text);
+  const lines = normalized.split("\n");
+  const nodes: ReactNode[] = [];
+  let index = 0;
+  let key = 0;
+
+  const pushParagraph = (paragraphLines: string[]) => {
+    const trimmed = paragraphLines.join("\n").trimEnd();
+    if (!trimmed.trim()) return;
+    const renderedLines = trimmed.split("\n");
+    nodes.push(
+      <p
+        key={`p-${key++}`}
+        className={options.paragraphClassName}
+      >
+        {renderedLines.map((line, lineIndex) => (
+          <span key={`p-${key}-${lineIndex}`}>
+            {renderInlineMarkdown(line, options)}
+            {lineIndex < renderedLines.length - 1 ? <br /> : null}
+          </span>
+        ))}
+      </p>,
+    );
+  };
+
+  while (index < lines.length) {
+    const rawLine = lines[index] ?? "";
+    const line = rawLine.replace(/\t/g, "  ");
+
+    if (!line.trim()) {
+      index += 1;
+      continue;
+    }
+
+    if (isHorizontalRule(line)) {
+      nodes.push(
+        <hr
+          key={`hr-${key++}`}
+          className="border-t border-[var(--LightGray)]"
+        />,
+      );
+      index += 1;
+      continue;
+    }
+
+    const fenceMatch = line.match(/^\s*```[^`]*\s*$/);
+    if (fenceMatch) {
+      index += 1;
+      const codeLines: string[] = [];
+      while (index < lines.length && !lines[index]?.match(/^\s*```\s*$/)) {
+        codeLines.push(lines[index] ?? "");
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      const code = codeLines.join("\n");
+      nodes.push(
+        <pre
+          key={`pre-${key++}`}
+          className="overflow-x-auto rounded-2xl border border-[var(--LightGray)] bg-[var(--LightGray)]/40 p-4 text-sm"
+        >
+          <code className="font-mono">{code}</code>
+        </pre>,
+      );
+      continue;
+    }
+
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)\s*$/);
+    if (headingMatch) {
+      const levelRaw = headingMatch[1]?.length ?? 1;
+      const level = Math.min(6, Math.max(1, levelRaw));
+      const content = headingMatch[2] ?? "";
+      const headingClasses =
+        level <= 2
+          ? "mt-6 text-lg font-semibold text-[var(--DarkGray)]"
+          : "mt-5 text-base font-semibold text-[var(--DarkGray)]";
+      const headingChildren = renderInlineMarkdown(content, options);
+      if (level === 1) {
+        nodes.push(
+          <h1 key={`h-${key++}`} className={headingClasses}>
+            {headingChildren}
+          </h1>,
+        );
+      } else if (level === 2) {
+        nodes.push(
+          <h2 key={`h-${key++}`} className={headingClasses}>
+            {headingChildren}
+          </h2>,
+        );
+      } else if (level === 3) {
+        nodes.push(
+          <h3 key={`h-${key++}`} className={headingClasses}>
+            {headingChildren}
+          </h3>,
+        );
+      } else if (level === 4) {
+        nodes.push(
+          <h4 key={`h-${key++}`} className={headingClasses}>
+            {headingChildren}
+          </h4>,
+        );
+      } else if (level === 5) {
+        nodes.push(
+          <h5 key={`h-${key++}`} className={headingClasses}>
+            {headingChildren}
+          </h5>,
+        );
+      } else {
+        nodes.push(
+          <h6 key={`h-${key++}`} className={headingClasses}>
+            {headingChildren}
+          </h6>,
+        );
+      }
+      index += 1;
+      continue;
+    }
+
+    if (/^\s*>/.test(line)) {
+      const quoteLines: string[] = [];
+      while (index < lines.length && /^\s*>/.test(lines[index] ?? "")) {
+        const current = lines[index] ?? "";
+        quoteLines.push(current.replace(/^\s*>\s?/, ""));
+        index += 1;
+      }
+      const quoteContent = quoteLines.join("\n").trimEnd();
+      nodes.push(
+        <blockquote
+          key={`quote-${key++}`}
+          className="rounded-2xl border border-[var(--LightGray)] bg-[#FAFAFA] px-4 py-3 text-[var(--DarkGray)]"
+        >
+          <div className="space-y-3">
+            {renderMarkdownBlocks(quoteContent, options)}
+          </div>
+        </blockquote>,
+      );
+      continue;
+    }
+
+    const maybeTableHeader = line.trim();
+    const nextLine = lines[index + 1] ?? "";
+    if (maybeTableHeader.includes("|") && isTableSeparatorRow(nextLine)) {
+      const headerCells = splitTableRow(maybeTableHeader);
+      index += 2;
+      const rowCells: string[][] = [];
+      while (index < lines.length) {
+        const rowLine = (lines[index] ?? "").trim();
+        if (!rowLine || !rowLine.includes("|")) break;
+        rowCells.push(splitTableRow(rowLine));
+        index += 1;
+      }
+
+      nodes.push(
+        <div
+          key={`tablewrap-${key++}`}
+          className="overflow-x-auto rounded-2xl border border-[var(--LightGray)]"
+        >
+          <table className="w-full border-collapse text-sm">
+            <thead className="bg-[#FAFAFA]">
+              <tr>
+                {headerCells.map((cell, cellIndex) => (
+                  <th
+                    key={`th-${cellIndex}`}
+                    className="border-b border-[var(--LightGray)] px-3 py-2 text-left font-semibold text-[var(--DarkGray)]"
+                  >
+                    {renderInlineMarkdown(cell, options)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rowCells.map((row, rowIndex) => (
+                <tr key={`tr-${rowIndex}`} className="odd:bg-[var(--White)] even:bg-[#FAFAFA]">
+                  {headerCells.map((_, cellIndex) => {
+                    const cell = row[cellIndex] ?? "";
+                    return (
+                      <td
+                        key={`td-${rowIndex}-${cellIndex}`}
+                        className="border-b border-[var(--LightGray)] px-3 py-2 align-top text-[var(--DarkGray)]"
+                      >
+                        {renderInlineMarkdown(cell, options)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
+      continue;
+    }
+
+    const unorderedMatch = line.match(/^\s*[-+*]\s+(.+)$/);
+    const orderedMatch = line.match(/^\s*\d+\.\s+(.+)$/);
+    if (unorderedMatch || orderedMatch) {
+      const ordered = Boolean(orderedMatch);
+      const items: string[] = [];
+
+      const takeItemText = (sourceLine: string) =>
+        sourceLine.replace(/^\s*([-+*]|\d+\.)\s+/, "");
+
+      while (index < lines.length) {
+        const current = lines[index] ?? "";
+        if (!current.trim()) break;
+
+        const isSameListItem = ordered
+          ? /^\s*\d+\.\s+/.test(current)
+          : /^\s*[-+*]\s+/.test(current);
+
+        if (isSameListItem) {
+          items.push(takeItemText(current));
+          index += 1;
+          continue;
+        }
+
+        const isContinuation = /^\s{2,}\S/.test(current);
+        if (isContinuation && items.length) {
+          items[items.length - 1] += `\n${current.trim()}`;
+          index += 1;
+          continue;
+        }
+
+        break;
+      }
+
+      const ListTag = ordered ? "ol" : "ul";
+      nodes.push(
+        <ListTag
+          key={`list-${key++}`}
+          className={`pl-6 text-[var(--DarkGray)] ${ordered ? "list-decimal" : "list-disc"} space-y-1`}
+        >
+          {items.map((item, itemIndex) => (
+            <li key={`li-${itemIndex}`}>
+              {renderInlineMarkdown(item, options)}
+            </li>
+          ))}
+        </ListTag>,
+      );
+      continue;
+    }
+
+    const paragraphLines: string[] = [];
+    while (index < lines.length) {
+      const current = lines[index] ?? "";
+      if (!current.trim()) break;
+
+      const startsFence = /^\s*```/.test(current);
+      const startsHeading = /^(#{1,6})\s+/.test(current);
+      const startsQuote = /^\s*>/.test(current);
+      const startsList = /^\s*([-+*]|\d+\.)\s+/.test(current);
+      const startsHr = isHorizontalRule(current);
+      const startsTable =
+        current.trim().includes("|") && isTableSeparatorRow(lines[index + 1] ?? "");
+
+      if (
+        paragraphLines.length > 0 &&
+        (startsFence || startsHeading || startsQuote || startsList || startsHr || startsTable)
+      ) {
+        break;
+      }
+
+      paragraphLines.push(current);
+      index += 1;
+    }
+    pushParagraph(paragraphLines);
+  }
+
+  return nodes;
+};
+
 export default function Katex({
   content,
   className,
@@ -321,10 +654,10 @@ export default function Katex({
   attachments,
 }: KatexProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const paragraphs = buildParagraphs(content);
   const resolveImageSrc = attachments?.length
     ? buildAttachmentImageResolver(attachments)
     : undefined;
+  const blocks = renderMarkdownBlocks(content, { resolveImageSrc, paragraphClassName });
 
   useEffect(() => {
     const element = containerRef.current;
@@ -354,29 +687,11 @@ export default function Katex({
     return () => {
       cancelled = true;
     };
-  }, [content]);
+  }, [content, attachments]);
 
   return (
     <div ref={containerRef} className={className}>
-      {paragraphs.length === 0 ? (
-        <p className={paragraphClassName}>
-          {renderInlineMarkdown(content, { resolveImageSrc })}
-        </p>
-      ) : (
-        paragraphs.map((paragraph, idx) => {
-          const lines = paragraph.split("\n");
-          return (
-            <p key={`${paragraph.slice(0, 20)}-${idx}`} className={paragraphClassName}>
-              {lines.map((line, lineIndex) => (
-                <span key={`${lineIndex}-${line.slice(0, 10)}`}>
-                  {renderInlineMarkdown(line, { resolveImageSrc })}
-                  {lineIndex < lines.length - 1 ? <br /> : null}
-                </span>
-              ))}
-            </p>
-          );
-        })
-      )}
+      <div className="space-y-4">{blocks}</div>
     </div>
   );
 }

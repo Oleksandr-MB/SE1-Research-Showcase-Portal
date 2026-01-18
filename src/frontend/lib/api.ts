@@ -1,6 +1,18 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
+export class ApiError extends Error {
+  status: number;
+  url: string;
+
+  constructor(status: number, url: string, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.url = url;
+  }
+}
+
 export type PostPhase = "published";
 
 export type PostSummary = {
@@ -21,7 +33,7 @@ export type PostSummary = {
 
 export type PostRead = PostSummary & {
   body: string;
-  attachments: string[];
+  attachments: unknown;
   bibtex?: string | null;
   upvotes: number;
   downvotes: number;
@@ -30,6 +42,15 @@ export type PostRead = PostSummary & {
 export type AttachmentDescriptor = {
   file_path: string;
   mime_type?: string;
+};
+
+export type PostAttachmentRead = {
+  file_path?: string | null;
+  path?: string | null;
+  alt?: string | null;
+  display_name?: string | null;
+  original_filename?: string | null;
+  mime_type?: string | null;
 };
 
 export type AttachmentUploadResponse = {
@@ -201,6 +222,8 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const contentType = response.headers.get("content-type") || "";
     const rawBody = await response.text();
+    let errorMessage =
+      rawBody || `API request failed (${response.status}): ${response.statusText}`;
     if (contentType.includes("application/json")) {
       try {
         const parsed = JSON.parse(rawBody) as unknown;
@@ -210,7 +233,7 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
           "detail" in parsed &&
           typeof (parsed as { detail?: unknown }).detail === "string"
         ) {
-          throw new Error((parsed as { detail: string }).detail);
+          errorMessage = (parsed as { detail: string }).detail;
         }
         if (
           parsed &&
@@ -218,15 +241,13 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
           "message" in parsed &&
           typeof (parsed as { message?: unknown }).message === "string"
         ) {
-          throw new Error((parsed as { message: string }).message);
+          errorMessage = (parsed as { message: string }).message;
         }
       } catch {
         
       }
     }
-    throw new Error(
-      rawBody || `API request failed (${response.status}): ${response.statusText}`,
-    );
+    throw new ApiError(response.status, sanitizedPath, errorMessage);
   }
 
   

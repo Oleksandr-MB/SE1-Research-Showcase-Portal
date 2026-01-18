@@ -542,12 +542,8 @@ def promote_user(
 ):
     user = get_user_by_username(db, username)
     
-    if requester.role != "moderator":
-        if not (payload.role == "researcher" and requester.role == "researcher"):
-            raise HTTPException(
-                status_code=403,
-                detail="Access deny"
-            )
+    if requester.role != models.UserRole.MODERATOR:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     if not user:
         logging.error(

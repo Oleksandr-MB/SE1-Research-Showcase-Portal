@@ -10,6 +10,7 @@ import {
   searchPosts,
   getCurrentUser,
   type UserRead,
+  ApiError,
 } from "@/lib/api";
 import {
   useEffect,
@@ -134,6 +135,7 @@ export default function NewPostPage() {
     const stored = localStorage.getItem("rsp_token");
     if (!stored) {
       router.replace("/login?next=/posts/new");
+      setCheckingAuth(false);
       return;
     }
     
@@ -153,14 +155,9 @@ export default function NewPostPage() {
           }));
         }
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to fetch current user";
-        const unauthorized = message.includes("(401)");
-
-        if (unauthorized) {
+        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
           localStorage.removeItem("rsp_token");
           setToken(null);
-          setError("Your session has expired. Please sign in again.");
           router.replace("/login?next=/posts/new");
           return;
         }
@@ -355,6 +352,38 @@ export default function NewPostPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--DarkGray)] mx-auto mb-4"></div>
           <p className="text-sm text-[var(--Gray)]">Checking your session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!token || !currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#F5F5F5] to-[#F3F3F3] px-4">
+        <div className="w-full max-w-lg rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-8 shadow-soft-md text-center">
+          <h1 className="h2-apple text-[var(--DarkGray)]">Sign in required</h1>
+          <p className="mt-3 text-sm text-[var(--Gray)]">
+            You need to be signed in to create a post.
+          </p>
+          {error ? (
+            <p className="mt-3 text-sm text-red-600">{error}</p>
+          ) : null}
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => router.replace("/login?next=/posts/new")}
+            >
+              Go to login
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.replace("/")}
+            >
+              Back to browse
+            </Button>
+          </div>
         </div>
       </div>
     );

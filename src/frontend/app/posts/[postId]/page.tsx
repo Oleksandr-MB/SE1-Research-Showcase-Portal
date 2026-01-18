@@ -11,6 +11,8 @@ import AttachmentDownloadButton from "@/components/attachment-download-button";
 import { Button } from "@/components/Button";
 import VerifiedResearcherBadge from "@/components/verified-researcher-badge";
 import ReportButton from "@/components/report-button";
+import PostPdfDownloadButton from "@/components/post-pdf-download-button";
+import type { PostAttachmentRead } from "@/lib/api";
 
 const ATTACHMENT_PREFIX = "/attachments/";
 
@@ -47,7 +49,7 @@ const normalizeAttachmentPath = (value: string | undefined): string | null => {
     const parsed = new URL(trimmed);
     candidatePath = parsed.pathname || trimmed;
   } catch {
-
+    // ignore invalid URLs
   }
 
   const normalizedCandidate = candidatePath.replace(/\\/g, "/");
@@ -72,7 +74,13 @@ const normalizeAttachmentPath = (value: string | undefined): string | null => {
   return null;
 };
 
-const normalizeAttachments = (raw: unknown): string[] => {
+type NormalizedAttachment = {
+  filePath: string;
+  fileName: string;
+  alt?: string | null;
+};
+
+const normalizeAttachments = (raw: unknown): NormalizedAttachment[] => {
   if (!raw) {
     return [];
   }
@@ -83,25 +91,52 @@ const normalizeAttachments = (raw: unknown): string[] => {
       ? Object.values(raw as Record<string, unknown>)
       : [];
 
-  const normalized = rawList
-    .map((item) => {
-      if (typeof item === "string") {
-        return normalizeAttachmentPath(item);
-      }
-      if (item && typeof item === "object") {
-        const maybeFilePath =
-          typeof (item as { file_path?: unknown }).file_path === "string"
-            ? (item as { file_path?: string }).file_path
-            : typeof (item as { path?: unknown }).path === "string"
-              ? (item as { path?: string }).path
-              : undefined;
-        return normalizeAttachmentPath(maybeFilePath);
-      }
-      return null;
-    })
-    .filter((value): value is string => Boolean(value));
+  const byPath = new Map<string, NormalizedAttachment>();
 
-  return Array.from(new Set(normalized));
+  rawList.forEach((item) => {
+    if (typeof item === "string") {
+      const filePath = normalizeAttachmentPath(item);
+      if (!filePath) return;
+      const fileName = filePath.split("/").pop() || filePath;
+      byPath.set(filePath, { filePath, fileName });
+      return;
+    }
+
+    if (item && typeof item === "object") {
+      const typed = item as PostAttachmentRead;
+      const filePath = normalizeAttachmentPath(
+        typeof typed.file_path === "string"
+          ? typed.file_path
+          : typeof typed.path === "string"
+            ? typed.path
+            : undefined,
+      );
+      if (!filePath) return;
+
+      const fileName = filePath.split("/").pop() || filePath;
+      const altRaw =
+        typeof typed.alt === "string"
+          ? typed.alt
+          : typeof typed.display_name === "string"
+            ? typed.display_name
+            : typeof typed.original_filename === "string"
+              ? typed.original_filename
+              : null;
+      const alt = altRaw?.trim() || null;
+
+      const existing = byPath.get(filePath);
+      if (existing) {
+        if (!existing.alt && alt) {
+          existing.alt = alt;
+        }
+        return;
+      }
+
+      byPath.set(filePath, { filePath, fileName, alt });
+    }
+  });
+
+  return Array.from(byPath.values());
 };
 
 type PageProps = {
@@ -121,7 +156,8 @@ export default async function PostDetailsPage({ params }: PageProps) {
   const post = await getPostById(numericPostId).catch(() => notFound());
   const comments = await getPostComments(numericPostId).catch(() => []);
 
-  const attachments = normalizeAttachments(post.attachments);
+  const attachmentItems = normalizeAttachments(post.attachments);
+  const attachmentPaths = attachmentItems.map((item) => item.filePath);
 
   return (
     <div className="min-h-screen bg-[var(--LightGray)] px-4 py-10 sm:px-6 lg:px-8">
@@ -162,6 +198,12 @@ export default async function PostDetailsPage({ params }: PageProps) {
                   </div>
                 </div>
                 <div className="ml-auto flex items-center gap-4">
+                  <PostPdfDownloadButton
+                    title={post.title}
+                    authorsText={post.authors_text}
+                    abstract={post.abstract}
+                    body={post.body}
+                  />
                   <ReportButton postId={numericPostId} />
                   <PostReviewAction postId={numericPostId} posterId={post.poster_id} />
                   <PostVoteActions
@@ -195,68 +237,63 @@ export default async function PostDetailsPage({ params }: PageProps) {
           </div>
         </section>
 
-        {post.authors_text ? (
-          <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--LightGray)] pb-4">
-              <div>
-                <h2 className="h3-apple text-[var(--DarkGray)]">Authors</h2>
-              </div>
-            </div>
-            <div className="mt-4 space-y-4">
-              <p className="body-apple leading-relaxed text-[var(--DarkGray)]">
-                {post.authors_text}
-              </p>
-            </div>
-          </section>
-        ) : null}
-
         <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm sm:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--LightGray)] pb-4">
-          <div>
-            <h2 className="h3-apple text-[var(--DarkGray)]">Body</h2>
-          </div>
-        </div>
-        <div className="mt-4 space-y-4">
-            {post.abstract ? (
-            <p className="body-apple leading-relaxed text-[var(--DarkGray)]">{post.abstract}</p>
+          <div className="space-y-6">
+            {post.authors_text ? (
+              <Katex
+                content={post.authors_text}
+                paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
+              />
             ) : null}
-          <hr className="border-t border-[var(--LightGray)]" />
-          {post.body ? (
-            <Katex
-              content={post.body}
-              attachments={attachments}
-              paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
-              className="space-y-3"
-            />
-          ) : null}
-        </div>
+
+            {post.abstract ? (
+              <div className="border-t border-[var(--LightGray)] pt-6">
+                <Katex
+                  content={post.abstract}
+                  paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
+                />
+              </div>
+            ) : null}
+
+            {post.body ? (
+              <div className="border-t border-[var(--LightGray)] pt-6">
+                <Katex
+                  content={post.body}
+                  attachments={attachmentPaths}
+                  paragraphClassName="body-apple text-[var(--DarkGray)] leading-relaxed"
+                />
+              </div>
+            ) : null}
+          </div>
         </section>
 
-        {attachments.length > 0 ? (
+        {attachmentItems.length > 0 ? (
           <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="h3-apple text-[var(--DarkGray)]">Attachments</h3>
               </div>
               <span className="text-xs text-[var(--Gray)]">
-                {attachments.length} file{attachments.length > 1 ? "s" : ""}
+                {attachmentItems.length} file{attachmentItems.length > 1 ? "s" : ""}
               </span>
             </div>
             <div className="mt-4 space-y-3">
-              {attachments.map((filePath, index) => {
-                const fileName = filePath.split("/").pop() || `Attachment-${index + 1}`;
+              {attachmentItems.map((attachment, index) => {
+                const displayName = attachment.alt?.trim() || attachment.fileName;
+                const subLabel =
+                  displayName !== attachment.fileName ? attachment.fileName : `Attachment ${index + 1}`;
                 return (
                   <div
-                    key={`${filePath}-${index}`}
+                    key={`${attachment.filePath}-${index}`}
                     className="flex items-center justify-between rounded-2xl border border-[var(--LightGray)] bg-[var(--LightGray)]/40 px-4 py-3 transition-colors duration-200 hover:border-[var(--DarkGray)] hover:bg-[var(--White)]"
                   >
                     <div>
-                      <p className="text-sm font-medium text-[var(--DarkGray)]">{fileName}</p>
-                      <p className="text-xs text-[var(--Gray)]">Attachment {index + 1}</p>
+                      <p className="text-sm font-medium text-[var(--DarkGray)]">{displayName}</p>
+                      <p className="text-xs text-[var(--Gray)]">{subLabel}</p>
                     </div>
                     <AttachmentDownloadButton
-                      filePath={filePath}
-                      fileName={fileName}
+                      filePath={attachment.filePath}
+                      fileName={displayName}
                     />
                   </div>
                 );
