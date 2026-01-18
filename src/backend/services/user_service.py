@@ -35,25 +35,35 @@ from src.database.models import User
 
 logging.basicConfig(level=logging.INFO)
 
-private_config = read_config("private")
 public_config = read_config("public")
 
-ACCESS_TOKEN_EXPIRE_MINUTES = public_config["token_cfg"]["access_token_expire_minutes"]
-EMAIL_TOKEN_EXPIRE_MINUTES = public_config["token_cfg"]["email_token_expire_minutes"]
+private_config = read_config("private", default={}, required=False)
 
-DELETE_EXPIRED_USERS_INTERVAL_MINUTES = public_config[
-    "scheduler_cfg"]["delete_expired_users_interval_minutes"]
+token_cfg = public_config.get("token_cfg") or {}
+ACCESS_TOKEN_EXPIRE_MINUTES = int(token_cfg.get("access_token_expire_minutes", 60))
+EMAIL_TOKEN_EXPIRE_MINUTES = int(token_cfg.get("email_token_expire_minutes", 30))
 
-SECRET_KEY = public_config["crypto_cfg"]["key"]
-ALGORITHM = public_config["crypto_cfg"]["algorithm"]
+scheduler_cfg = public_config.get("scheduler_cfg") or {}
+DELETE_EXPIRED_USERS_INTERVAL_MINUTES = int(
+    scheduler_cfg.get("delete_expired_users_interval_minutes", 60)
+)
 
-EMAIL_SENDER = private_config["smtp_cfg"]["sender"]
-EMAIL_PASSWORD = private_config["smtp_cfg"]["password"]
-EMAIL_SMTP_SERVER = private_config["smtp_cfg"]["smtp_server"]
-EMAIL_SMTP_PORT = private_config["smtp_cfg"]["smtp_port"]
+crypto_cfg = public_config.get("crypto_cfg") or {}
+SECRET_KEY = crypto_cfg.get("key", "dev-insecure-secret-key")
+ALGORITHM = crypto_cfg.get("algorithm", "HS256")
 
-EMAIL_LINK_BASE = public_config["email_cfg"]["link_base"]
-RESET_PASSWORD_LINK_BASE = public_config["email_cfg"].get(
+smtp_cfg = private_config.get("smtp_cfg") or {}
+EMAIL_SENDER: str | None = smtp_cfg.get("sender")
+EMAIL_PASSWORD: str | None = smtp_cfg.get("password")
+EMAIL_SMTP_SERVER: str | None = smtp_cfg.get("smtp_server")
+try:
+    EMAIL_SMTP_PORT = int(smtp_cfg.get("smtp_port", 587))
+except (TypeError, ValueError):
+    EMAIL_SMTP_PORT = 587
+
+email_cfg = public_config.get("email_cfg") or {}
+EMAIL_LINK_BASE = email_cfg.get("link_base", "http://localhost:3000/verify-email?token=")
+RESET_PASSWORD_LINK_BASE = email_cfg.get(
     "reset_link_base",
     "http://localhost:3000/reset-password?token=",
 )
@@ -61,6 +71,8 @@ RESET_PASSWORD_LINK_BASE = public_config["email_cfg"].get(
 def _normalize_email(email: str) -> str:
     return email.strip().lower()
 
+def _smtp_enabled() -> bool:
+    return bool(EMAIL_SENDER and EMAIL_PASSWORD and EMAIL_SMTP_SERVER and EMAIL_SMTP_PORT)
 
 MODERATOR_EMAILS: set[str] = {
     _normalize_email(email)
@@ -224,6 +236,10 @@ def register_user(
 
 
 def send_verification_email(recipient_email: str, verification_link: str):
+    if not _smtp_enabled():
+        logging.info("SMTP is not configured; skipping verification email send.")
+        return
+
     msg = EmailMessage()
     msg['Subject'] = 'Verify your email for Research Showcase Portal'
     msg['From'] = EMAIL_SENDER
@@ -251,6 +267,10 @@ def send_verification_email(recipient_email: str, verification_link: str):
 
 
 def send_password_reset_email(recipient_email: str, reset_link: str) -> None:
+    if not _smtp_enabled():
+        logging.info("SMTP is not configured; skipping password reset email send.")
+        return
+
     msg = EmailMessage()
     msg["Subject"] = "Reset your Research Showcase Portal password"
     msg["From"] = EMAIL_SENDER
