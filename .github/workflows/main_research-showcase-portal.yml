@@ -20,12 +20,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Write runtime config (src/backend/config/config.yaml)
-        if: ${{ secrets.APP_CONFIG_YAML != '' }}
         env:
           APP_CONFIG_YAML: ${{ secrets.APP_CONFIG_YAML }}
         run: |
-          mkdir -p src/backend/config
-          printf "%s" "$APP_CONFIG_YAML" > src/backend/config/config.yaml
+          if [ -n "$APP_CONFIG_YAML" ]; then
+            mkdir -p src/backend/config
+            printf "%s" "$APP_CONFIG_YAML" > src/backend/config/config.yaml
+          else
+            echo "APP_CONFIG_YAML is not set; skipping config.yaml write"
+          fi
 
       - name: Set up Python version
         uses: actions/setup-python@v5
