@@ -23,7 +23,7 @@ htmlcov/
 *.env
 *.env.*
 config/*.env
-!config/*.env.example
+!config/example.env
 
 # Uploads and media
 src/backend/uploads/
