@@ -1,9 +1,6 @@
 name: Deploy frontend (Azure App Service)
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -30,4 +27,3 @@ jobs:
           app-name: research-showcase-portal-frontend
           slot-name: Production
           package: src/frontend
-
