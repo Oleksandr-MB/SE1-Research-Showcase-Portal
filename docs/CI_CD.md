@@ -45,3 +45,8 @@ When you're ready, we can add:
 - Dockerfiles + a `docker-compose.yml` for local parity
 - A `deploy.yml` workflow that builds + pushes images and deploys to Azure/AWS using repo secrets
 
+## Azure App Service quick notes (current repo)
+
+- Frontend lives in `src/frontend` (Next.js). Ensure `NEXT_PUBLIC_API_BASE_URL` is set to your backend URL at **build time** (in GitHub Actions via `secrets.NEXT_PUBLIC_API_BASE_URL`, see `.github/workflows/main_research-showcase-portal-frontend.yml`) or the app will default to `http://127.0.0.1:8000`.
+- Use Node `20.x` (matches `.github/workflows/main_research-showcase-portal-frontend.yml`).
+- Backend is FastAPI; App Service needs a startup command like `python -m uvicorn src.backend.main:app --host 0.0.0.0 --port 8000` (or a `gunicorn` equivalent) and the frontend `NEXT_PUBLIC_API_BASE_URL` should point at that deployed backend.

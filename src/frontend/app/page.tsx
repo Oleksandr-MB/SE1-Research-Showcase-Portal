@@ -210,9 +210,9 @@ const PostCard = ({
 export default async function Home({
   searchParams,
 }: {
-  searchParams?: Promise<HomeSearchParams> | HomeSearchParams;
+  searchParams?: Promise<HomeSearchParams>;
 }) {
-  const resolved = (searchParams ? await searchParams : {}) as HomeSearchParams;
+  const resolved = ((await searchParams) ?? {}) as HomeSearchParams;
   const query = resolved.query?.trim() ?? "";
   const authorFilter = resolved.author?.trim() ?? "";
   const tagRaw = resolved.tag?.trim() ?? "";

@@ -26,6 +26,8 @@ jobs:
           cache-dependency-path: src/frontend/package-lock.json
 
       - name: npm install, build, and test
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
         run: |
           npm --prefix src/frontend ci
           npm --prefix src/frontend run build --if-present
