@@ -2,16 +2,17 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 
-from src.backend.config.config_utils import read_config
+from src.backend.config.config_utils import read_app_config
 
 
-public_config = read_config("public")
-prefix = public_config['db_cfg']['base']
-user = public_config['db_cfg']['user']
-password = public_config['db_cfg']['password']
-host = public_config['db_cfg']['host']
-port = public_config['db_cfg']['port']
-database = public_config['db_cfg']['database']
+app_config = read_app_config()
+db_cfg = app_config["db_cfg"]
+prefix = db_cfg["base"]
+user = db_cfg["user"]
+password = db_cfg["password"]
+host = db_cfg["host"]
+port = db_cfg["port"]
+database = db_cfg["database"]
 DATABASE_URL = f"{prefix}://{user}:{password}@{host}:{port}/{database}"
 
 

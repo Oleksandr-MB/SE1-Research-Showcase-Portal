@@ -13,8 +13,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Coverage
+.coverage
+coverage.txt
+coverage.xml
+htmlcov/
+
 # Local config (secrets)
 src/backend/config/private.yaml
+src/backend/config/config.yaml
 *.env
 *.env.*
 
