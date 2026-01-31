@@ -12,4 +12,3 @@ passlib[argon2]
 python-multipart
 pydantic[email]
 argon2_cffi
-PyYAML

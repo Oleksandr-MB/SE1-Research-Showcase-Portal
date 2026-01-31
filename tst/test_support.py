@@ -33,6 +33,24 @@ def import_backend_app_with_stubbed_db() -> ImportedBackend:
     """
     ensure_repo_root_on_path()
 
+    os.environ.setdefault("RSP_DB_BASE", "postgresql+psycopg2")
+    os.environ.setdefault("RSP_DB_HOST", "localhost")
+    os.environ.setdefault("RSP_DB_PORT", "5432")
+    os.environ.setdefault("RSP_DB_DATABASE", "research_showcase")
+    os.environ.setdefault("RSP_DB_USER", "postgres")
+    os.environ.setdefault("RSP_DB_PASSWORD", "admin")
+    os.environ.setdefault(
+        "RSP_EMAIL_LINK_BASE", "http://localhost:3000/verify-email?token="
+    )
+    os.environ.setdefault(
+        "RSP_EMAIL_RESET_LINK_BASE", "http://localhost:3000/reset-password?token="
+    )
+    os.environ.setdefault("RSP_CRYPTO_KEY", "test-secret")
+    os.environ.setdefault("RSP_CRYPTO_ALGORITHM", "HS256")
+    os.environ.setdefault("RSP_TOKEN_ACCESS_EXPIRE_MINUTES", "60")
+    os.environ.setdefault("RSP_TOKEN_EMAIL_EXPIRE_MINUTES", "30")
+    os.environ.setdefault("RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES", "60")
+
     modules_to_clear = [
         "src.backend.main",
         "src.backend.services.user_service",
@@ -81,4 +99,3 @@ def make_sqlite_session_factory():
         future=True,
     )
     return engine, SessionLocal
-

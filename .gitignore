@@ -20,9 +20,10 @@ coverage.xml
 htmlcov/
 
 # Local configs
-src/backend/config/private.yaml
 *.env
 *.env.*
+config/*.env
+!config/*.env.example
 
 # Uploads and media
 src/backend/uploads/
