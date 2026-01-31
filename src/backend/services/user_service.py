@@ -27,7 +27,7 @@ from src.backend.services.schemas import (
     PromotionRequest,
 )
 
-from src.backend.config.config_utils import read_app_config
+from src.backend.config.config_utils import read_config
 
 import logging
 
@@ -35,22 +35,23 @@ from src.database.models import User
 
 logging.basicConfig(level=logging.INFO)
 
-app_config = read_app_config()
+public_config = read_config("public")
+private_config = read_config("private", default={}, required=False)
 
-token_cfg = app_config.get("token_cfg") or {}
+token_cfg = public_config.get("token_cfg") or {}
 ACCESS_TOKEN_EXPIRE_MINUTES = int(token_cfg.get("access_token_expire_minutes", 60))
 EMAIL_TOKEN_EXPIRE_MINUTES = int(token_cfg.get("email_token_expire_minutes", 30))
 
-scheduler_cfg = app_config.get("scheduler_cfg") or {}
+scheduler_cfg = public_config.get("scheduler_cfg") or {}
 DELETE_EXPIRED_USERS_INTERVAL_MINUTES = int(
     scheduler_cfg.get("delete_expired_users_interval_minutes", 60)
 )
 
-crypto_cfg = app_config.get("crypto_cfg") or {}
+crypto_cfg = public_config.get("crypto_cfg") or {}
 SECRET_KEY = crypto_cfg.get("key", "dev-insecure-secret-key")
 ALGORITHM = crypto_cfg.get("algorithm", "HS256")
 
-smtp_cfg = app_config.get("smtp_cfg") or {}
+smtp_cfg = private_config.get("smtp_cfg") or {}
 EMAIL_SENDER: str | None = smtp_cfg.get("sender")
 EMAIL_PASSWORD: str | None = smtp_cfg.get("password")
 EMAIL_SMTP_SERVER: str | None = smtp_cfg.get("smtp_server")
@@ -59,7 +60,7 @@ try:
 except (TypeError, ValueError):
     EMAIL_SMTP_PORT = 587
 
-email_cfg = app_config.get("email_cfg") or {}
+email_cfg = public_config.get("email_cfg") or {}
 EMAIL_LINK_BASE = email_cfg.get("link_base", "http://localhost:3000/verify-email?token=")
 RESET_PASSWORD_LINK_BASE = email_cfg.get(
     "reset_link_base",
@@ -74,7 +75,7 @@ def _smtp_enabled() -> bool:
 
 MODERATOR_EMAILS: set[str] = {
     _normalize_email(email)
-    for email in (app_config.get("moderator_emails") or [])
+    for email in (private_config.get("moderator_emails") or [])
     if isinstance(email, str) and email.strip()
 }
 

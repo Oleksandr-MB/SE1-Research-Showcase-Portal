@@ -15,7 +15,7 @@ app.add_middleware(
     allow_origins=[
         f"http://{HOST}:{FRONT_PORT}", 
         f"http://localhost:{FRONT_PORT}", 
-        f"http://https://research-showcase-portal-frontend.azurewebsites.net"
+        "https://research-showcase-portal-frontend.azurewebsites.net"
     ],
     allow_credentials=True,
     allow_methods=["*"],

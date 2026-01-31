@@ -2,11 +2,10 @@ import os
 import runpy
 import unittest
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
-from src.backend.config.config_utils import read_app_config, read_config
+from src.backend.config.config_utils import read_config
 
 
 class TestConfigAndMainCoverage(unittest.TestCase):
@@ -50,45 +49,25 @@ class TestConfigAndMainCoverage(unittest.TestCase):
             except FileNotFoundError:
                 pass
 
-    def test_read_app_config_merges_public_and_private(self):
-        with TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir)
-            (tmp_path / "public.yaml").write_text(
-                "db_cfg:\n  base: postgresql+psycopg2\n  user: u\n  password: p\n  host: h\n  port: 5432\n  database: d\n",
-                encoding="utf-8",
-            )
-            (tmp_path / "private.yaml").write_text(
-                "smtp_cfg:\n  sender: sender@example.com\nmoderator_emails:\n  - mod@example.com\n",
-                encoding="utf-8",
-            )
-
-            merged = read_app_config(config_dir=tmp_path)
-            self.assertEqual(merged["db_cfg"]["database"], "d")
-            self.assertEqual(merged["smtp_cfg"]["sender"], "sender@example.com")
-            self.assertEqual(merged["moderator_emails"], ["mod@example.com"])
-
-    def test_read_app_config_env_overrides_files(self):
-        with TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir)
-            (tmp_path / "public.yaml").write_text("db_cfg: {}\n", encoding="utf-8")
-
-            with patch.dict(
-                os.environ,
-                {"APP_CONFIG_ENABLE": "1", "APP_CONFIG_YAML": "hello: world\n"},
-            ):
-                cfg = read_app_config(config_dir=tmp_path)
-            self.assertEqual(cfg["hello"], "world")
-
     def test_main_module_runs_uvicorn_in_main_guard(self):
-        fake_uvicorn = SimpleNamespace(run=Mock())
-        try:
-            import sys
+        import sys
+        import types
 
-            sys.modules["uvicorn"] = fake_uvicorn # type: ignore
+        fake_uvicorn = SimpleNamespace(run=Mock())
+        fake_db = types.ModuleType("src.database.db")
+
+        def get_db():  # pragma: no cover
+            raise RuntimeError("Test must override dependency `get_db`.")
+
+        fake_db.get_db = get_db
+
+        try:
+            sys.modules["uvicorn"] = fake_uvicorn  # type: ignore
+            sys.modules["src.database.db"] = fake_db
+            sys.modules.pop("src.backend.main", None)
             runpy.run_module("src.backend.main", run_name="__main__")
         finally:
-            import sys
-
             sys.modules.pop("uvicorn", None)
+            sys.modules.pop("src.database.db", None)
 
         self.assertTrue(fake_uvicorn.run.called)

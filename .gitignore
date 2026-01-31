@@ -19,9 +19,8 @@ coverage.txt
 coverage.xml
 htmlcov/
 
-# Local config (secrets)
+# Local configs
 src/backend/config/private.yaml
-src/backend/config/config.yaml
 *.env
 *.env.*
 
