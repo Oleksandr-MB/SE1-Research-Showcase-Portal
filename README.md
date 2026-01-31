@@ -83,18 +83,35 @@ A comprehensive academic platform where researchers can create profiles, publish
 
 ## Installation & Setup
 
-### Prerequisites
-- **Python 3.8+**: Backend runtime
-- **Node.js 18+**: Frontend runtime
-- **PostgreSQL**: Database server
-- **pip**: Python package manager
-- **npm**: Node package manager
-
-### Backend Setup
-
-1. **Create a Python virtual environment**:
-   ```bash
-   python -m venv .venv
+   Create a `.env` file in `src/backend/config/` with the following variables:
+   
+   **Database Configuration**:
+   - `RSP_DB_BASE` - Database base URL
+   - `RSP_DB_HOST` - Database host
+   - `RSP_DB_PORT` - Database port
+   - `RSP_DB_DATABASE` - Database name
+   - `RSP_DB_USER` - Database username
+   - `RSP_DB_PASSWORD` - Database password
+   
+   **Security Settings**:
+   - `RSP_CRYPTO_KEY` - Secret key for JWT signing (minimum 32 characters)
+   - `RSP_CRYPTO_ALGORITHM` - Algorithm for JWT (e.g., HS256)
+   
+   **Token Expiration**:
+   - `RSP_TOKEN_ACCESS_EXPIRE_MINUTES` - Access token lifetime
+   - `RSP_TOKEN_EMAIL_EXPIRE_MINUTES` - Email verification token lifetime
+   
+   **Email Configuration**:
+   - `RSP_EMAIL_LINK_BASE` - Base URL for email verification links
+   - `RSP_EMAIL_RESET_LINK_BASE` - Base URL for password reset links
+   - `RSP_SMTP_SERVER` - SMTP server address
+   - `RSP_SMTP_PORT` - SMTP server port
+   - `RSP_SMTP_SENDER` - Sender email address
+   - `RSP_SMTP_PASSWORD` - SMTP password
+   
+   **Application Settings**:
+   - `RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES` - Cleanup interval for expired users
+   - `RSP_MODERATOR_EMAILS` - Comma-separated list of moderator emails
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
@@ -103,32 +120,33 @@ A comprehensive academic platform where researchers can create profiles, publish
    pip install -r requirements.txt
    ```
 
-3. **Configure Environment Variables**:
-   Copy the example environment file and fill in your values:
+1. **Start the Backend** (from project root):
    ```bash
-   cp .env.example .env
+   source .venv/bin/activate  # Activate virtual environment
+   python -m src.backend.main
    ```
-   
-   Required environment variables:
-   - **Database**: `RSP_DB_BASE`, `RSP_DB_HOST`, `RSP_DB_PORT`, `RSP_DB_DATABASE`, `RSP_DB_USER`, `RSP_DB_PASSWORD`
-   - **Security**: `RSP_CRYPTO_KEY` (min 32 characters), `RSP_CRYPTO_ALGORITHM` (e.g., HS256)
-   - **Tokens**: `RSP_TOKEN_ACCESS_EXPIRE_MINUTES`, `RSP_TOKEN_EMAIL_EXPIRE_MINUTES`
-   - **Email Links**: `RSP_EMAIL_LINK_BASE`, `RSP_EMAIL_RESET_LINK_BASE`
-   - **SMTP**: `RSP_SMTP_SERVER`, `RSP_SMTP_PORT`, `RSP_SMTP_SENDER`, `RSP_SMTP_PASSWORD`
-   - **Scheduler**: `RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES`
-   - **Moderators**: `RSP_MODERATOR_EMAILS` (comma-separated list)
+   The backend API will be available at `http://127.0.0.1:8000`
 
-4. **Initialize the Database**:
+2. **Start the Frontend** (from `src/frontend`):
    ```bash
-   python -m src.database.db_creator
+   npm run dev
+   ```
+   The frontend will be available at `http://localhost:3000`
+
+### Production Mode
+
+1. **Build and Start the Backend**:
+   ```bash
+   source .venv/bin/activate
+   uvicorn src.backend.main:app --host 0.0.0.0 --port 8000
    ```
 
-### Frontend Setup
-
-1. **Navigate to the frontend directory**:
+2. **Build and Start the Frontend**:
    ```bash
    cd src/frontend
-   ```
+   npm run build
+   npm start
+      ```
 
 2. **Install Node dependencies**:
    ```bash
