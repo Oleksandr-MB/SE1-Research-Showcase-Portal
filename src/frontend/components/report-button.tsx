@@ -85,11 +85,10 @@ export default function ReportButton({ postId, commentId, onReported }: Props) {
       <button
         type="button"
         onClick={handleOpen}
-        className="flex items-center gap-1.5 rounded-full border border-[#E5E5E5] px-3 py-1.5 text-xs font-semibold text-[var(--Gray)] transition hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
+        className="flex items-center justify-center rounded-full border border-[#E5E5E5] p-2 text-[var(--Gray)] transition hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
         aria-label="Report content"
       >
         <FlagIcon />
-        <span>Report</span>
       </button>
     );
   }

@@ -33,7 +33,7 @@ const truncate = (value: string | undefined, limit = 128) => {
 
 type ActivityTab = "posts" | "comments";
 
-function selectRecentPosts(posts: PostSummary[], limit = 5) {
+function selectRecentPosts(posts: PostSummary[], limit = 20) {
   return [...posts]
     .filter((p) => p.phase === "published")
     .sort(

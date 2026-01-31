@@ -218,8 +218,9 @@ export function EyeIcon({ className, ...props }: BaseIconProps) {
       focusable="false"
       {...props}
     >
-      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12" />
+      <path d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12" />
+      <circle cx="12" cy="12" r="3" />
     </svg>
   );
 }
@@ -238,7 +239,9 @@ export function EyeOffIcon({ className, ...props }: BaseIconProps) {
       focusable="false"
       {...props}
     >
-      <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.596-3.856a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c-1.657 4.905-6.075 8.236-11.25 8.236A11.011 11.011 0 013.749 15M2.25 9h19.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <path d="M2 2L22 22" />
+      <path d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335" />
+      <path d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818" />
     </svg>
   );
 }
@@ -299,6 +302,28 @@ export function FlagIcon({ className, ...props }: BaseIconProps) {
     >
       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
       <line x1="4" y1="22" x2="4" y2="15" />
+    </svg>
+  );
+}
+
+export function TrashIcon({ className, ...props }: BaseIconProps) {
+  return (
+    <svg
+      className={cx("h-4 w-4", className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      {...props}
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
     </svg>
   );
 }

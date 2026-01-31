@@ -12,6 +12,7 @@ import { Button } from "@/components/Button";
 import VerifiedResearcherBadge from "@/components/verified-researcher-badge";
 import ReportButton from "@/components/report-button";
 import PostPdfDownloadButton from "@/components/post-pdf-download-button";
+import PostActionsClient from "@/components/post-actions-client";
 import type { PostAttachmentRead } from "@/lib/api";
 
 const ATTACHMENT_PREFIX = "/attachments/";
@@ -204,6 +205,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
                     abstract={post.abstract}
                     body={post.body}
                   />
+                  <PostActionsClient postId={numericPostId} posterId={post.poster_id} />
                   <ReportButton postId={numericPostId} />
                   <PostReviewAction postId={numericPostId} posterId={post.poster_id} />
                   <PostVoteActions

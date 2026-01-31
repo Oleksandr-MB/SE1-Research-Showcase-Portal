@@ -390,10 +390,10 @@ export default function NewPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F5F5F5] to-[#F3F3F3] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
+    <div className="min-h-screen bg-[var(--LightGray)] px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-6 shadow-soft-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="h1-apple text-[var(--DarkGray)]">Create New Post</h1>
@@ -402,12 +402,11 @@ export default function NewPostPage() {
               </p>
             </div>
             <Link href="/me">
-              <Button variant="outline" size="md">
+              <Button variant="primary" size="md">
                 Back to your lab
               </Button>
             </Link>
           </div>
-          <div className="divider-subtle"></div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -676,7 +675,7 @@ export default function NewPostPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Tips */}
-            <div className="rounded-2xl border border-[#E5E5E5] bg-gradient-to-b from-[var(--White)] to-transparent p-7 shadow-soft-sm">
+            <div className="rounded-2xl border border-[#E5E5E5] bg-[var(--White)] p-7 shadow-soft-sm">
               <div className="flex items-center gap-3 mb-4 text-center justify-center">
                 <h3 className="h3-apple text-[var(--DarkGray)]">Tips</h3>
               </div>

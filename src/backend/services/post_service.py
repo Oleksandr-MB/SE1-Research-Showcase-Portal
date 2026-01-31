@@ -720,7 +720,7 @@ def create_report_for_comment(
         target_type="COMMENT",
         target_id=comment_id,
         status=models.ReportStatus.OPEN,
-        description=payload.description.strip(),
+        description="",
         created_at=datetime.now(timezone.utc),
     )
     db.add(report)

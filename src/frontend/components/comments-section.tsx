@@ -8,10 +8,13 @@ import {
   type CreateCommentPayload,
   getPostComments,
   voteOnComment,
+  getCurrentUser,
+  type UserRead,
 } from "@/lib/api";
 import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 import { usePolling } from "@/lib/usePolling";
 import ReportButton from "@/components/report-button";
+import DeleteCommentButton from "@/components/delete-comment-button";
 
 type Props = {
   postId: number;
@@ -147,6 +150,24 @@ export default function CommentsSection({ postId, initialComments }: Props) {
   const [replyLoading, setReplyLoading] = useState<Record<number, boolean>>({});
   const [activeReplyTarget, setActiveReplyTarget] = useState<number | null>(null);
   const [commentVoteState, setCommentVoteState] = useState<Record<number, -1 | 0 | 1>>({});
+  const [currentUser, setCurrentUser] = useState<UserRead | null>(null);
+
+  // Fetch current user on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = typeof window !== "undefined" ? window.localStorage.getItem("rsp_token") : null;
+      if (!token) return;
+
+      try {
+        const user = await getCurrentUser(token);
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const token = window.localStorage.getItem("rsp_token");
@@ -341,6 +362,10 @@ export default function CommentsSection({ postId, initialComments }: Props) {
     );
   };
 
+  const handleCommentDeleted = (commentId: number) => {
+    setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+  };
+
   const renderCommentActions = (
     comment: CommentThread,
     replyButtonSize: "text-sm" | "text-xs" = "text-sm",
@@ -354,6 +379,8 @@ export default function CommentsSection({ postId, initialComments }: Props) {
       replyButtonSize === "text-xs"
         ? "mt-2 flex items-center gap-3"
         : "flex items-center gap-3";
+
+    const isOwner = currentUser?.id === comment.commenter_id;
 
     return (
       <>
@@ -395,6 +422,12 @@ export default function CommentsSection({ postId, initialComments }: Props) {
           >
             Reply
           </button>
+          <DeleteCommentButton 
+            postId={comment.post_id} 
+            commentId={comment.id} 
+            isOwner={isOwner}
+            onDeleted={() => handleCommentDeleted(comment.id)}
+          />
           <ReportButton postId={comment.post_id} commentId={comment.id} />
         </div>
       </>
