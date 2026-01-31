@@ -1,16 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Roboto } from "next/font/google";
 import "./globals.css";
-
-const headingFont = Playfair_Display({
-  variable: "--font-heading",
-  subsets: ["latin"],
-});
-
-const normalFont = Roboto({
-  variable: "--font-normal",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Research Showcase Portal",
@@ -24,11 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${headingFont.variable} ${normalFont.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

@@ -15,6 +15,10 @@
 
   --ease-apple: cubic-bezier(0.4, 0, 0.6, 1);
   --ease-smooth: cubic-bezier(0.2, 0, 0, 1);
+
+  --font-normal: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-heading: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 .shadow-soft-xs {
