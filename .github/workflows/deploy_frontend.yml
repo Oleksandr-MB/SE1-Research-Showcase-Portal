@@ -1,0 +1,33 @@
+name: Deploy frontend (Azure App Service)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D20D83A5BC1A4BFC9C384DF1FCD5E6CB }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_698F8BA4D3B74386B0F8974CBE56EFED }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CC3F7FF60F5B498EB0DAABE6A31315DF }}
+
+      - name: Deploy to Azure Web App (frontend)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: research-showcase-portal-frontend
+          slot-name: Production
+          package: src/frontend
+
