@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /login
+Disallow: /register
+Disallow: /logout
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /me
+Disallow: /reports
+Disallow: /posts/new
+Disallow: /posts/*/review
+Disallow: /posts/*/reports
+Allow: /

@@ -1,4 +1,4 @@
-name: CI
+name: Run backend tests and frontend typecheck
 
 on:
   push:

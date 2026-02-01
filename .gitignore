@@ -16,8 +16,6 @@ __pycache__/
 # Coverage
 .coverage
 coverage.txt
-coverage.xml
-htmlcov/
 
 # Local configs
 *.env
