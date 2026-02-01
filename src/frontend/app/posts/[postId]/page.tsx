@@ -204,6 +204,7 @@ export default async function PostDetailsPage({ params }: PageProps) {
                     authorsText={post.authors_text}
                     abstract={post.abstract}
                     body={post.body}
+                    attachments={attachmentPaths}
                   />
                   <PostActionsClient postId={numericPostId} posterId={post.poster_id} />
                   <ReportButton postId={numericPostId} />
