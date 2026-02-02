@@ -28,42 +28,35 @@ from src.backend.services.schemas import (
 )
 
 from src.backend.config.config_utils import read_config
-
+from src.database.models import User
 import logging
 
-from src.database.models import User
 
 logging.basicConfig(level=logging.INFO)
 
-public_config = read_config("public")
-private_config = read_config("private", default={}, required=False)
+cfg = read_config(required=True)
 
-token_cfg = public_config.get("token_cfg") or {}
-ACCESS_TOKEN_EXPIRE_MINUTES = int(token_cfg.get("access_token_expire_minutes", 60))
-EMAIL_TOKEN_EXPIRE_MINUTES = int(token_cfg.get("email_token_expire_minutes", 30))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(cfg.get("RSP_TOKEN_ACCESS_EXPIRE_MINUTES", 60))
+EMAIL_TOKEN_EXPIRE_MINUTES = int(cfg.get("RSP_TOKEN_EMAIL_EXPIRE_MINUTES", 30))
 
-scheduler_cfg = public_config.get("scheduler_cfg") or {}
 DELETE_EXPIRED_USERS_INTERVAL_MINUTES = int(
-    scheduler_cfg.get("delete_expired_users_interval_minutes", 60)
+    cfg.get("RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES", 60)
 )
 
-crypto_cfg = public_config.get("crypto_cfg") or {}
-SECRET_KEY = crypto_cfg.get("key", "dev-insecure-secret-key")
-ALGORITHM = crypto_cfg.get("algorithm", "HS256")
+SECRET_KEY = cfg.get("RSP_CRYPTO_KEY", "dev-insecure-secret-key")
+ALGORITHM = cfg.get("RSP_CRYPTO_ALGORITHM", "HS256")
 
-smtp_cfg = private_config.get("smtp_cfg") or {}
-EMAIL_SENDER: str | None = smtp_cfg.get("sender")
-EMAIL_PASSWORD: str | None = smtp_cfg.get("password")
-EMAIL_SMTP_SERVER: str | None = smtp_cfg.get("smtp_server")
+EMAIL_SENDER: str | None = cfg.get("RSP_SMTP_SENDER")
+EMAIL_PASSWORD: str | None = cfg.get("RSP_SMTP_PASSWORD")
+EMAIL_SMTP_SERVER: str | None = cfg.get("RSP_SMTP_SERVER")
 try:
-    EMAIL_SMTP_PORT = int(smtp_cfg.get("smtp_port", 587))
+    EMAIL_SMTP_PORT = int(cfg.get("RSP_SMTP_PORT", 587))
 except (TypeError, ValueError):
     EMAIL_SMTP_PORT = 587
 
-email_cfg = public_config.get("email_cfg") or {}
-EMAIL_LINK_BASE = email_cfg.get("link_base", "http://localhost:3000/verify-email?token=")
-RESET_PASSWORD_LINK_BASE = email_cfg.get(
-    "reset_link_base",
+EMAIL_LINK_BASE = cfg.get("RSP_EMAIL_LINK_BASE", "http://localhost:3000/verify-email?token=")
+RESET_PASSWORD_LINK_BASE = cfg.get(
+    "RSP_EMAIL_RESET_LINK_BASE",
     "http://localhost:3000/reset-password?token=",
 )
 
@@ -75,7 +68,7 @@ def _smtp_enabled() -> bool:
 
 MODERATOR_EMAILS: set[str] = {
     _normalize_email(email)
-    for email in (private_config.get("moderator_emails") or [])
+    for email in (cfg.get("RSP_MODERATOR_EMAILS") or [])
     if isinstance(email, str) and email.strip()
 }
 
@@ -255,9 +248,9 @@ def send_verification_email(recipient_email: str, verification_link: str):
     )
 
     try:
-        with smtplib.SMTP(EMAIL_SMTP_SERVER, EMAIL_SMTP_PORT) as server:
+        with smtplib.SMTP(EMAIL_SMTP_SERVER, EMAIL_SMTP_PORT) as server: # type: ignore
             server.starttls()
-            server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+            server.login(EMAIL_SENDER, EMAIL_PASSWORD) # type: ignore
             server.send_message(msg)
             logging.info(f"✅ Verification email sent to {recipient_email}")
     except Exception as e:
@@ -285,9 +278,9 @@ def send_password_reset_email(recipient_email: str, reset_link: str) -> None:
         f"Research Showcase Portal Team"
     )
 
-    with smtplib.SMTP(EMAIL_SMTP_SERVER, EMAIL_SMTP_PORT) as server:
+    with smtplib.SMTP(EMAIL_SMTP_SERVER, EMAIL_SMTP_PORT) as server: # type: ignore
         server.starttls()
-        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+        server.login(EMAIL_SENDER, EMAIL_PASSWORD) # type: ignore
         server.send_message(msg)
 
 
@@ -425,7 +418,14 @@ def start_cleanup_scheduler():
         name='Delete expired unverified users',
         replace_existing=True
     )
-    scheduler.start()
+    if not getattr(scheduler, "running", False):
+        scheduler.start()
+
+
+def stop_cleanup_scheduler() -> None:
+    if not getattr(scheduler, "running", False):
+        return
+    scheduler.shutdown(wait=False)
 
 
 @router.post("/login", response_model=Token)

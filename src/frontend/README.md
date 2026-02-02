@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend (Next.js)
 
-## Getting Started
+This directory contains the **Next.js App Router** frontend for the Research Showcase Portal.
 
-First, run the development server:
+## Stack
+
+- Next.js `16.1.6` + React `19.2.0`
+- TypeScript `5.9.3`
+- Tailwind CSS `4`
+
+## Prerequisites
+
+- Node.js `20 LTS` and Next.js `16.1.6`
+
+## Setup & run
+
+From the repo root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm --prefix src/frontend ci
+npm --prefix src/frontend run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+The frontend reads configuration from `NEXT_PUBLIC_API_BASE_URL` environment variable:
 
-To learn more about Next.js, take a look at the following resources:
+- Default: `http://127.0.0.1:8000` (see `src/frontend/lib/api.ts`)
+- Local override: set the `NEXT_PUBLIC_API_BASE_URL` to some other value or change the default in `src/frontend/lib/api.ts`
+ 
+## Useful scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `npm --prefix src/frontend run dev` — start dev server
+- `npm --prefix src/frontend run build` — production build
+- `npm --prefix src/frontend run start` — serve production build
+- `npm --prefix src/frontend run typecheck` — TypeScript typechecking
+- `npm --prefix src/frontend run lint` — ESLint
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Routes (App Router)
 
-## Deploy on Vercel
+Pages live in `src/frontend/app/`:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/` — feed / search
+- `/register`, `/login`, `/logout` — auth flows
+- `/verify-email`, `/reset-password` — token-based flows
+- `/posts/new` — create a post
+- `/posts/[postId]` — post details
+- `/posts/[postId]/reviews` and `/posts/[postId]/reviews/[reviewId]` — review UI
+- `/reports` — moderation dashboard (moderator role)
+- `/me` and `/me/profile` — your account and profile editing
+- `/[username]` — public profile page
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API integration
+
+- API client/types live in `src/frontend/lib/api.ts`.
+- The auth token is stored in `localStorage` under the key `rsp_token` and is sent as a Bearer token to the backend.
+- Uploaded attachments are served by the backend under `/attachments/*` (static files).
+
+## Notes
+
+- KaTeX is loaded on-demand from a CDN in `src/frontend/components/katex.tsx`.
+- Some UI screens use polling/refresh helpers (see `src/frontend/components/route-refresh-poller.tsx`) to keep content fresh without websockets.

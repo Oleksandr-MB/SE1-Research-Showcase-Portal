@@ -14,7 +14,7 @@ app = FastAPI(title="Research Showcase Portal API")
 HOST = "127.0.0.1"
 BACK_PORT = 8000
 FRONT_PORT = 3000
-RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RSP_RATE_LIMIT_MAX", "120"))
+RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RSP_RATE_LIMIT_MAX", "180"))
 RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RSP_RATE_LIMIT_WINDOW_SECONDS", "60"))
 
 _rate_limit_lock = asyncio.Lock()
@@ -66,8 +66,8 @@ async def rate_limit_middleware(request: Request, call_next):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        f"http://{HOST}:{FRONT_PORT}", 
-        f"http://localhost:{FRONT_PORT}", 
+        f"http://{HOST}:{FRONT_PORT}",
+        f"http://localhost:{FRONT_PORT}",
         "https://research-showcase-portal-frontend.azurewebsites.net"
     ],
     allow_credentials=True,
@@ -79,6 +79,17 @@ app.include_router(post_service.router, prefix="/posts")
 app.include_router(review_service.router)
 app.include_router(report_service.router, prefix="/reports")
 app.mount("/attachments", StaticFiles(directory=ATTACHMENTS_DIR), name="attachments")
+
+
+@app.on_event("startup")
+def _start_background_scheduler() -> None:
+    user_service.start_cleanup_scheduler()
+
+
+@app.on_event("shutdown")
+def _stop_background_scheduler() -> None:
+    user_service.stop_cleanup_scheduler()
+
 
 if __name__ == "__main__":
     import uvicorn

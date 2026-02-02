@@ -19,9 +19,7 @@ coverage.txt
 
 # Local configs
 *.env
-*.env.*
-config/*.env
-!config/example.env
+!*example.env
 
 # Uploads and media
 src/backend/uploads/

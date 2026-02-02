@@ -1,296 +1,215 @@
-# SE1-Research-Showcase-Portal
+# SE1 Research Showcase Portal
 
-A comprehensive academic platform where researchers can create profiles, publish their research papers, share abstracts, and showcase their work. The portal features a peer review system, community engagement through comments and voting, and moderation tools to maintain content quality.
+<p align="center">
+  <a href="https://github.com/Oleksandr-MB/SE1-Research-Showcase-Portal/actions/workflows/test-ci.yml">
+    <img src="https://github.com/Oleksandr-MB/SE1-Research-Showcase-Portal/actions/workflows/test-ci.yml/badge.svg" alt="CI Status" />
+  </a>
+</p>
 
-## Table of Contents
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Installation & Setup](#installation--setup)
-- [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [Team](#team)
-- [License](#license)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12-yellow?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/SQL_Alchemy-20-red?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy" />
+  <img src="https://img.shields.io/badge/Node.js-20-darkgreen?logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/Postgresql-17-blue?logo=Postgresql&logoColor=white" alt="PostgreSQL" />
+</p>
 
-## Features
+<p align="center">
+  <img src="https://img.shields.io/badge/backend%20coverage-93%25-green" alt="Backend coverage" />
+  <img src="https://img.shields.io/badge/license-MIT-black" alt="License" />
+  <img src="https://img.shields.io/website?url=https://research-showcase-portal-frontend.azurewebsites.net/" alt="Website" />
+</p>
 
-### User Management
-- **User Registration & Authentication**: Secure registration with email verification
-- **Password Reset**: Self-service password recovery system
-- **Role-Based Access Control**: Three user roles (User, Researcher, Moderator)
-- **Profile Management**: Customizable user profiles
-- **Auto-Promotion**: Automatic promotion to Researcher role based on activity and peer reviews
 
-### Research Showcase
-- **Post Creation**: Upload research papers, abstracts, and supporting documents (PDF attachments)
-- **Post Deletion**: Post owners can delete their own posts with confirmation dialog
-- **Tagging System**: Organize posts with tags for easy discovery
-- **Rich Content**: Support for formatted text and LaTeX equations (KaTeX)
-- **File Management**: Upload and download research materials
+Research Showcase Portal is a full-stack academic platform where researchers can create profiles, publish research posts, upload attachments, and engage in peer review and discussion. It was built as part of the **Software Engineering 1 (SE1)** course at University of Luxembourg.
 
-### Peer Review System
-- **Post Reviews**: Comprehensive review system for research papers
-- **Review Voting**: Community can upvote/downvote reviews for quality control
-- **Review Visibility**: Public reviews to foster transparency
+Component-level documentation:
+- Frontend: `src/frontend/README.md`
+- Backend: `src/backend/README.md`
+- Database: `src/database/README.md`
 
-### Community Engagement
-- **Comments**: Discussion threads on posts and reviews
-- **Comment Deletion**: Comment owners can delete their own comments with confirmation dialog
-- **Voting System**: Upvote/downvote posts and reviews
-- **User Profiles**: View other researchers' profiles and contributions
+## What you can do (features)
 
-### Moderation & Reporting
-- **Content Reporting**: Report inappropriate posts or reviews
-- **Report Management**: Moderators can review and resolve reports
-- **Content Moderation**: Both content creators and moderators can delete posts/comments
-- **Status Tracking**: Reports have statuses (Pending, Open, Closed)
-- **User Promotion**: Moderators can manually promote users to Researcher role
+- **Accounts & roles**: registration, email verification, login/logout, password reset, role-based access (user / researcher / moderator).
+- **Research posts**: create/search posts with tags, rich content (incl. LaTeX via KaTeX), attach files, download attachments.
+- **Peer review**: write and read structured `openreview.net` inspired peer reviews, surface higher-quality feedback.
+- **Community**: comment threads, upvote/downvote posts and comments.
+- **Moderation**: reporting workflow (pending/open/closed), moderator tooling, content deletion with ownership checks.
+- **Quality-of-life**: responsive UI, polling-based refresh, citation sharing/export.
 
-### User Experience
-- **Responsive Design**: Mobile-friendly interface with Tailwind CSS
-- **Real-time Updates**: Polling system for live content updates
-- **Loading States**: Skeleton loaders for better UX
-- **Citation Export**: Generate citations for research papers
+## Tech stack (and versions)
 
-## Technology Stack
+| Area | Tech | Version |
+| --- | --- | --- |
+| Frontend | Next.js | `16.0.x` |
+| Frontend | React | `19.2.0` |
+| Frontend | TypeScript | `5.9.3` |
+| Backend | FastAPI | (see `requirements.txt`) |
+| Backend | Python | `3.12` (CI) |
+| Database | PostgreSQL | recommended (via `psycopg2-binary`) |
+| Testing | Python `unittest` + `coverage.py` | backend coverage: `93%` (see `coverage.txt`) |
 
-### Backend
-- **FastAPI**: Modern, high-performance Python web framework
-- **SQLAlchemy**: SQL toolkit and ORM for database operations
-- **PostgreSQL**: Robust relational database (via psycopg2-binary)
-- **Pydantic**: Data validation using Python type annotations
-- **PyJWT & python-jose**: JWT token authentication
-- **Passlib with Argon2**: Secure password hashing
-- **APScheduler**: Background task scheduling
-- **Uvicorn**: ASGI server for FastAPI
+## Project layout
 
-### Frontend
-- **Next.js 16**: React framework with server-side rendering
-- **React 19**: Modern React with hooks
-- **TypeScript 5.9**: Type-safe JavaScript
-- **Tailwind CSS 4**: Utility-first CSS framework
-- **KaTeX**: LaTeX equation rendering
+```text
+.
+├─ src/
+│  ├─ frontend/         # Next.js app (UI)
+│  ├─ backend/          # FastAPI app (REST API)
+│  └─ database/         # SQLAlchemy models + DB engine
+├─ tst/                 # backend test suite (unittest)
+├─ .github/workflows/   # CI + Azure deployments
+└─ deliverables/        # course deliverables (PDF)
+```
 
-### Development Tools
-- **ESLint**: JavaScript/TypeScript linting
-- **Python unittest**: Backend testing framework
+## Quickstart (local development)
 
-## Project Structure
-### Please consult /deliverables/presentation.pdf/Project Structure
+### Prerequisites
 
-## Installation & Setup
+- Python `3.12`
+- Node.js `20 LTS`
+- A running PostgreSQL server instance (local install or Docker)
 
-   Create a `.env` file in `src/backend/config/` with the following variables:
-   
-   **Database Configuration**:
-   - `RSP_DB_BASE` - Database base URL
-   - `RSP_DB_HOST` - Database host
-   - `RSP_DB_PORT` - Database port
-   - `RSP_DB_DATABASE` - Database name
-   - `RSP_DB_USER` - Database username
-   - `RSP_DB_PASSWORD` - Database password
-   
-   **Security Settings**:
-   - `RSP_CRYPTO_KEY` - Secret key for JWT signing (minimum 32 characters)
-   - `RSP_CRYPTO_ALGORITHM` - Algorithm for JWT (e.g., HS256)
-   
-   **Token Expiration**:
-   - `RSP_TOKEN_ACCESS_EXPIRE_MINUTES` - Access token lifetime
-   - `RSP_TOKEN_EMAIL_EXPIRE_MINUTES` - Email verification token lifetime
-   
-   **Email Configuration**:
-   - `RSP_EMAIL_LINK_BASE` - Base URL for email verification links
-   - `RSP_EMAIL_RESET_LINK_BASE` - Base URL for password reset links
-   - `RSP_SMTP_SERVER` - SMTP server address
-   - `RSP_SMTP_PORT` - SMTP server port
-   - `RSP_SMTP_SENDER` - Sender email address
-   - `RSP_SMTP_PASSWORD` - SMTP password
-   
-   **Application Settings**:
-   - `RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES` - Cleanup interval for expired users
-   - `RSP_MODERATOR_EMAILS` - Comma-separated list of moderator emails
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
+### 1) Configure backend environment
 
-2. **Install Python dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+The backend reads configuration from environment variables (`RSP_*`). Start by creating a local env file:
 
-1. **Start the Backend** (from project root):
-   ```bash
-   source .venv/bin/activate  # Activate virtual environment
-   python -m src.backend.main
-   ```
-   The backend API will be available at `http://127.0.0.1:8000`
-
-2. **Start the Frontend** (from `src/frontend`):
-   ```bash
-   npm run dev
-   ```
-   The frontend will be available at `http://localhost:3000`
-
-### Production Mode
-
-1. **Build and Start the Backend**:
-   ```bash
-   source .venv/bin/activate
-   uvicorn src.backend.main:app --host 0.0.0.0 --port 8000
-   ```
-
-2. **Build and Start the Frontend**:
-   ```bash
-   cd src/frontend
-   npm run build
-   npm start
-      ```
-
-2. **Install Node dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Configure API endpoint**:
-   Ensure the API endpoint in `lib/api.ts` points to your backend URL (default: `http://127.0.0.1:8000`)
-
-## Running the Application
-
-### Development Mode
-
-**Start the Backend** (from project root):
 ```bash
-source .venv/bin/activate  # Activate virtual environment
+cp src/backend/config/example.env src/backend/config/.env
+```
+
+Edit `src/backend/config/.env` (see `src/backend/config/example.env`) and then load it into your shell:
+
+```bash
+set -a
+source src/backend/config/.env
+set +a
+```
+
+### 2) Install dependencies
+
+Backend (from repo root):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+Frontend:
+
+```bash
+npm --prefix src/frontend ci
+```
+
+### 3) Initialize the database schema
+
+This helper script creates tables **and drops existing ones** (safe for first run; destructive afterwards):
+
+```bash
+source .venv/bin/activate
+python -m src.database.db_creator
+```
+
+### 4) Run the app
+
+Backend (Terminal A):
+
+```bash
+set -a; source src/backend/config/.env; set +a
+source .venv/bin/activate
 python -m src.backend.main
 ```
-The backend API will be available at `http://127.0.0.1:8000`
 
-**Start the Frontend** (from `src/frontend`):
+Frontend (Terminal B):
+
 ```bash
-npm run dev
-```
-The frontend will be available at `http://localhost:3000`
-
-### Production Mode
-
-**Backend**:
-```bash
-uvicorn src.backend.main:app --host 0.0.0.0 --port 8000
+npm --prefix src/frontend run dev
 ```
 
-**Frontend**:
-```bash
-cd src/frontend
-npm run build
-npm start
-```
-
-## API Documentation
-
-The backend provides a RESTful API built with FastAPI. Once the backend is running, you can access:
-
-- **Interactive API Documentation (Swagger UI)**: `http://127.0.0.1:8000/docs`
-- **Alternative API Documentation (ReDoc)**: `http://127.0.0.1:8000/redoc`
-- **OpenAPI Schema**: `http://127.0.0.1:8000/openapi.json`
-
-### Main API Endpoints
-- `/users/*`: User authentication, registration, and profile management
-- `/posts/*`: Research post creation, retrieval, management, and deletion
-- `/posts/{id}/comments/*`: Comment creation and deletion
-- `/posts/{id}/reviews/*`: Peer review system
-- `/reports/*`: Content reporting and moderation
-- `/attachments/*`: Static file serving for uploaded documents
-
-### Content Deletion
-The platform supports content deletion with the following features:
-- **Post Deletion**: `DELETE /posts/{post_id}` - Post owners and moderators can delete posts
-- **Comment Deletion**: `DELETE /posts/{post_id}/comments/{comment_id}` - Comment owners and moderators can delete comments
-- **Confirmation Dialog**: Frontend shows confirmation before deletion:
-  - Posts: "Are you sure you want to delete this post?"
-  - Comments: "Are you sure you want to delete this comment?"
-- **Ownership Verification**: Delete buttons only visible to content creators (and moderators)
-- **Automatic Cleanup**: Deleting a post or comment automatically closes related reports
+URLs:
+- Frontend: `http://localhost:3000`
+- Backend: `http://127.0.0.1:8000`
+- OpenAPI docs: `http://127.0.0.1:8000/docs`
 
 ## Testing
 
-### Backend Tests
+Backend unit tests:
 
-Run all backend tests from the project root:
 ```bash
-.venv/bin/python -m unittest discover -s tst -p 'test_*.py'
+set -a; source src/backend/config/.env; set +a
+source .venv/bin/activate
+python -m unittest discover -s tst -p "test_*.py"
 ```
 
-### Frontend Type Checking
+Backend coverage (requires `coverage.py`):
 
-From project root:
+```bash
+python -m coverage run --source=src -m unittest discover -s tst -p "test_*.py"
+python -m coverage report -m
+```
+
+Frontend typecheck:
+
 ```bash
 npm --prefix src/frontend run typecheck
 ```
 
-Or from `src/frontend` directory:
-```bash
-npm run typecheck
-```
+## Deployment (Azure)
 
-For more details on CI/CD, see `docs/CI_CD.md`
+This repo includes GitHub Actions workflows to deploy:
+- Frontend → Azure Web App (`.github/workflows/azure-ci-frontend.yml`)
+- Backend → Azure Web App (`.github/workflows/azure-ci-backend.yml`)
 
-## Deployment
+Production frontend URL: `https://research-showcase-portal-frontend.azurewebsites.net`
 
-### Azure Deployment
-
-The application is configured for deployment on Microsoft Azure:
-
-- **Backend**: Can be deployed to Azure App Service or Azure Container Instances
-- **Frontend**: Deployed to Azure Static Web Apps or Azure App Service
-  - Production URL: `https://research-showcase-portal-frontend.azurewebsites.net`
-- **Database**: Azure Database for PostgreSQL
-
-### CORS Configuration
-
-The backend is configured to accept requests from:
-- Local development: `http://127.0.0.1:3000`, `http://localhost:3000`
-- Production: `https://research-showcase-portal-frontend.azurewebsites.net`
-
-Update CORS settings in `src/backend/main.py` for additional origins.
-
-## Contributing
-
-We welcome contributions to the Research Showcase Portal! Here's how you can help:
-
-### Getting Started
-
-1. **Fork the repository**
-2. **Clone your fork**:
-   ```bash
-   git clone https://github.com/your-username/SE1-Research-Showcase-Portal.git
-   cd SE1-Research-Showcase-Portal
-   ```
-3. **Create a feature branch**:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+## Usage example
 
 
+## Authors
 
+<table>
+   <tbody>
+   <tr>
+      <td align="center">
+         <a href="https://github.com/Oleksandr-MB">
+         <img src="https://github.com/Oleksandr-MB.png?size=120" width="120" alt="Oleksandr Marchenko Breneur" />
+         <br />
+         <sub><b>Oleksandr Marchenko Breneur</b></sub>
+         </a>
+      </td>
+      <td align="center">
+         <a href="https://github.com/DemyanFaguer">
+         <img src="https://github.com/DemyanFaguer.png?size=120" width="120" alt="Demyan Faguer" />
+         <br />
+         <sub><b>Demyan Faguer</b></sub>
+         </a>
+      </td>
+      <td align="center">
+         <a href="https://github.com/YaroslavAkhramenko">
+         <img src="https://github.com/YaroslavAkhramenko.png?size=120" width="120" alt="Yaraslaw Akhramenka" />
+         <br />
+         <sub><b>Yaraslaw Akhramenka</b></sub>
+         </a>
+      </td>
+      <td align="center">
+         <a href="https://github.com/TenderChasm">
+         <img src="https://github.com/TenderChasm.png?size=120" width="120" alt="Adelaide Danilova" />
+         <br />
+         <sub><b>Adelaide Danilova</b></sub>
+         </a>
+      </td>
+      <td align="center">
+         <a href="https://github.com/Jester0101">
+         <img src="https://github.com/Jester0101.png?size=120" width="120" alt="Add contributor photo" />
+         <br />
+         <sub><b>Oleksandr Yeroftieiev</b></sub>
+         </a>
+      </td>
+   </tr>
+   </tbody>
+</table>
 
-## Team
+## Copyright
 
-**Team 10** - University of Luxembourg, Software Engineering 1 (SE1), Semester 5
-
-1. Adelaide Danilov
-2. Oleksandr Marchenko Breneur
-3. Demyan Faguer
-4. Yaraslaw Akhramenka
-5. Oleksandr Yeroftieiev
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-Copyright (c) 2025 Oleksandr Marchenko Breneur et al.
-
----
-
-**Built with ❤️ for the research community**
+MIT License. See `LICENSE`.

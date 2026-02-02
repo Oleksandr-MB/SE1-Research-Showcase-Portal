@@ -48,6 +48,6 @@ class TestSchemasValidation(unittest.TestCase):
         self.assertEqual(ok.new_password, "long-enough")
 
     def test_read_config_returns_expected_shape(self):
-        public = read_config("public")
-        self.assertIn("db_cfg", public)
-        self.assertIn("crypto_cfg", public)
+        cfg = read_config()
+        self.assertIn("RSP_DB_HOST", cfg)
+        self.assertIn("RSP_CRYPTO_KEY", cfg)

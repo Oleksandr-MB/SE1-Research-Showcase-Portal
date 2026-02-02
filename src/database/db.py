@@ -5,13 +5,13 @@ from sqlalchemy.orm import sessionmaker
 from src.backend.config.config_utils import read_config
 
 
-public_config = read_config("public")
-prefix = public_config["db_cfg"]["base"]
-user = public_config["db_cfg"]["user"]
-password = public_config["db_cfg"]["password"]
-host = public_config["db_cfg"]["host"]
-port = public_config["db_cfg"]["port"]
-database = public_config["db_cfg"]["database"]
+cfg = read_config()
+prefix = cfg["RSP_DB_BASE"]
+user = cfg["RSP_DB_USER"]
+password = cfg["RSP_DB_PASSWORD"]
+host = cfg["RSP_DB_HOST"]
+port = cfg["RSP_DB_PORT"]
+database = cfg["RSP_DB_DATABASE"]
 DATABASE_URL = f"{prefix}://{user}:{password}@{host}:{port}/{database}"
 
 

@@ -332,7 +332,7 @@ const concatBytes = (...parts: Array<string | Uint8Array>) => {
 };
 
 const buildPdfDocument = (items: LayoutItem[]): Uint8Array => {
-  const safeItems = items.length ? items : [{ type: "text", text: "No content." }];
+  const safeItems: LayoutItem[] = items.length ? items : [{ type: "text", text: "No content." }];
 
   const imageMap = new Map<string, PdfImageObject>();
   const imageObjects: PdfImageObject[] = [];
@@ -607,7 +607,7 @@ export default function PostPdfDownloadButton({
       const hydratedItems = await loadPdfItems(items);
       const bytes = buildPdfDocument(hydratedItems);
 
-      const blob = new Blob([bytes], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       const blobUrl = window.URL.createObjectURL(blob);
 
       const anchor = document.createElement("a");
