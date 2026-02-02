@@ -36,7 +36,7 @@ export default function PostReviewAction({ postId, posterId }: Props) {
         
         setUser(currentUser);
         // Only researchers who are NOT the post author can review
-        const isResearcher = currentUser.role === "researcher";
+        const isResearcher = currentUser.role === "researcher" || currentUser.role === "moderator";
         const isNotAuthor = currentUser.id !== posterId;
         setIsAuthorized(isResearcher && isNotAuthor);
       } catch (error) {

@@ -565,7 +565,7 @@ export default async function Home({
                   {pageList.map((item, idx) =>
                     item === "ellipsis" ? (
                       <span key={`ellipsis-${idx}`} className="px-1 text-xs text-[var(--Gray)]">
-                        …
+                        ...
                       </span>
                     ) : item === currentPage ? (
                       <span

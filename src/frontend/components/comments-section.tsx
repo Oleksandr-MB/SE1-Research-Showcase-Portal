@@ -15,6 +15,7 @@ import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
 import { usePolling } from "@/lib/usePolling";
 import ReportButton from "@/components/report-button";
 import DeleteCommentButton from "@/components/delete-comment-button";
+import { getVoteStorageUserKey } from "@/lib/voteStorage";
 
 type Props = {
   postId: number;
@@ -110,32 +111,6 @@ const commentVoteButtonClasses = (active: boolean, variant: "up" | "down" = "up"
       : "border border-[#E5E5E5] text-[var(--Gray)] hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
   } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
 
-const getVoteStorageUserKey = () => {
-  const token = window.localStorage.getItem("rsp_token");
-  if (!token) {
-    return null;
-  }
-
-  const parts = token.split(".");
-  if (parts.length >= 2) {
-    try {
-      const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
-      const payload = JSON.parse(payloadJson) as Record<string, unknown>;
-      const sub = payload.sub ?? payload.username ?? payload.user;
-      if (typeof sub === "string" && sub.trim()) {
-        return sub;
-      }
-      if (typeof sub === "number") {
-        return String(sub);
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  return token.slice(0, 12);
-};
-
 const commentVoteStorageKey = (postId: number, commentId: number) => {
   const userKey = getVoteStorageUserKey();
   return userKey ? `rsp_vote:comment:${postId}:${commentId}:${userKey}` : null;
@@ -150,7 +125,38 @@ export default function CommentsSection({ postId, initialComments }: Props) {
   const [replyLoading, setReplyLoading] = useState<Record<number, boolean>>({});
   const [activeReplyTarget, setActiveReplyTarget] = useState<number | null>(null);
   const [commentVoteState, setCommentVoteState] = useState<Record<number, -1 | 0 | 1>>({});
+  const [voteUserKey, setVoteUserKey] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<UserRead | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const tick = () => {
+      const next = getVoteStorageUserKey();
+      setVoteUserKey((prev) => (prev === next ? prev : next));
+    };
+
+    tick();
+
+    const id = window.setInterval(() => {
+      tick();
+    }, 1000);
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "rsp_token") {
+        tick();
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   // Fetch current user on mount
   useEffect(() => {
@@ -170,22 +176,22 @@ export default function CommentsSection({ postId, initialComments }: Props) {
   }, []);
 
   useEffect(() => {
-    const token = window.localStorage.getItem("rsp_token");
-    if (!token) {
+    if (!voteUserKey) {
+      setCommentVoteState({});
       return;
     }
 
     const next: Record<number, -1 | 0 | 1> = {};
     for (const comment of comments) {
-      const key = commentVoteStorageKey(postId, comment.id);
-      if (!key) continue;
-      const parsed = Number(window.localStorage.getItem(key));
-      if (parsed === 1 || parsed === -1 || parsed === 0) {
+      const key = `rsp_vote:comment:${postId}:${comment.id}:${voteUserKey}`;
+      const raw = window.localStorage.getItem(key);
+      const parsed = raw === null ? null : Number(raw);
+      if (parsed === 1 || parsed === -1) {
         next[comment.id] = parsed as -1 | 0 | 1;
       }
     }
-    setCommentVoteState((prev) => ({ ...prev, ...next }));
-  }, [comments, postId]);
+    setCommentVoteState(next);
+  }, [comments, postId, voteUserKey]);
 
   usePolling(
     async ({ isActive }) => {

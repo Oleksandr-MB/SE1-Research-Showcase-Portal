@@ -67,7 +67,7 @@ export default function ReviewsFeedPage() {
 
   const canWriteReview = useMemo(() => {
     if (!post || !currentUser) return false;
-    if (currentUser.role !== "researcher") return false;
+    if (!(currentUser.role === "researcher" || currentUser.role === "moderator")) return false;
     if (currentUser.id === post.poster_id) return false;
     if (reviews.some((r) => r.reviewer_username === currentUser.username)) return false;
     return true;
@@ -76,7 +76,7 @@ export default function ReviewsFeedPage() {
   const reviewEligibilityMessage = useMemo(() => {
     if (!post) return "Unable to verify review permissions.";
     if (!currentUser) return "Please sign in to write a review.";
-    if (currentUser.role !== "researcher") return "Only researchers can write reviews.";
+    if (!(currentUser.role === "researcher" || currentUser.role === "moderator")) return "Only researchers can write reviews.";
     if (currentUser.id === post.poster_id) return "You cannot review your own post.";
     if (reviews.some((r) => r.reviewer_username === currentUser.username)) {
       return "You have already reviewed this post.";

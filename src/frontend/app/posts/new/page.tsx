@@ -546,7 +546,7 @@ export default function NewPostPage() {
                         <div className="absolute z-10 mt-1 w-full rounded-xl border border-[#E5E5E5] bg-[var(--White)] shadow-soft-lg">
                           {isTagLoading && tagSuggestions.length === 0 ? (
                             <div className="px-4 py-3 text-xs text-[var(--Gray)]">
-                              Searching tags…
+                              Searching tags...
                             </div>
                           ) : (
                             <>

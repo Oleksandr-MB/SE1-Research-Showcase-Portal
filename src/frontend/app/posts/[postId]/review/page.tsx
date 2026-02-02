@@ -47,8 +47,7 @@ export default function ReviewPage() {
         const currentUser = await getCurrentUser(storedToken);
         if (!isMounted) return;
 
-        // Only researchers can access the review page
-        const isResearcher = currentUser.role === "researcher";
+        const isResearcher = (currentUser.role === "researcher" || currentUser.role === "moderator");
 
         if (!isResearcher) {
           router.replace(`/posts/${postId}`);

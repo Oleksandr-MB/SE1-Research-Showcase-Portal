@@ -3,38 +3,13 @@
 import { useEffect, useState } from "react";
 import { voteOnReview } from "@/lib/api";
 import { DownvoteIcon, UpvoteIcon } from "@/components/icons";
+import { getVoteStorageUserKey } from "@/lib/voteStorage";
 
 interface ReviewVoteActionsProps {
   reviewId: number;
   initialUpvotes: number;
   initialDownvotes: number;
 }
-
-const getVoteStorageUserKey = () => {
-  const token = window.localStorage.getItem("rsp_token");
-  if (!token) {
-    return null;
-  }
-
-  const parts = token.split(".");
-  if (parts.length >= 2) {
-    try {
-      const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
-      const payload = JSON.parse(payloadJson) as Record<string, unknown>;
-      const sub = payload.sub ?? payload.username ?? payload.user;
-      if (typeof sub === "string" && sub.trim()) {
-        return sub;
-      }
-      if (typeof sub === "number") {
-        return String(sub);
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  return token.slice(0, 12);
-};
 
 const reviewVoteStorageKey = (reviewId: number) => {
   const userKey = getVoteStorageUserKey();

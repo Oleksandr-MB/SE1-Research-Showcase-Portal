@@ -28,7 +28,7 @@ function formatJoinedDate(createdAt: string | undefined) {
 const truncate = (value: string | undefined, limit = 128) => {
   const text = (value ?? "").trim();
   if (text.length <= limit) return text;
-  return `${text.slice(0, Math.max(0, limit - 1))}…`;
+  return `${text.slice(0, Math.max(0, limit - 1))}...`;
 };
 
 type ActivityTab = "posts" | "comments";

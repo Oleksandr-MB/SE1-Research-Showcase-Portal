@@ -165,6 +165,11 @@ Production frontend URL: `https://research-showcase-portal-frontend.azurewebsite
 
 ## Usage example
 
+<p align="center">
+   <a href="https://www.youtube.com/watch?v=Ryi2NFj4SrY">
+      <img height=405 src="https://markdown-videos-api.jorgenkh.no/url?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DRyi2NFj4SrY" alt="Usage example" title="Usage example"/>
+   </a>
+</p>
 
 ## Authors
 
