@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/SQL_Alchemy-20-red?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy" />
   <img src="https://img.shields.io/badge/Node.js-20-darkgreen?logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white" alt="Next.js" />
-  <img src="https://img.shields.io/badge/Postgresql-17-blue?logo=Postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/PostgreSQL-17-blue?logo=postgresql&logoColor=white" alt="PostgreSQL" />
 </p>
 
 <p align="center">
@@ -19,7 +19,6 @@
   <img src="https://img.shields.io/badge/license-MIT-black" alt="License" />
   <img src="https://img.shields.io/website?url=https://research-showcase-portal-frontend.azurewebsites.net/" alt="Website" />
 </p>
-
 
 Research Showcase Portal is a full-stack academic platform where researchers can create profiles, publish research posts, upload attachments, and engage in peer review and discussion. It was built as part of the **Software Engineering 1 (SE1)** course at University of Luxembourg.
 
@@ -44,10 +43,9 @@ Component-level documentation:
 | Frontend | Next.js | `16.1.6` |
 | Frontend | React | `19.2.0` |
 | Frontend | TypeScript | `5.9.3` |
-| Backend | FastAPI | (see `requirements.txt`) |
-| Backend | Python | `3.12` (CI) |
-| Database | PostgreSQL | recommended (via `psycopg2-binary`) |
-| Testing | Python `unittest` + `coverage.py` | backend coverage: `93%` (see `coverage.txt`) |
+| Backend | FastAPI | `0.123.8` |
+| Backend | Python | `3.12` |
+| Database | PostgreSQL | `17` (recommended via `psycopg2-binary`) |
 
 ## Project layout
 
