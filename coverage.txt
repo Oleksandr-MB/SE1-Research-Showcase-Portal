@@ -1,0 +1,14 @@
+Name                                     Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------
+src/backend/config/config_utils.py          40      0   100%
+src/backend/main.py                         55     25    55%   25-30, 35-64
+src/backend/services/paths.py                4      0   100%
+src/backend/services/post_service.py       318     29    91%   58, 83-84, 92, 127, 151, 290, 321-325, 403-404, 428-429, 447-456, 487, 503-505, 564, 590, 610-611, 662, 681, 746-747
+src/backend/services/report_service.py      44      7    84%   31-33, 51, 62, 66, 68
+src/backend/services/review_service.py      72      0   100%
+src/backend/services/schemas.py            171      0   100%
+src/backend/services/user_service.py       297     18    94%   54-55, 157-158, 178-179, 187-188, 263-264, 301, 471, 561-563, 582-583, 600-601
+src/backend/services/vote_service.py        48      7    85%   11, 30-36
+src/database/models.py                     144      0   100%
+----------------------------------------------------------------------
+TOTAL                                     1193     86    93%

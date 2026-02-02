@@ -41,7 +41,7 @@ Component-level documentation:
 
 | Area | Tech | Version |
 | --- | --- | --- |
-| Frontend | Next.js | `16.0.x` |
+| Frontend | Next.js | `16.1.6` |
 | Frontend | React | `19.2.0` |
 | Frontend | TypeScript | `5.9.3` |
 | Backend | FastAPI | (see `requirements.txt`) |
@@ -186,13 +186,6 @@ Production frontend URL: `https://research-showcase-portal-frontend.azurewebsite
          </a>
       </td>
       <td align="center">
-         <a href="https://github.com/YaroslavAkhramenko">
-         <img src="https://github.com/YaroslavAkhramenko.png?size=120" width="120" alt="Yaraslaw Akhramenka" />
-         <br />
-         <sub><b>Yaraslaw Akhramenka</b></sub>
-         </a>
-      </td>
-      <td align="center">
          <a href="https://github.com/TenderChasm">
          <img src="https://github.com/TenderChasm.png?size=120" width="120" alt="Adelaide Danilova" />
          <br />
@@ -204,6 +197,13 @@ Production frontend URL: `https://research-showcase-portal-frontend.azurewebsite
          <img src="https://github.com/Jester0101.png?size=120" width="120" alt="Add contributor photo" />
          <br />
          <sub><b>Oleksandr Yeroftieiev</b></sub>
+         </a>
+      </td>
+      <td align="center">
+         <a href="https://github.com/YaroslavAkhramenko">
+         <img src="https://github.com/YaroslavAkhramenko.png?size=120" width="120" alt="Yaraslaw Akhramenka" />
+         <br />
+         <sub><b>Yaraslaw Akhramenka</b></sub>
          </a>
       </td>
    </tr>
