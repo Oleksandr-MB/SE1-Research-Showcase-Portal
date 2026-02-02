@@ -7,11 +7,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12-yellow?logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/SQL_Alchemy-20-red?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy" />
-  <img src="https://img.shields.io/badge/Node.js-20-darkgreen?logo=node.js&logoColor=white" alt="Node.js" />
-  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white" alt="Next.js" />
-  <img src="https://img.shields.io/badge/PostgreSQL-17-blue?logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Python-3.12-346C99?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/FastAPI-0.123-009485?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/SQLAlchemy-20-CA2727?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy" />
+  <img src="https://img.shields.io/badge/Node.js-20-689F63?logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/PostgreSQL-17-336791?logo=postgresql&logoColor=white" alt="PostgreSQL" />
 </p>
 
 <p align="center">
@@ -30,7 +31,7 @@ Component-level documentation:
 ## What you can do (features)
 
 - **Accounts & roles**: registration, email verification, login/logout, password reset, role-based access (user / researcher / moderator).
-- **Research posts**: create/search posts with tags, rich content (incl. LaTeX via KaTeX), attach files, download attachments.
+- **Research posts**: create/search posts with tags, rich content (incl. LaTeX via KaTeX and image rendering), attach files, download attachments.
 - **Peer review**: write and read structured `openreview.net` inspired peer reviews, surface higher-quality feedback.
 - **Community**: comment threads, upvote/downvote posts and comments.
 - **Moderation**: reporting workflow (pending/open/closed), moderator tooling, content deletion with ownership checks.
@@ -50,14 +51,35 @@ Component-level documentation:
 ## Project layout
 
 ```text
-.
-├─ src/
-│  ├─ frontend/         # Next.js app (UI)
-│  ├─ backend/          # FastAPI app (REST API)
-│  └─ database/         # SQLAlchemy models + DB engine
-├─ tst/                 # backend test suite (unittest)
-├─ .github/workflows/   # CI + Azure deployments
-└─ deliverables/        # course deliverables (PDF)
+./
+├── src/
+│   ├── backend/                        # FastAPI backend application
+│   │   ├── README.md                   # Backend documentation
+│   │   ├── main.py                     # Application entry point and API setup
+│   │   ├── config/                     # Configuration utilities and .env files
+│   │   └── services/                   # Business logic and API routess
+│   │
+│   ├── database/                       # Database layer
+│   │   ├── README.md                   # Database documentation
+│   │   ├── db.py                       # Database connection and session management
+│   │   ├── db_creator.py               # Database initialization
+│   │   └── models.py                   # SQLAlchemy ORM models
+│   │
+│   └── frontend/                       # Next.js frontend application
+│       ├── README.md                   # Frontend documentation
+│       ├── app/                        # Next.js app directory (pages)
+│       ├── components/                 # Reusable React components
+│       ├── lib/                        # Utility functions and hooks
+│       ├── public/                     # Static assets
+│       └── *other*                     # Other Next.js / React files
+│
+├── tst/                                # Test suite
+│
+├── deliverables/                       # Project deliverables and documentation
+│
+├── requirements.txt                    # Python dependencies
+├── LICENSE                             # MIT License
+└── README.md                           # This file
 ```
 
 ## Quickstart (local development)
