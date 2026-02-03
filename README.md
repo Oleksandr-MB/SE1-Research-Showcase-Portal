@@ -180,11 +180,13 @@ npm --prefix src/frontend run typecheck
 ## Deployment (Azure)
 
 This repo includes GitHub Actions workflows to deploy:
-- Frontend → Azure Web App (`.github/workflows/azure-ci-frontend.yml`)
-- Backend → Azure Web App (`.github/workflows/azure-ci-backend.yml`)
+- Frontend → Azure Web App (`.github/workflows/azure-deployment-frontend.yml`)
+- Backend → Azure Web App (`.github/workflows/azure-deployment-backend.yml`)
 
 Production frontend URL (website): `https://research-showcase-portal-frontend.azurewebsites.net`
 Production backend URL (OpenAPI): `https://research-showcase-portal-backend.azurewebsites.net/docs`
+
+**Note:** We use Azure's burstable database tier (not intended for production deployment) as well as the cheapest available Web App tiers, thus responses may be quite slow.
 
 ## Usage example
 
@@ -217,7 +219,7 @@ Production backend URL (OpenAPI): `https://research-showcase-portal-backend.azur
          <a href="https://github.com/TenderChasm">
          <img src="https://github.com/TenderChasm.png?size=120" width="120" alt="Adelaide Danilova" />
          <br />
-         <sub><b>Adelaide Danilova</b></sub>
+         <sub><b>Adelaide Danilov</b></sub>
          </a>
       </td>
       <td align="center">
