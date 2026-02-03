@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/backend%20coverage-93%25-green" alt="Backend coverage" />
+  <img src="https://img.shields.io/badge/backend%20coverage-92%25-green" alt="Backend Coverage" />
   <img src="https://img.shields.io/badge/license-MIT-black" alt="License" />
   <img src="https://img.shields.io/website?url=https://research-showcase-portal-frontend.azurewebsites.net/" alt="Website Status" />
 </p>
