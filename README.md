@@ -247,7 +247,7 @@ We welcome your further contributions to the Research Showcase Portal!
 Here's how you can help:
 
 1. **Fork** the repository and create a new branch for your feature or fix.
-2. **Follow existing code style** — check component READMEs for conventions.
+2. **Make your improvements** (please follow existing code style).
 3. **Run checks**: backend tests (`python -m unittest discover -s tst -p "test_*.py"`) and frontend typecheck (`npm --prefix src/frontend run typecheck`).
 4. **Update documentation** if you change APIs or add features.
 5. **Submit a pull request** with a clear description of your changes.
