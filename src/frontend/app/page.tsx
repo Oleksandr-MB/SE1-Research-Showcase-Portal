@@ -82,13 +82,6 @@ const formatLatestUsers = (
     }),
   }));
 
-const formatPoster = (post: PostSummary) => {
-  if (post.poster_username) {
-    return `@${post.poster_username}`;
-  }
-  return `Researcher #${post.poster_id}`;
-};
-
 const getAbstractPreview = (abstract?: string) => {
   if (!abstract) {
     return "No abstract was provided yet.";
@@ -683,6 +676,17 @@ export default async function Home({
           </aside>
         </div>
       </div>
+
+      <footer className="border-t border-[var(--LightGray)] bg-[var(--LightGray)] backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 py-8 text-sm text-[var(--Gray)] sm:px-6 lg:px-8">
+          <p className="text-xs text-center">
+            © {currentYear} Research Showcase Portal. Academic content is provided by users.<br /> 
+            <Link href="/terms" className="text-xs hover:underline">Terms &amp; Community Guidelines</Link>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
+
+const currentYear = new Date().getFullYear();

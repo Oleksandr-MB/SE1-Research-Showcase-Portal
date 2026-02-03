@@ -94,7 +94,7 @@ export default function ReportsPage() {
           return;
         }
         setUser(currentUser);
-      } catch (err) {
+      } catch {
         router.replace("/login?next=/reports");
       }
     };
@@ -112,7 +112,6 @@ export default function ReportsPage() {
       try {
         const targetType = reportType === "ALL" ? undefined : reportType;
         const allReports = await getAllReports(token, targetType);
-        console.log("Loaded reports:", allReports);
         setReports(allReports);
 
         
@@ -487,4 +486,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-

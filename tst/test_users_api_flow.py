@@ -49,7 +49,7 @@ class TestUsersApiFlow(unittest.TestCase):
             "src.backend.services.user_service.send_verification_email",
             autospec=True,
             side_effect=lambda *_args, **_kwargs: None,
-        ):
+        ) as send_verification_email:
             bg = BackgroundTasks()
             created = self.user_service.register_user(
                 user_in=self.user_service.UserCreate(
@@ -61,7 +61,8 @@ class TestUsersApiFlow(unittest.TestCase):
                 db=self.db,
             )
 
-        self.assertEqual(len(bg.tasks), 1)
+        self.assertEqual(len(bg.tasks), 0)
+        send_verification_email.assert_called_once()
         self.assertEqual(created.username, "alice")
         self._mark_email_verified("alice")
 

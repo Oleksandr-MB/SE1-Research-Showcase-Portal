@@ -34,17 +34,21 @@ source src/backend/config/.env
 set +a
 ```
 
-### Environmental variables
+### Environment variables
 
-The required keys are validated in `src/backend/config/config_utils.py` and include:
+The backend validates a set of required keys at startup (see `src/backend/config/config_utils.py`):
 
-- DB settings: `RSP_DB_BASE`, `RSP_DB_HOST`, `RSP_DB_PORT`, `RSP_DB_DATABASE`, `RSP_DB_USER`, `RSP_DB_PASSWORD`
-- Crypto settings: `RSP_CRYPTO_KEY`, `RSP_CRYPTO_ALGORITHM`
-- `RSP_TOKEN_ACCESS_EXPIRE_MINUTES`, `RSP_TOKEN_EMAIL_EXPIRE_MINUTES`
-- Scheduler settings: `RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES`
-- SMTP settings: `RSP_SMTP_SERVER`, `RSP_SMTP_PORT`, `RSP_SMTP_SENDER`, `RSP_SMTP_PASSWORD`, `RSP_EMAIL_LINK_BASE`, `RSP_EMAIL_RESET_LINK_BASE`
-- Moderator bootstrap: `RSP_MODERATOR_EMAILS` (required to assign the first moderators to avoid cold-start problem)
-- Rate limiting: `RSP_RATE_LIMIT_MAX`, `RSP_RATE_LIMIT_WINDOW_SECONDS`
+- Database: `RSP_DB_BASE`, `RSP_DB_HOST`, `RSP_DB_PORT`, `RSP_DB_DATABASE`, `RSP_DB_USER`, `RSP_DB_PASSWORD`
+- JWT/crypto: `RSP_CRYPTO_KEY`, `RSP_CRYPTO_ALGORITHM`
+- Token expiry (minutes): `RSP_TOKEN_ACCESS_EXPIRE_MINUTES`, `RSP_TOKEN_EMAIL_EXPIRE_MINUTES`
+- Cleanup job: `RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES`
+- SMTP (enables email delivery): `RSP_SMTP_SERVER`, `RSP_SMTP_PORT`, `RSP_SMTP_SENDER`, `RSP_SMTP_PASSWORD`
+- Frontend links (used in emails): `RSP_EMAIL_LINK_BASE`, `RSP_EMAIL_RESET_LINK_BASE`
+
+Optional keys:
+
+- Moderator bootstrap: `RSP_MODERATOR_EMAILS` (add your email to create the first moderator accounts)
+- Rate limiting (defaults: 180 req / 60s): `RSP_RATE_LIMIT_MAX`, `RSP_RATE_LIMIT_WINDOW_SECONDS`
 
 ## Install & run
 
@@ -84,11 +88,13 @@ When running locally:
 - `POST /users/login` / `POST /users/logout` — auth
 - `POST /users/request-password-reset` / `POST /users/reset-password` — password reset
 - `GET /posts` / `GET /posts/{id}` — search/read posts
-- `POST /posts` / `DELETE /posts/{id}` — create/delete post (owner/moderator)
+- `POST /posts/create` / `DELETE /posts/{id}` — create/delete post (owner/moderator)
 - `POST /posts/attachments/upload` — upload attachment (returns `/attachments/<file>`)
 - `POST /posts/{id}/comments` — add comment (and threaded replies)
 - `POST /posts/{id}/reviews` — add review
-- `POST /reports` / `PATCH /reports/{id}` — reporting workflow (moderator)
+- `POST /posts/{id}/reports` — report a post
+- `POST /posts/{id}/comments/{comment_id}/reports` — report a comment
+- `GET /reports` / `PATCH /reports/{id}/status` — moderation workflow (moderator)
 
 Exact routes and request/response schemas are defined in `src/backend/services/*` and surfaced via OpenAPI.
 

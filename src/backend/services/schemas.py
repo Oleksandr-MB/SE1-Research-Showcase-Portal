@@ -19,6 +19,7 @@ class UserRead(BaseModel):
     username: str
     role: str
     email: Optional[str] = None
+    is_email_public: bool = False
     created_at: datetime.datetime
 
     display_name: Optional[str] = None
@@ -30,11 +31,6 @@ class UserRead(BaseModel):
     twitter: Optional[str] = None
     github: Optional[str] = None
     linkedin: Optional[str] = None
-
-    is_profile_public: Optional[bool] = True
-    is_orcid_public: Optional[bool] = True
-    is_socials_public: Optional[bool] = True
-    is_arxiv_public: Optional[bool] = True
 
     class Config:
         from_attributes = True
@@ -164,11 +160,7 @@ class ProfileUpdate(BaseModel):
     twitter: Optional[str] = None
     github: Optional[str] = None
     linkedin: Optional[str] = None
-
-    is_profile_public: Optional[bool] = None
-    is_orcid_public: Optional[bool] = None
-    is_socials_public: Optional[bool] = None
-    is_arxiv_public: Optional[bool] = None
+    is_email_public: Optional[bool] = None
 
 
 class CommentActivityRead(BaseModel):

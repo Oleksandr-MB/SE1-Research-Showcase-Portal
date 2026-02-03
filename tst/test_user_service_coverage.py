@@ -94,39 +94,6 @@ class TestUserServiceCoverage(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.user_service._extract_argon_salt("not-an-argon2-hash")  # type: ignore
 
-    def test_smtp_enabled_false_and_true(self):
-        with patch.multiple(
-            self.user_service,  # type: ignore
-            EMAIL_SENDER=None,
-            EMAIL_PASSWORD=None,
-            EMAIL_SMTP_SERVER=None,
-            EMAIL_SMTP_PORT=0,
-        ):
-            self.assertFalse(self.user_service._smtp_enabled())  # type: ignore
-
-        with patch.multiple(
-            self.user_service,  # type: ignore
-            EMAIL_SENDER="sender@example.com",
-            EMAIL_PASSWORD="pw",
-            EMAIL_SMTP_SERVER="smtp.example.com",
-            EMAIL_SMTP_PORT=587,
-        ):
-            self.assertTrue(self.user_service._smtp_enabled())  # type: ignore
-
-    def test_send_verification_email_skip_when_unconfigured(self):
-        smtp = Mock(side_effect=AssertionError("SMTP should not be called"))
-        with patch.multiple(
-            self.user_service,  # type: ignore
-            EMAIL_SENDER=None,
-            EMAIL_PASSWORD=None,
-            EMAIL_SMTP_SERVER=None,
-            EMAIL_SMTP_PORT=0,
-        ), patch("src.backend.services.user_service.smtplib.SMTP", new=smtp):
-            self.user_service.send_verification_email(  # type: ignore
-                "alice@example.com",
-                "http://example.com/verify",
-            )
-
     def test_send_verification_email_sends_and_handles_error(self):
         dummy = _DummySMTP()
 
@@ -149,10 +116,11 @@ class TestUserServiceCoverage(unittest.TestCase):
             self.assertTrue(dummy.send_message_called)
 
             dummy.raise_on_send = True
-            self.user_service.send_verification_email(  # type: ignore
-                "alice@example.com",
-                "http://example.com/verify",
-            )
+            with self.assertRaises(RuntimeError):
+                self.user_service.send_verification_email(  # type: ignore
+                    "alice@example.com",
+                    "http://example.com/verify",
+                )
 
     def test_send_password_reset_email_sends(self):
         dummy = _DummySMTP()

@@ -81,7 +81,7 @@ export default function DeleteCommentButton({ postId, commentId, isOwner, onDele
       <button
         type="button"
         onClick={handleDeleteClick}
-        className="flex items-center justify-center rounded-full border border-[#E5E5E5] p-1.5 text-xs font-semibold text-[var(--Red)] transition hover:border-[var(--Red)] hover:bg-[var(--Red)] hover:text-[var(--White)]"
+        className="flex items-center justify-center rounded-full border border-[#E5E5E5] p-2 text-xs font-semibold text-[var(--Red)] transition hover:border-[var(--Red)] hover:bg-[var(--Red)] hover:text-[var(--White)]"
         aria-label="Delete comment"
         title="Delete comment"
       >

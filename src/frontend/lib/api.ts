@@ -44,22 +44,11 @@ export type AttachmentDescriptor = {
   mime_type?: string;
 };
 
-export type PostAttachmentRead = {
-  file_path?: string | null;
-  path?: string | null;
-  alt?: string | null;
-  display_name?: string | null;
-  original_filename?: string | null;
-  mime_type?: string | null;
-};
-
 export type AttachmentUploadResponse = {
   file_path: string;
   mime_type: string;
   original_filename: string;
-  file_size: number;             
 };
-
 
 export type CreatePostPayload = {
   title: string;
@@ -131,6 +120,7 @@ export type UserRead = {
   username: string;
   role: UserRole;
   email: string;
+  is_email_public?: boolean;
   created_at: string;
 
   display_name?: string | null;
@@ -143,12 +133,6 @@ export type UserRead = {
   github?: string | null;
   linkedin?: string | null;
 
-  is_profile_public?: boolean;
-  is_orcid_public?: boolean;
-  is_socials_public?: boolean;
-  is_arxiv_public?: boolean;
-  is_email_public?: boolean;
-
   is_institution_verified?: boolean;
 };
 
@@ -158,19 +142,15 @@ export type PublicUserRead = Omit<UserRead, "email"> & {
 };
 
 export type ProfileUpdatePayload = {
-  display_name?: string;
-  bio?: string;
-  affiliation?: string;
-  orcid?: string;
-  arxiv?: string;
-  website?: string;
-  twitter?: string;
-  github?: string;
-  linkedin?: string;
-  is_profile_public?: boolean;
-  is_orcid_public?: boolean;
-  is_socials_public?: boolean;
-  is_arxiv_public?: boolean;
+  display_name?: string | null;
+  bio?: string | null;
+  affiliation?: string | null;
+  orcid?: string | null;
+  arxiv?: string | null;
+  website?: string | null;
+  twitter?: string | null;
+  github?: string | null;
+  linkedin?: string | null;
   is_email_public?: boolean;
 };
 

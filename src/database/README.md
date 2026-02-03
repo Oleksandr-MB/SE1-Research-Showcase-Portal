@@ -45,7 +45,7 @@ Warning: `db_creator.py` calls `Base.metadata.drop_all(...)` and will **delete a
 If you don't have PostgreSQL installed, you can run it via Docker:
 
 ```bash
-docker run --name rsp-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16
+docker run --name rsp-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:17
 ```
 
 Then set `RSP_DB_HOST=localhost`, `RSP_DB_PORT=5432`, `RSP_DB_USER=postgres`, and choose a database name/password that match your setup.

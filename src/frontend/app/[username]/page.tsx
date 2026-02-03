@@ -60,10 +60,70 @@ export default async function UserProfilePage({ params }: PageProps) {
   const isModerator = userProfile.role === "moderator";
   const isVerified = userProfile.is_institution_verified === true;
 
-  const showEmail = userProfile.is_email_public === true && Boolean(userProfile.email);
-  const showOrcid = Boolean(userProfile.orcid) && userProfile.is_orcid_public !== false;
-  const showArxiv = Boolean(userProfile.arxiv) && userProfile.is_arxiv_public !== false;
-  const showSocials = userProfile.is_socials_public !== false;
+  const showEmail =
+    userProfile.is_email_public === true && Boolean(userProfile.email);
+
+  const normalizeProfileValue = (value: string | null | undefined) =>
+    (value ?? "").trim();
+
+  const bio = normalizeProfileValue(userProfile.bio);
+  const affiliation = normalizeProfileValue(userProfile.affiliation);
+  const orcid = normalizeProfileValue(userProfile.orcid);
+  const arxiv = normalizeProfileValue(userProfile.arxiv);
+  const website = normalizeProfileValue(userProfile.website);
+  const github = normalizeProfileValue(userProfile.github);
+  const linkedin = normalizeProfileValue(userProfile.linkedin);
+  const twitter = normalizeProfileValue(userProfile.twitter);
+
+  const identifierItems = [
+    orcid
+      ? {
+          label: "ORCID",
+          href: orcid.startsWith("http") ? orcid : `https://orcid.org/${orcid}`,
+          text: orcid,
+        }
+      : null,
+    arxiv
+      ? {
+          label: "arXiv",
+          href: arxiv.startsWith("http") ? arxiv : `https://arxiv.org/a/${arxiv}`,
+          text: arxiv,
+        }
+      : null,
+  ].filter(Boolean) as Array<{ label: string; href: string; text: string }>;
+
+  const linkItems = [
+    website
+      ? {
+          label: "Website",
+          href: normalizeUrl(website),
+          text: website,
+        }
+      : null,
+    github
+      ? {
+          label: "GitHub",
+          href: normalizeUrl(github),
+          text: github,
+        }
+      : null,
+    linkedin
+      ? {
+          label: "LinkedIn",
+          href: normalizeUrl(linkedin),
+          text: linkedin,
+        }
+      : null,
+    twitter
+      ? {
+          label: "Twitter / X",
+          href: twitter.startsWith("http")
+            ? twitter
+            : `https://twitter.com/${twitter.replace(/^@/, "")}`,
+          text: twitter,
+        }
+      : null,
+  ].filter(Boolean) as Array<{ label: string; href: string; text: string }>;
 
   const roleLabel = isModerator ? "Moderator" : isResearcher ? "Researcher" : "User";
 
@@ -88,8 +148,8 @@ export default async function UserProfilePage({ params }: PageProps) {
                 </div>
                 <p className="text-sm text-[var(--Gray)]">@{userProfile.username}</p>
 
-                {userProfile.affiliation ? (
-                  <p className="text-sm text-[var(--DarkGray)]">{userProfile.affiliation}</p>
+                {affiliation ? (
+                  <p className="text-sm text-[var(--DarkGray)]">{affiliation}</p>
                 ) : null}
 
                 <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--Gray)]">
@@ -197,21 +257,25 @@ export default async function UserProfilePage({ params }: PageProps) {
           <div className="space-y-6">
             <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
               <h2 className="h3-apple text-[var(--DarkGray)]">About</h2>
-              <p className="mt-3 text-sm leading-relaxed text-[var(--DarkGray)]">
-                {userProfile.bio || "This user hasn't written a bio yet."}
-              </p>
+              {bio ? (
+                <p className="mt-3 text-sm leading-relaxed text-[var(--DarkGray)]">
+                  {bio}
+                </p>
+              ) : null}
               <PromoteUserButton
                 targetUsername={userProfile.username}
                 currentRole={userProfile.role}
               />
 
               <div className="mt-5 space-y-3 text-sm">
-                <div className="flex items-center justify-between gap-4 border-b border-[var(--LightGray)] pb-3">
-                  <span className="text-[var(--Gray)]">Affiliation</span>
-                  <span className="truncate text-[var(--DarkGray)]">
-                    {userProfile.affiliation || "Not provided"}
-                  </span>
-                </div>
+                {affiliation ? (
+                  <div className="flex items-center justify-between gap-4 border-b border-[var(--LightGray)] pb-3">
+                    <span className="text-[var(--Gray)]">Affiliation</span>
+                    <span className="truncate text-[var(--DarkGray)]">
+                      {affiliation}
+                    </span>
+                  </div>
+                ) : null}
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-[var(--Gray)]">Email</span>
                   {showEmail ? (
@@ -223,127 +287,61 @@ export default async function UserProfilePage({ params }: PageProps) {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
-              <h2 className="h3-apple text-[var(--DarkGray)]">Identifiers</h2>
-              <ul className="mt-4 space-y-3 text-sm">
-                <li className="flex items-center justify-between gap-4 border-b border-[var(--LightGray)] pb-3">
-                  <span className="text-[var(--Gray)]">ORCID</span>
-                  {showOrcid ? (
-                    <a
-                      href={
-                        userProfile.orcid!.startsWith("http")
-                          ? userProfile.orcid!
-                          : `https://orcid.org/${userProfile.orcid}`
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                      className="truncate text-[var(--Red)] hover:underline"
-                    >
-                      {userProfile.orcid}
-                    </a>
-                  ) : (
-                    <span className="text-[var(--Gray)]">Not shared</span>
-                  )}
-                </li>
-                <li className="flex items-center justify-between gap-4">
-                  <span className="text-[var(--Gray)]">arXiv</span>
-                  {showArxiv ? (
-                    <a
-                      href={
-                        userProfile.arxiv!.startsWith("http")
-                          ? userProfile.arxiv!
-                          : `https://arxiv.org/a/${userProfile.arxiv}`
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                      className="truncate text-[var(--Red)] hover:underline"
-                    >
-                      {userProfile.arxiv}
-                    </a>
-                  ) : (
-                    <span className="text-[var(--Gray)]">Not shared</span>
-                  )}
-                </li>
-              </ul>
-            </section>
-
-            <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
-              <h2 className="h3-apple text-[var(--DarkGray)]">Links</h2>
-              {showSocials ? (
+            {identifierItems.length > 0 ? (
+              <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
+                <h2 className="h3-apple text-[var(--DarkGray)]">Identifiers</h2>
                 <ul className="mt-4 space-y-3 text-sm">
-                  {userProfile.website ? (
-                    <li className="flex items-center justify-between gap-4 border-b border-[var(--LightGray)] pb-3">
-                      <span className="text-[var(--Gray)]">Website</span>
+                  {identifierItems.map((item, index) => (
+                    <li
+                      key={item.label}
+                      className={`flex items-center justify-between gap-4 ${
+                        index < identifierItems.length - 1
+                          ? "border-b border-[var(--LightGray)] pb-3"
+                          : ""
+                      }`}
+                    >
+                      <span className="text-[var(--Gray)]">{item.label}</span>
                       <a
-                        href={normalizeUrl(userProfile.website)}
+                        href={item.href}
                         target="_blank"
                         rel="noreferrer"
                         className="truncate text-[var(--Red)] hover:underline"
                       >
-                        {userProfile.website}
+                        {item.text}
                       </a>
                     </li>
-                  ) : null}
-                  {userProfile.github ? (
-                    <li className="flex items-center justify-between gap-4 border-b border-[var(--LightGray)] pb-3">
-                      <span className="text-[var(--Gray)]">GitHub</span>
-                      <a
-                        href={normalizeUrl(userProfile.github)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="truncate text-[var(--Red)] hover:underline"
-                      >
-                        {userProfile.github}
-                      </a>
-                    </li>
-                  ) : null}
-                  {userProfile.linkedin ? (
-                    <li className="flex items-center justify-between gap-4 border-b border-[var(--LightGray)] pb-3">
-                      <span className="text-[var(--Gray)]">LinkedIn</span>
-                      <a
-                        href={normalizeUrl(userProfile.linkedin)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="truncate text-[var(--Red)] hover:underline"
-                      >
-                        {userProfile.linkedin}
-                      </a>
-                    </li>
-                  ) : null}
-                  {userProfile.twitter ? (
-                    <li className="flex items-center justify-between gap-4">
-                      <span className="text-[var(--Gray)]">Twitter / X</span>
-                      <a
-                        href={
-                          userProfile.twitter.startsWith("http")
-                            ? userProfile.twitter
-                            : `https://twitter.com/${userProfile.twitter.replace(
-                                /^@/,
-                                "",
-                              )}`
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                        className="truncate text-[var(--Red)] hover:underline"
-                      >
-                        {userProfile.twitter}
-                      </a>
-                    </li>
-                  ) : null}
-
-                  {!userProfile.website &&
-                  !userProfile.github &&
-                  !userProfile.linkedin &&
-                  !userProfile.twitter ? (
-                    <li className="text-sm text-[var(--Gray)]">No links shared.</li>
-                  ) : null}
+                  ))}
                 </ul>
-              ) : (
-                <p className="mt-3 text-sm text-[var(--Gray)]">
-                  This user doesn&apos;t share their social links publicly.
-                </p>
-              )}
-            </section>
+              </section>
+            ) : null}
+
+            {linkItems.length > 0 ? (
+              <section className="rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-6 shadow-soft-sm">
+                <h2 className="h3-apple text-[var(--DarkGray)]">Links</h2>
+                <ul className="mt-4 space-y-3 text-sm">
+                  {linkItems.map((item, index) => (
+                    <li
+                      key={item.label}
+                      className={`flex items-center justify-between gap-4 ${
+                        index < linkItems.length - 1
+                          ? "border-b border-[var(--LightGray)] pb-3"
+                          : ""
+                      }`}
+                    >
+                      <span className="text-[var(--Gray)]">{item.label}</span>
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="truncate text-[var(--Red)] hover:underline"
+                      >
+                        {item.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </div>
         </div>
       </div>

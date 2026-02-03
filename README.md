@@ -1,8 +1,8 @@
 # SE1 Research Showcase Portal
 
 <p align="center">
-  <a href="https://github.com/Oleksandr-MB/SE1-Research-Showcase-Portal/actions/workflows/test-ci.yml">
-    <img src="https://github.com/Oleksandr-MB/SE1-Research-Showcase-Portal/actions/workflows/test-ci.yml/badge.svg" alt="CI Status" />
+  <a href="https://github.com/Oleksandr-MB/SE1-Research-Showcase-Portal/actions/workflows/tests.yml">
+    <img src="https://github.com/Oleksandr-MB/SE1-Research-Showcase-Portal/actions/workflows/tests.yml/badge.svg" alt="CI Status" />
   </a>
 </p>
 
@@ -18,7 +18,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/backend%20coverage-93%25-green" alt="Backend coverage" />
   <img src="https://img.shields.io/badge/license-MIT-black" alt="License" />
-  <img src="https://img.shields.io/website?url=https://research-showcase-portal-frontend.azurewebsites.net/" alt="Website" />
+  <img src="https://img.shields.io/website?url=https://research-showcase-portal-frontend.azurewebsites.net/" alt="Website Status" />
 </p>
 
 Research Showcase Portal is a full-stack academic platform where researchers can create profiles, publish research posts, upload attachments, and engage in peer review and discussion. It was built as part of the **Software Engineering 1 (SE1)** course at University of Luxembourg.
@@ -88,7 +88,7 @@ Component-level documentation:
 
 - Python `3.12`
 - Node.js `20 LTS`
-- A running PostgreSQL server instance (local install or Docker)
+- A running PostgreSQL server instance (local install or Docker; see `src/database/README.md` for a one-liner)
 
 ### 1) Configure backend environment
 
@@ -105,6 +105,8 @@ set -a
 source src/backend/config/.env
 set +a
 ```
+
+Note: signup/login requires email verification. SMTP must be configured (see `src/backend/README.md`).
 
 ### 2) Install dependencies
 
@@ -181,7 +183,8 @@ This repo includes GitHub Actions workflows to deploy:
 - Frontend → Azure Web App (`.github/workflows/azure-ci-frontend.yml`)
 - Backend → Azure Web App (`.github/workflows/azure-ci-backend.yml`)
 
-Production frontend URL: `https://research-showcase-portal-frontend.azurewebsites.net`
+Production frontend URL (website): `https://research-showcase-portal-frontend.azurewebsites.net`
+Production backend URL (OpenAPI): `https://research-showcase-portal-backend.azurewebsites.net/docs`
 
 ## Usage example
 
@@ -234,6 +237,18 @@ Production frontend URL: `https://research-showcase-portal-frontend.azurewebsite
    </tr>
    </tbody>
 </table>
+
+## Contributing
+
+We welcome your further contributions to the Research Showcase Portal!
+
+Here's how you can help:
+
+1. **Fork** the repository and create a new branch for your feature or fix.
+2. **Follow existing code style** — check component READMEs for conventions.
+3. **Run checks**: backend tests (`python -m unittest discover -s tst -p "test_*.py"`) and frontend typecheck (`npm --prefix src/frontend run typecheck`).
+4. **Update documentation** if you change APIs or add features.
+5. **Submit a pull request** with a clear description of your changes.
 
 ## Copyright
 

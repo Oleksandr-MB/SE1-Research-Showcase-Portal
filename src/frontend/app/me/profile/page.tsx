@@ -15,7 +15,6 @@ import {
   PlusIcon,
   UserIcon,
   XCircleSolidIcon,
-  XMarkIcon,
 } from "@/components/icons";
 
 type ProfileFormState = {
@@ -28,9 +27,6 @@ type ProfileFormState = {
   twitter: string;
   github: string;
   linkedin: string;
-  isOrcidPublic: boolean;
-  isSocialsPublic: boolean;
-  isArxivPublic: boolean;
   isEmailPublic: boolean;
 };
 
@@ -44,9 +40,6 @@ const emptyForm: ProfileFormState = {
   twitter: "",
   github: "",
   linkedin: "",
-  isOrcidPublic: true,
-  isSocialsPublic: true,
-  isArxivPublic: true,
   isEmailPublic: false,
 };
 
@@ -101,9 +94,7 @@ function PrivacyCheckbox({
         <div
           className="flex h-4 w-4 items-center justify-center rounded-[4px] border border-[var(--LightGray)] bg-[var(--White)] transition-colors duration-200"
         >
-          {!checked && (
-            <XMarkIcon className="h-3 w-3 text-[var(--DarkGray)]" strokeWidth={3} />
-          )}
+          {checked ? (<CheckSolidIcon className="h-3 w-3 text-[var(--DarkGray)]" />) : null }
         </div>
       </div>
       <div className="min-w-0 flex-1">
@@ -174,9 +165,6 @@ export default function PersonalLab() {
           twitter: currentUser.twitter || "",
           github: currentUser.github || "",
           linkedin: currentUser.linkedin || "",
-          isOrcidPublic: currentUser.is_orcid_public ?? true,
-          isSocialsPublic: currentUser.is_socials_public ?? true,
-          isArxivPublic: currentUser.is_arxiv_public ?? true,
           isEmailPublic: currentUser.is_email_public ?? false,
         });
       } catch (error) {
@@ -213,19 +201,21 @@ export default function PersonalLab() {
       return;
     }
 
+    const toNullableText = (value: string) => {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    };
+
     const payload: ProfileUpdatePayload = {
-      display_name: form.displayName.trim() || undefined,
-      bio: form.bio.trim() || undefined,
-      affiliation: form.affiliation.trim() || undefined,
-      orcid: form.orcid.trim() || undefined,
-      arxiv: form.arxiv.trim() || undefined,
-      website: form.website.trim() || undefined,
-      twitter: form.twitter.trim() || undefined,
-      github: form.github.trim() || undefined,
-      linkedin: form.linkedin.trim() || undefined,
-      is_orcid_public: form.isOrcidPublic,
-      is_socials_public: form.isSocialsPublic,
-      is_arxiv_public: form.isArxivPublic,
+      display_name: toNullableText(form.displayName),
+      bio: toNullableText(form.bio),
+      affiliation: toNullableText(form.affiliation),
+      orcid: toNullableText(form.orcid),
+      arxiv: toNullableText(form.arxiv),
+      website: toNullableText(form.website),
+      twitter: toNullableText(form.twitter),
+      github: toNullableText(form.github),
+      linkedin: toNullableText(form.linkedin),
       is_email_public: form.isEmailPublic,
     };
 
@@ -365,25 +355,8 @@ export default function PersonalLab() {
               </section>
 
               <section>
-                <h2 className="h3-apple mb-6 text-[var(--DarkGray)]">Privacy Settings</h2>
+                <h2 className="h3-apple mb-6 text-[var(--DarkGray)]">Privacy</h2>
                 <div className="rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] p-2">
-                  <PrivacyCheckbox
-                    name="isOrcidPublic"
-                    checked={form.isOrcidPublic}
-                    onChange={(e) => {
-                      handleCheckboxChange(e);
-                      setForm((prev) => ({ ...prev, isArxivPublic: e.target.checked }));
-                    }}
-                    label="Show ORCID and arXiv profiles"
-                    description="Display your academic identifiers on your public profile"
-                  />
-                  <PrivacyCheckbox
-                    name="isSocialsPublic"
-                    checked={form.isSocialsPublic}
-                    onChange={handleCheckboxChange}
-                    label="Show social links"
-                    description="Display website and social media links"
-                  />
                   <PrivacyCheckbox
                     name="isEmailPublic"
                     checked={form.isEmailPublic}

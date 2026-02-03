@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { PostRead, ReviewRead, UserRead } from "@/lib/api";
 import { getCurrentUser, getPostById, getPostReviews } from "@/lib/api";
-import ReviewVoteActions from "@/components/review-vote-actions";
 import { Button } from "@/components/Button";
 import { XCircleSolidIcon } from "@/components/icons";
 import { usePolling } from "@/lib/usePolling";

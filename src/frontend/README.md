@@ -10,7 +10,7 @@ This directory contains the **Next.js App Router** frontend for the Research Sho
 
 ## Prerequisites
 
-- Node.js `20 LTS` and Next.js `16.1.6`
+- Node.js `20 LTS` (Next.js is installed via `npm`)
 
 ## Setup & run
 
@@ -25,12 +25,12 @@ Then open `http://localhost:3000`.
 
 ## Configuration
 
-
 The frontend reads configuration from `NEXT_PUBLIC_API_BASE_URL` environment variable:
 
 - Default: `http://127.0.0.1:8000` (see `src/frontend/lib/api.ts`)
-- Local override: set the `NEXT_PUBLIC_API_BASE_URL` to some other value or change the default in `src/frontend/lib/api.ts`
- 
+- Local override (recommended): create `src/frontend/.env.local` and set `NEXT_PUBLIC_API_BASE_URL=...`
+- Alternative: export `NEXT_PUBLIC_API_BASE_URL` in your shell before running `npm --prefix src/frontend run dev`
+
 ## Useful scripts
 
 - `npm --prefix src/frontend run dev` — start dev server
@@ -44,11 +44,14 @@ The frontend reads configuration from `NEXT_PUBLIC_API_BASE_URL` environment var
 Pages live in `src/frontend/app/`:
 
 - `/` — feed / search
+- `/terms` — terms & community guidelines
 - `/register`, `/login`, `/logout` — auth flows
 - `/verify-email`, `/reset-password` — token-based flows
 - `/posts/new` — create a post
 - `/posts/[postId]` — post details
-- `/posts/[postId]/reviews` and `/posts/[postId]/reviews/[reviewId]` — review UI
+- `/posts/[postId]/review` — write a review
+- `/posts/[postId]/reviews` and `/posts/[postId]/reviews/[reviewId]` — read reviews
+- `/posts/[postId]/reports` — report a post
 - `/reports` — moderation dashboard (moderator role)
 - `/me` and `/me/profile` — your account and profile editing
 - `/[username]` — public profile page
@@ -61,5 +64,5 @@ Pages live in `src/frontend/app/`:
 
 ## Notes
 
-- KaTeX is loaded on-demand from a CDN in `src/frontend/components/katex.tsx`.
+- Markdown (tables, images, math) is rendered via `react-markdown` + `remark-*` + `rehype-katex` in `src/frontend/components/katex.tsx`.
 - Some UI screens use polling/refresh helpers (see `src/frontend/components/route-refresh-poller.tsx`) to keep content fresh without websockets.

@@ -50,6 +50,10 @@ def import_backend_app_with_stubbed_db() -> ImportedBackend:
     os.environ.setdefault("RSP_TOKEN_ACCESS_EXPIRE_MINUTES", "60")
     os.environ.setdefault("RSP_TOKEN_EMAIL_EXPIRE_MINUTES", "30")
     os.environ.setdefault("RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES", "60")
+    os.environ.setdefault("RSP_SMTP_SERVER", "smtp.example.com")
+    os.environ.setdefault("RSP_SMTP_PORT", "587")
+    os.environ.setdefault("RSP_SMTP_SENDER", "sender@example.com")
+    os.environ.setdefault("RSP_SMTP_PASSWORD", "smtp-password")
 
     modules_to_clear = [
         "src.backend.main",

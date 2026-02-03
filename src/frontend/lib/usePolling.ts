@@ -63,6 +63,6 @@ export function usePolling(
     return () => {
       window.clearInterval(id);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps is intentionally spread as a dependency list.
   }, [enabled, intervalMs, immediate, ...deps]);
 }
-

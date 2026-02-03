@@ -124,9 +124,25 @@ export default function CommentsSection({ postId, initialComments }: Props) {
   const [replyBodies, setReplyBodies] = useState<Record<number, string>>({});
   const [replyLoading, setReplyLoading] = useState<Record<number, boolean>>({});
   const [activeReplyTarget, setActiveReplyTarget] = useState<number | null>(null);
-  const [commentVoteState, setCommentVoteState] = useState<Record<number, -1 | 0 | 1>>({});
   const [voteUserKey, setVoteUserKey] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<UserRead | null>(null);
+
+  const commentVoteState = useMemo(() => {
+    if (typeof window === "undefined" || !voteUserKey) {
+      return {};
+    }
+
+    const next: Record<number, -1 | 0 | 1> = {};
+    for (const comment of comments) {
+      const key = `rsp_vote:comment:${postId}:${comment.id}:${voteUserKey}`;
+      const raw = window.localStorage.getItem(key);
+      const parsed = raw === null ? null : Number(raw);
+      if (parsed === 1 || parsed === -1) {
+        next[comment.id] = parsed as -1 | 0 | 1;
+      }
+    }
+    return next;
+  }, [comments, postId, voteUserKey]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -174,24 +190,6 @@ export default function CommentsSection({ postId, initialComments }: Props) {
 
     fetchUser();
   }, []);
-
-  useEffect(() => {
-    if (!voteUserKey) {
-      setCommentVoteState({});
-      return;
-    }
-
-    const next: Record<number, -1 | 0 | 1> = {};
-    for (const comment of comments) {
-      const key = `rsp_vote:comment:${postId}:${comment.id}:${voteUserKey}`;
-      const raw = window.localStorage.getItem(key);
-      const parsed = raw === null ? null : Number(raw);
-      if (parsed === 1 || parsed === -1) {
-        next[comment.id] = parsed as -1 | 0 | 1;
-      }
-    }
-    setCommentVoteState(next);
-  }, [comments, postId, voteUserKey]);
 
   usePolling(
     async ({ isActive }) => {
@@ -303,7 +301,6 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             : comment,
         ),
       );
-      setCommentVoteState((prev) => ({ ...prev, [targetCommentId]: nextValue }));
       const key = commentVoteStorageKey(postIdForComment, targetCommentId);
       if (key) {
         window.localStorage.setItem(key, String(nextValue));
@@ -420,7 +417,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
             <span>{comment.downvotes}</span>
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => toggleReplyTarget(comment.id)}
@@ -428,13 +425,15 @@ export default function CommentsSection({ postId, initialComments }: Props) {
           >
             Reply
           </button>
-          <DeleteCommentButton 
-            postId={comment.post_id} 
-            commentId={comment.id} 
-            isOwner={isOwner}
-            onDeleted={() => handleCommentDeleted(comment.id)}
-          />
-          <ReportButton postId={comment.post_id} commentId={comment.id} />
+          <div className="ml-auto flex flex-wrap items-start gap-2">
+            <DeleteCommentButton
+              postId={comment.post_id}
+              commentId={comment.id}
+              isOwner={isOwner}
+              onDeleted={() => handleCommentDeleted(comment.id)}
+            />
+            <ReportButton postId={comment.post_id} commentId={comment.id} />
+          </div>
         </div>
       </>
     );
@@ -481,7 +480,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
           threads.map(({ comment, replies }, index) => (
             <li
               key={comment.id}
-              className={`space-y-4 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 shadow-soft-xs ${
+              className={`space-y-4 rounded-3xl border border-[var(--LightGray)] bg-[var(--White)] p-5 ${
                 index === threads.length - 1 ? "" : "mb-4"
               }`}
             >
@@ -506,7 +505,7 @@ export default function CommentsSection({ postId, initialComments }: Props) {
                   {replies.map(({ comment: replyComment, parentUsername }) => (
                     <div
                       key={replyComment.id}
-                      className="mb-4 rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm shadow-soft-xs"
+                      className="mb-4 rounded-2xl border border-[var(--LightGray)] bg-[var(--White)] px-4 py-3 text-sm"
                     >
                       <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--Gray)]">
                         <span className="font-semibold text-[var(--DarkGray)]">

@@ -312,11 +312,11 @@ export default function NewPostPage() {
     const tags = splitTags(form.tags);
     const finalAbstract = rewriteMarkdownImageSources(trimmedAbstract, attachments);
     const finalBody = rewriteMarkdownImageSources(trimmedBody, attachments);
-    const sanitizedAttachments =
+    const sanitizedAttachments: string[] =
       attachments.length > 0
         ? attachments
-            .map(({ file_path }) => file_path?.trim())
-            .filter((path): path is string => Boolean(path))
+            .map((attachment) => attachment.file_path.trim())
+            .filter(Boolean)
         : [];
     const attachmentPayload =
       sanitizedAttachments.length > 0 ? sanitizedAttachments : undefined;
@@ -634,7 +634,7 @@ export default function NewPostPage() {
                                   {attachment.original_filename}
                                 </p>
                                 <p className="text-xs text-[#8A8A8A]">
-                                  {attachment.mime_type} · {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
+                                  {attachment.mime_type}
                                 </p>
                               </div>
                             </div>
@@ -704,7 +704,8 @@ export default function NewPostPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--DarkGray)]">Attachments</p>
-                    <p className="text-xs text-[var(--Gray)]">Add supplementary materials and data</p>
+                    <p className="text-xs text-[var(--Gray)]">Add supplementary materials and data.
+                      Please make the titles clear and descriptive.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

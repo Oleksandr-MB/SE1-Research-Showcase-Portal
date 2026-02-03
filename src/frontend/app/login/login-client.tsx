@@ -230,7 +230,7 @@ export default function LoginPageClient() {
           )}
 
           <div className="mt-8 text-center text-sm text-[var(--Gray)]">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="link-apple font-semibold">
               Register
             </Link>
@@ -240,4 +240,3 @@ export default function LoginPageClient() {
     </div>
   );
 }
-

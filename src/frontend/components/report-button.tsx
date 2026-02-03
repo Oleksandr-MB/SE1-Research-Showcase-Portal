@@ -54,10 +54,8 @@ export default function ReportButton({ postId, commentId, onReported }: Props) {
       const payload: ReportCreatePayload = { description: trimmed };
       
       if (commentId) {
-        console.log("Creating comment report:", { postId, commentId, payload });
         await createCommentReport(token, postId, commentId, payload);
       } else {
-        console.log("Creating post report:", { postId, payload });
         await createPostReport(token, postId, payload);
       }
 
@@ -85,7 +83,7 @@ export default function ReportButton({ postId, commentId, onReported }: Props) {
       <button
         type="button"
         onClick={handleOpen}
-        className="flex items-center justify-center rounded-full border border-[#E5E5E5] p-2 text-[var(--Gray)] transition hover:border-[var(--DarkGray)] hover:text-[var(--DarkGray)]"
+        className="flex items-center justify-center rounded-full border border-[#E5E5E5] p-2 text-[var(--Red)] transition hover:border-[var(--Red)] hover:text-[var(--White)] hover:bg-[var(--Red)]"
         aria-label="Report content"
       >
         <FlagIcon />
@@ -132,4 +130,3 @@ export default function ReportButton({ postId, commentId, onReported }: Props) {
     </div>
   );
 }
-

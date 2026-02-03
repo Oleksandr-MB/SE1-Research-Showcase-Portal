@@ -82,7 +82,7 @@ export default function DeletePostButton({ postId, isOwner, onDeleted }: Props) 
       <button
         type="button"
         onClick={handleDeleteClick}
-        className="flex items-center justify-center rounded-full border border-[#E5E5E5] p-1.5 text-xs font-semibold text-[var(--Red)] transition hover:border-[var(--Red)] hover:bg-[var(--Red)] hover:text-[var(--White)]"
+        className="flex items-center justify-center rounded-full border border-[#E5E5E5] p-2 text-xs font-semibold text-[var(--Red)] transition hover:border-[var(--Red)] hover:bg-[var(--Red)] hover:text-[var(--White)]"
         aria-label="Delete post"
         title="Delete post"
       >

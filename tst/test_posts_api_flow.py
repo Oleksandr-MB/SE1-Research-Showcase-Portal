@@ -110,7 +110,7 @@ class TestPostsApiFlow(unittest.TestCase):
         self.assertEqual(created.title, "Test Post")
         self.assertEqual(set(created.tags), {"ml", "systems"})
         self.assertEqual(
-            set(created.attachments),
+            set(created.attachments or []),
             {
                 "/attachments/file1.pdf",
                 "/attachments/file2.png",

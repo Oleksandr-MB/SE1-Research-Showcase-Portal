@@ -94,6 +94,14 @@ class User(TimestampMixin, Base):
     is_socials_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_arxiv_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    @property
+    def is_email_public(self) -> bool:
+        return not self.is_profile_public
+
+    @is_email_public.setter
+    def is_email_public(self, value: bool) -> None:
+        self.is_profile_public = not bool(value)
+
     authored_posts: Mapped[list["Post"]] = relationship(
         back_populates="poster",
         cascade="all, delete-orphan",

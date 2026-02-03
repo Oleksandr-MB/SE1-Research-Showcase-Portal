@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import type { PublicUserRead, ReviewRead } from "@/lib/api";
 import { getPublicUserProfile, getReviewById } from "@/lib/api";
-import ReviewVoteActions from "@/components/review-vote-actions";
 import VerifiedResearcherBadge from "@/components/verified-researcher-badge";
 import { Button } from "@/components/Button";
 
@@ -137,12 +136,6 @@ export default function ReviewDetailPage() {
                 </p>
               </div>
             </div>
-
-            {/*<ReviewVoteActions*/}
-            {/*  reviewId={review.id}*/}
-            {/*  initialUpvotes={review.upvotes}*/}
-            {/*  initialDownvotes={review.downvotes}*/}
-            {/*/>*/}
           </div>
         </section>
 
@@ -173,13 +166,13 @@ export default function ReviewDetailPage() {
             href={`/posts/${postId}`}
             className="text-sm font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
           >
-            View original post →
+            View original post
           </Link>
           <Link
             href={`/posts/${postId}/reviews`}
             className="text-sm font-semibold text-[var(--DarkGray)] hover:text-[var(--Red)]"
           >
-            Back to all reviews →
+            Back to all reviews
           </Link>
         </div>
       </div>

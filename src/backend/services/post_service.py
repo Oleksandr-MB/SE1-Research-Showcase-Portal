@@ -1,6 +1,7 @@
 from typing import Annotated
 import mimetypes
 import logging
+import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -35,6 +36,26 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 
 ATTACHMENT_PREFIX = "/attachments/"
+
+_ATTACHMENT_NAME_SEPARATOR = "__"
+
+def _guess_mime_type(path: str) -> str:
+    guessed_mime_type, _ = mimetypes.guess_type(path)
+    return guessed_mime_type or "application/octet-stream"
+
+def _sanitize_attachment_stem(filename: str) -> str:
+    stem = Path(filename).stem.strip()
+    if not stem:
+        return "attachment"
+
+    stem = re.sub(r"\s+", "_", stem)
+    stem = re.sub(r"[^A-Za-z0-9._-]", "_", stem)
+    stem = re.sub(r"_+", "_", stem).strip("._-")
+
+    if not stem:
+        return "attachment"
+
+    return stem[:80]
 
 
 def _escape(query: str) -> str:
@@ -108,7 +129,7 @@ def _to_post_read(post: models.Post) -> PostRead:
             normalized
             for attachment in (post.attachments or [])
             for normalized in [_normalize_attachment_value(attachment.file_path)]
-            if normalized
+            if normalized is not None
         ],
         title=post.title,
         body=post.body,
@@ -155,7 +176,8 @@ async def upload_post_attachment(
 
     mime_type = file.content_type or "application/octet-stream"
     extension = Path(file.filename).suffix
-    destination_name = f"{uuid.uuid4().hex}{extension}"
+    safe_stem = _sanitize_attachment_stem(file.filename)
+    destination_name = f"{safe_stem}{_ATTACHMENT_NAME_SEPARATOR}{uuid.uuid4().hex}{extension}"
     ATTACHMENTS_DIR.mkdir(parents=True, exist_ok=True)
     destination_path = ATTACHMENTS_DIR / destination_name
 
@@ -361,22 +383,23 @@ async def create_research_post(
             db_post.tags.append(tag)
 
     if post.attachments:
-        for attachment_path in post.attachments:
-            normalized = (
-                _normalize_attachment_value(attachment_path)
-                if isinstance(attachment_path, str)
-                else None
-            )
-            if not normalized:
+        for attachment_item in post.attachments:
+            if not isinstance(attachment_item, str):
                 logging.warning(
-                    "Attachment skipped because file_path is invalid: %s",
-                    attachment_path,
+                    "Attachment skipped because value is not a string: %s",
+                    attachment_item,
                 )
                 continue
 
-            guessed_mime_type, _ = mimetypes.guess_type(normalized)
-            mime_type = guessed_mime_type or "application/octet-stream"
+            normalized = _normalize_attachment_value(attachment_item)
+            if not normalized:
+                logging.warning(
+                    "Attachment skipped because file_path is invalid: %s",
+                    attachment_item,
+                )
+                continue
 
+            mime_type = _guess_mime_type(normalized)
             attachment = models.Attachment(
                 file_path=normalized,
                 mime_type=mime_type,

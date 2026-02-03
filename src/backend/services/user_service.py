@@ -36,35 +36,26 @@ logging.basicConfig(level=logging.INFO)
 
 cfg = read_config(required=True)
 
-ACCESS_TOKEN_EXPIRE_MINUTES = int(cfg.get("RSP_TOKEN_ACCESS_EXPIRE_MINUTES", 60))
-EMAIL_TOKEN_EXPIRE_MINUTES = int(cfg.get("RSP_TOKEN_EMAIL_EXPIRE_MINUTES", 30))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(cfg["RSP_TOKEN_ACCESS_EXPIRE_MINUTES"])
+EMAIL_TOKEN_EXPIRE_MINUTES = int(cfg["RSP_TOKEN_EMAIL_EXPIRE_MINUTES"])
 
 DELETE_EXPIRED_USERS_INTERVAL_MINUTES = int(
-    cfg.get("RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES", 60)
+    cfg["RSP_SCHED_DELETE_EXPIRED_USERS_INTERVAL_MINUTES"]
 )
 
-SECRET_KEY = cfg.get("RSP_CRYPTO_KEY", "dev-insecure-secret-key")
-ALGORITHM = cfg.get("RSP_CRYPTO_ALGORITHM", "HS256")
+SECRET_KEY = str(cfg["RSP_CRYPTO_KEY"])
+ALGORITHM = str(cfg["RSP_CRYPTO_ALGORITHM"])
 
-EMAIL_SENDER: str | None = cfg.get("RSP_SMTP_SENDER")
-EMAIL_PASSWORD: str | None = cfg.get("RSP_SMTP_PASSWORD")
-EMAIL_SMTP_SERVER: str | None = cfg.get("RSP_SMTP_SERVER")
-try:
-    EMAIL_SMTP_PORT = int(cfg.get("RSP_SMTP_PORT", 587))
-except (TypeError, ValueError):
-    EMAIL_SMTP_PORT = 587
+EMAIL_SENDER = str(cfg["RSP_SMTP_SENDER"])
+EMAIL_PASSWORD = str(cfg["RSP_SMTP_PASSWORD"])
+EMAIL_SMTP_SERVER = str(cfg["RSP_SMTP_SERVER"])
+EMAIL_SMTP_PORT = int(cfg["RSP_SMTP_PORT"])
 
-EMAIL_LINK_BASE = cfg.get("RSP_EMAIL_LINK_BASE", "http://localhost:3000/verify-email?token=")
-RESET_PASSWORD_LINK_BASE = cfg.get(
-    "RSP_EMAIL_RESET_LINK_BASE",
-    "http://localhost:3000/reset-password?token=",
-)
+EMAIL_LINK_BASE = str(cfg["RSP_EMAIL_LINK_BASE"])
+RESET_PASSWORD_LINK_BASE = str(cfg["RSP_EMAIL_RESET_LINK_BASE"])
 
 def _normalize_email(email: str) -> str:
     return email.strip().lower()
-
-def _smtp_enabled() -> bool:
-    return bool(EMAIL_SENDER and EMAIL_PASSWORD and EMAIL_SMTP_SERVER and EMAIL_SMTP_PORT)
 
 MODERATOR_EMAILS: set[str] = {
     _normalize_email(email)
@@ -216,7 +207,19 @@ def register_user(
     db.add(db_user)
     db.commit()
 
-    background_tasks.add_task(send_verification_email, user_in.email, verification_link)
+    try:
+        send_verification_email(user_in.email, verification_link)
+    except Exception:
+        logging.exception(
+            "❌ Failed to send verification email during registration; rolling back user creation."
+        )
+        db.delete(db_user)
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to send verification email. Please try again later.",
+        )
+
     logging.info("✅ User created successfully.")
 
     return UserRead(
@@ -228,10 +231,6 @@ def register_user(
 
 
 def send_verification_email(recipient_email: str, verification_link: str):
-    if not _smtp_enabled():
-        logging.info("SMTP is not configured; skipping verification email send.")
-        return
-
     msg = EmailMessage()
     msg['Subject'] = 'Verify your email for Research Showcase Portal'
     msg['From'] = EMAIL_SENDER
@@ -253,16 +252,12 @@ def send_verification_email(recipient_email: str, verification_link: str):
             server.login(EMAIL_SENDER, EMAIL_PASSWORD) # type: ignore
             server.send_message(msg)
             logging.info(f"✅ Verification email sent to {recipient_email}")
-    except Exception as e:
-        logging.error("❌ Failed to send verification email: %s", e)
-        return
+    except Exception:
+        logging.exception("❌ Failed to send verification email")
+        raise
 
 
 def send_password_reset_email(recipient_email: str, reset_link: str) -> None:
-    if not _smtp_enabled():
-        logging.info("SMTP is not configured; skipping password reset email send.")
-        return
-
     msg = EmailMessage()
     msg["Subject"] = "Reset your Research Showcase Portal password"
     msg["From"] = EMAIL_SENDER
@@ -524,9 +519,21 @@ async def get_latest_users(
     db: Session = Depends(get_db),
     n: Annotated[int, Query(gt=0, le=50)] = 10,
 ):
-    return db.query(models.User) \
-        .order_by(models.User.created_at.desc()) \
-        .limit(n).all()
+    users = (
+        db.query(models.User)
+        .order_by(models.User.created_at.desc())
+        .limit(n)
+        .all()
+    )
+
+    profiles: list[UserRead] = []
+    for user in users:
+        profile = UserRead.model_validate(user)
+        if not getattr(user, "is_email_public", False):
+            profile.email = None
+        profiles.append(profile)
+
+    return profiles
 
 
 @router.get("/{username}", response_model=UserRead)
@@ -543,13 +550,10 @@ async def get_user_profile(
             detail="User not found",
         )
 
-    return UserRead(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        role=user.role,
-        created_at=user.created_at,
-    )
+    profile = UserRead.model_validate(user)
+    if not getattr(user, "is_email_public", False):
+        profile.email = None
+    return profile
 
 
 @router.post("/{username}/promote_user", response_model=UserRead)
@@ -575,7 +579,10 @@ def promote_user(
     user.role = payload.role
     logging.info(f"User '{username}' promoted to {payload.role}")
     db.commit()
-    return user
+    profile = UserRead.model_validate(user)
+    if not getattr(user, "is_email_public", False):
+        profile.email = None
+    return profile
 
 
 
@@ -640,8 +647,13 @@ async def update_current_user_profile(
         )
 
     for field, value in data.items():
-        if hasattr(current_user, field):
-            setattr(current_user, field, value)
+        if not hasattr(current_user, field):
+            continue
+
+        if isinstance(value, str) and not value.strip():
+            value = None
+
+        setattr(current_user, field, value)
 
     db.add(current_user)
     db.commit()

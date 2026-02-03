@@ -101,7 +101,7 @@ export default function PostVoteActions({
   };
 
   const buttonClasses = (active: boolean, variant: "up" | "down" = "up") =>
-    `rounded-full px-4 py-2 text-sm font-semibold transition ${
+    `inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
       active
         ? variant === "up"
           ? "bg-[var(--Green)] text-[var(--White)]"
@@ -110,24 +110,28 @@ export default function PostVoteActions({
     } ${variant === "up" ? "UpvoteButton" : "DownvoteButton"}`;
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <button
-        type="button"
-        onClick={() => handleVote(1)}
-        disabled={isVoting}
-        className={buttonClasses(currentVote === 1, "up")}
-      >
-        <UpvoteIcon size="l" /> {counts.upvotes}
-      </button>
-      <button
-        type="button"
-        onClick={() => handleVote(-1)}
-        disabled={isVoting}
-        className={buttonClasses(currentVote === -1, "down")}
-      >
-        <DownvoteIcon size="l" /> {counts.downvotes}
-      </button>
-      {error && <span className="text-sm text-red-600">{error}</span>}
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => handleVote(1)}
+          disabled={isVoting}
+          className={buttonClasses(currentVote === 1, "up")}
+        >
+          <UpvoteIcon />
+          <span className="tabular-nums">{counts.upvotes}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleVote(-1)}
+          disabled={isVoting}
+          className={buttonClasses(currentVote === -1, "down")}
+        >
+          <DownvoteIcon />
+          <span className="tabular-nums">{counts.downvotes}</span>
+        </button>
+      </div>
+      {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   );
 }
